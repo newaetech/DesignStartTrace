@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_m3_for_arty_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="axi_bram_ctrl_funcs" />
+            <top_module name="glbl" />
+            <top_module name="ipif_pkg" />
+            <top_module name="lib_pkg" />
+            <top_module name="tb_m3_for_arty" />
+            <top_module name="vcomponents" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="73900000001fs"></ZoomEndTime>
+      <Cursor1Time time="30915000000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="408"></NameColumnWidth>
+      <ValueColumnWidth column_width="161"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="36" />
+   <wvobject fp_name="/tb_m3_for_arty/clk_sys" type="logic">
+      <obj_property name="ElementShortName">clk_sys</obj_property>
+      <obj_property name="ObjectShortName">clk_sys</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/clk_1m" type="logic">
+      <obj_property name="ElementShortName">clk_1m</obj_property>
+      <obj_property name="ObjectShortName">clk_1m</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/clk_baud" type="logic">
+      <obj_property name="ElementShortName">clk_baud</obj_property>
+      <obj_property name="ObjectShortName">clk_baud</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/reset_n" type="logic">
+      <obj_property name="ElementShortName">reset_n</obj_property>
+      <obj_property name="ObjectShortName">reset_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/nTRST" type="logic">
+      <obj_property name="ElementShortName">nTRST</obj_property>
+      <obj_property name="ObjectShortName">nTRST</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/TDO" type="logic">
+      <obj_property name="ElementShortName">TDO</obj_property>
+      <obj_property name="ObjectShortName">TDO</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/uart_tx" type="logic">
+      <obj_property name="ElementShortName">uart_tx</obj_property>
+      <obj_property name="ObjectShortName">uart_tx</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/uart_rx" type="logic">
+      <obj_property name="ElementShortName">uart_rx</obj_property>
+      <obj_property name="ObjectShortName">uart_rx</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/baud_count" type="array">
+      <obj_property name="ElementShortName">baud_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">baud_count[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/uart_pipe" type="array">
+      <obj_property name="ElementShortName">uart_pipe[99:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_pipe[99:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/daplink_srstn" type="logic">
+      <obj_property name="ElementShortName">daplink_srstn</obj_property>
+      <obj_property name="ObjectShortName">daplink_srstn</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/sw_di" type="array">
+      <obj_property name="ElementShortName">sw_di[1:0]</obj_property>
+      <obj_property name="ObjectShortName">sw_di[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/CLK_PERIOD_12M" type="array">
+      <obj_property name="ElementShortName">CLK_PERIOD_12M[31:0]</obj_property>
+      <obj_property name="ObjectShortName">CLK_PERIOD_12M[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/CLK_PERIOD_100M" type="array">
+      <obj_property name="ElementShortName">CLK_PERIOD_100M[31:0]</obj_property>
+      <obj_property name="ObjectShortName">CLK_PERIOD_100M[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/CLK_PERIOD_1M" type="array">
+      <obj_property name="ElementShortName">CLK_PERIOD_1M[31:0]</obj_property>
+      <obj_property name="ObjectShortName">CLK_PERIOD_1M[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/CLK_PERIOD_SYS" type="array">
+      <obj_property name="ElementShortName">CLK_PERIOD_SYS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">CLK_PERIOD_SYS[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/BAUD_RATE" type="array">
+      <obj_property name="ElementShortName">BAUD_RATE[31:0]</obj_property>
+      <obj_property name="ObjectShortName">BAUD_RATE[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/CLK_DIV_BAUD" type="array">
+      <obj_property name="ElementShortName">CLK_DIV_BAUD[31:0]</obj_property>
+      <obj_property name="ObjectShortName">CLK_DIV_BAUD[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/SW_TOGGLE_RATE" type="array">
+      <obj_property name="ElementShortName">SW_TOGGLE_RATE[31:0]</obj_property>
+      <obj_property name="ObjectShortName">SW_TOGGLE_RATE[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/UART_DELAY" type="array">
+      <obj_property name="ElementShortName">UART_DELAY[31:0]</obj_property>
+      <obj_property name="ObjectShortName">UART_DELAY[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/Clocks_and_Resets/peripheral_aresetn" type="array">
+      <obj_property name="ElementShortName">peripheral_aresetn[0:0]</obj_property>
+      <obj_property name="ObjectShortName">peripheral_aresetn[0:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/Clocks_and_Resets/interconnect_aresetn" type="array">
+      <obj_property name="ElementShortName">interconnect_aresetn[0:0]</obj_property>
+      <obj_property name="ObjectShortName">interconnect_aresetn[0:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/Clocks_and_Resets/i_interconnect_aresetn_Res" type="array">
+      <obj_property name="ElementShortName">i_interconnect_aresetn_Res[0:0]</obj_property>
+      <obj_property name="ObjectShortName">i_interconnect_aresetn_Res[0:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/Clocks_and_Resets/i_interconnect_aresetn_Res[0]" type="logic">
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/blk_mem_gen_0/clka" type="logic">
+      <obj_property name="ElementShortName">clka</obj_property>
+      <obj_property name="ObjectShortName">clka</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/blk_mem_gen_0/rsta" type="logic">
+      <obj_property name="ElementShortName">rsta</obj_property>
+      <obj_property name="ObjectShortName">rsta</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/blk_mem_gen_0/ena" type="logic">
+      <obj_property name="ElementShortName">ena</obj_property>
+      <obj_property name="ObjectShortName">ena</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/blk_mem_gen_0/wea" type="array">
+      <obj_property name="ElementShortName">wea[3:0]</obj_property>
+      <obj_property name="ObjectShortName">wea[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/blk_mem_gen_0/addra" type="array">
+      <obj_property name="ElementShortName">addra[31:0]</obj_property>
+      <obj_property name="ObjectShortName">addra[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/blk_mem_gen_0/dina" type="array">
+      <obj_property name="ElementShortName">dina[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dina[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/blk_mem_gen_0/douta" type="array">
+      <obj_property name="ElementShortName">douta[31:0]</obj_property>
+      <obj_property name="ObjectShortName">douta[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/Cortex_M3_0/SYSRESETn" type="logic">
+      <obj_property name="ElementShortName">SYSRESETn</obj_property>
+      <obj_property name="ObjectShortName">SYSRESETn</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/reset" type="logic">
+      <obj_property name="ElementShortName">reset</obj_property>
+      <obj_property name="ObjectShortName">reset</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/aux_reset_in" type="logic">
+      <obj_property name="ElementShortName">aux_reset_in</obj_property>
+      <obj_property name="ObjectShortName">aux_reset_in</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/Clocks_and_Resets/sys_reset_n" type="logic">
+      <obj_property name="ElementShortName">sys_reset_n</obj_property>
+      <obj_property name="ObjectShortName">sys_reset_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_m3_for_arty/DUT/m3_for_arty_a7_i/Clocks_and_Resets/sysresetreq" type="logic">
+      <obj_property name="ElementShortName">sysresetreq</obj_property>
+      <obj_property name="ObjectShortName">sysresetreq</obj_property>
+   </wvobject>
+</wave_config>

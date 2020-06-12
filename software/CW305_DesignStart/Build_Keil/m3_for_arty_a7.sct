@@ -1,0 +1,18 @@
+; *************************************************************
+; *** Scatter-Loading Description File                      ***
+; *************************************************************
+
+LR_IROM1 0x00000000  
+{ 
+  ER_IROM1 +0    ; load address = execution address
+  {
+   *.o (RESET, +First)
+   *(InRoot$$Sections)
+   .ANY (+RO)
+  }
+  RW_IRAM1 +0     ; RW data
+  { 
+   .ANY (+RW +ZI)
+  }
+}
+
