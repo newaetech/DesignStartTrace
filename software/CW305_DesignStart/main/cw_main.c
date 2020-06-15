@@ -33,6 +33,7 @@
 #include "cw_gpio.h"
 #include "uart.h"
 #include "spi.h"
+#include "main.h"
 
 
 // simpleserial and AES:
@@ -40,10 +41,73 @@
 #include "hal.h"
 #include "aes-independant.h"
 
-
 // uartlite example:
 #include "xstatus.h"
 #include "xuartlite.h"
+
+
+void enable_itm()
+{
+    // Configure TPI
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // Enable access to registers
+    TPI->ACPR = 1; // Trace clock = HCLK/(x+1) = 8MHz = UART 's baudrate
+                   // The HCLK of F105 is 8MHz so x is 0, and the F103 is 72MHz so x is 8
+                   // (not needed for parallel mode)
+    //TPI->SPPR = 0; // parallel trace mode
+    TPI->SPPR = 1; // SWO with Manchester encoding
+    //TPI->SPPR = 2; // SWO with NRZ encoding
+    //TPI->FFCR = 0x102; // packet framing enabled
+    TPI->FFCR = 0x100; // for DWT/ITM only, no ETM
+    //if (trace_lanes == 1) {TPI->CSPSR =0x00000001;}
+    //else if (trace_lanes == 2) {TPI->CSPSR =0x00000002;}
+    //else if (trace_lanes == 4) {TPI->CSPSR =0x00000008;}
+
+    // Configure ITM:
+    ITM->LAR = 0xC5ACCE55;
+    ITM->TCR = (1 << ITM_TCR_TraceBusID_Pos) // Trace bus ID for TPIU
+             | (1 << ITM_TCR_DWTENA_Pos) // Enable events from DWT
+             | (0 << ITM_TCR_SYNCENA_Pos) // Disable sync packets!
+             | (1 << ITM_TCR_ITMENA_Pos); // Main enable for ITM
+    ITM->TER = 0xFFFFFFFF; // Enable all stimulus ports
+    ITM->TPR = 0x00000000; // allow unpriviledged access
+}
+
+
+// Print a given string to ITM with 8-bit writes.
+void ITM_Print(int port, const char *p)
+{
+    if ((ITM->TCR & ITM_TCR_ITMENA_Msk) && (ITM->TER & (1UL << port)))
+    {
+        while (*p)
+        {
+            while (ITM->PORT[port].u32 == 0);
+            ITM->PORT[port].u8 = *p++;
+        }
+        print("ITM alive!\n");
+    }
+    else {print("Couldn't print!\n");}
+}
+
+
+uint8_t test_itm(uint8_t* x)
+{
+        ITM_Print(0, "ITM alive!");
+	return 0x00;
+}
+
+
+uint8_t itm_print1(uint8_t* x)
+{
+        ITM_Print(0, "111");
+	return 0x00;
+}
+
+uint8_t itm_print2(uint8_t* x)
+{
+        ITM_Print(0, "222");
+	return 0x00;
+}
+
 
 
 uint8_t get_mask (uint8_t* m)
@@ -103,6 +167,12 @@ int main(void)
 	simpleserial_addcmd('x', 0, reset);
 	simpleserial_addcmd('i', 0, info);
 	simpleserial_addcmd('m', 18, get_mask);
+	simpleserial_addcmd('t', 0, test_itm);
+	simpleserial_addcmd('c', 0, itm_print1);
+	simpleserial_addcmd('d', 0, itm_print2);
+
+        enable_itm();
+
 	while(1) {
           simpleserial_get();
 	}

@@ -35,10 +35,12 @@ module CW305_designstart_top (
   input  wire reset,
   input  wire tio_clkin,
   input  wire pll_clk1,
-  input  wire j16_sel,
+  input  wire j16_sel,  // clock source select
   input  wire k16_sel,  // unused
   input  wire l14_sel,  // unused
   input  wire k15_sel,  // unused
+
+  output wire swv,
 
   output wire ext_clock,
   output wire trig_out,
@@ -55,7 +57,6 @@ module CW305_designstart_top (
   wire SWDOEN;
   wire JTAGTOP;
   wire JTAGNSW;
-  wire swv;
   wire tdo;
   wire m3_reset_out;
   wire swotdo;
@@ -74,13 +75,10 @@ module CW305_designstart_top (
   end
 
   assign led1 = count[22];              // clock alive
-  assign led2 = ~m3_reset_out;                 // TODO-temp debug
+  assign led2 = ~m3_reset_out;          // LED off when reset is inactive
   assign led3 = uart_rxd ^ uart_txd;    // UART activity
 
-  // saved bitfile: auxreset was 1'b1, CFMDFGD was 2'b10
-  // WORKS! K16 = 1 (auxrst = 1);
-  //        L14 = 0, K15 = 1 (cfg = 2'b01)
-  //wire [1:0] cfg = {l14_sel, k15_sel};
+  // controls where program is fetched from:
   wire [1:0] cfg = 2'b01;
 
 
@@ -94,13 +92,13 @@ module CW305_designstart_top (
         .JTAGNSW                (JTAGNSW),
         .TDI                    (TDI),
         .TDO                    (tdo),
+        .nTDOEN                 (nTDOEN),
         .SWV                    (swv),
         .nTRST                  (nTRST),
         .reset                  (reset),
         .sys_clock              (sys_clock),
         .ext_clock              (ext_clock),
         .gpio_rtl_0_tri_o       (trig_out),
-        //.gpio_rtl_0_tri_o       (), // TODO-temp debug
         .usb_uart_rxd           (uart_rxd),
         .usb_uart_txd           (uart_txd),
 
@@ -164,7 +162,10 @@ module CW305_designstart_top (
 
 
 
-  assign swotdo = nTDOEN? swv : tdo;
+  // JTAG or SW: multiplexing of other pins is handled by the M3 core, but the
+  // SWO/TDO mux logic was left for us to handle:
+  assign swotdo = JTAGNSW? tdo : swv;
+
   OBUF #(
          .DRIVE (12),                  // Specify the output drive strength
          .IOSTANDARD ("DEFAULT")       // Specify the I/O standard

@@ -210,7 +210,6 @@ proc create_hier_cell_Clocks_and_Resets { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.C_OPERATION {not} \
    CONFIG.C_SIZE {1} \
-   CONFIG.LOGO_FILE {data/sym_notgate.png} \
  ] $i_inv_dbgresetn
 
   # Create instance: i_inv_sysresetn1, and set properties
@@ -218,7 +217,6 @@ proc create_hier_cell_Clocks_and_Resets { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.C_OPERATION {not} \
    CONFIG.C_SIZE {1} \
-   CONFIG.LOGO_FILE {data/sym_notgate.png} \
  ] $i_inv_sysresetn1
 
   # Create instance: proc_sys_reset_base, and set properties
@@ -345,10 +343,8 @@ proc create_root_design { parentCell } {
   # Create instance: axi_bram_ctrl_0, and set properties
   set axi_bram_ctrl_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_0 ]
   set_property -dict [ list \
-   CONFIG.ECC_TYPE {0} \
    CONFIG.PROTOCOL {AXI4LITE} \
    CONFIG.SINGLE_PORT_BRAM {1} \
-   CONFIG.SUPPORTS_NARROW_BURST {0} \
  ] $axi_bram_ctrl_0
 
   # Create instance: axi_gpio_0, and set properties

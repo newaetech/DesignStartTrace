@@ -60,13 +60,13 @@ set_property PACKAGE_PIN K15 [get_ports k15_sel]
 
 # Debug on JP3:
 # --------------------------------------------------
-#set_property PACKAGE_PIN A12 [get_ports {  }]
-#set_property PACKAGE_PIN A14 [get_ports {  }]
-#set_property PACKAGE_PIN A15 [get_ports {  }]
-#set_property PACKAGE_PIN C12 [get_ports {  }]
-#set_property PACKAGE_PIN B14 [get_ports {  }]
-#set_property PACKAGE_PIN B16 [get_ports {  }]
-#set_property PACKAGE_PIN C13 [get_ports { }]
+set_property PACKAGE_PIN A12 [get_ports swv]
+#set_property PACKAGE_PIN A14 [get_ports ]
+#set_property PACKAGE_PIN A15 [get_ports ]
+#set_property PACKAGE_PIN C12 [get_ports ]
+#set_property PACKAGE_PIN B14 [get_ports ]
+#set_property PACKAGE_PIN B16 [get_ports ]
+#set_property PACKAGE_PIN C13 [get_ports ]
 
 set_property PACKAGE_PIN C11 [get_ports { SWOTDO }]
 set_property PACKAGE_PIN B12 [get_ports { TDI }]

@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="40" Path="V:/hardware/CW305_DesignStart/CW305_DesignStart.xpr">
+<Project Version="7" Minor="40" Path="W:/hardware/CW305_DesignStart/CW305_DesignStart.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="0fac3cabe8ef4d9e8dd96a55313436c0"/>
@@ -18,10 +18,11 @@
     <Option Name="CompiledLibDirRiviera" Val="$PCACHEDIR/compile_simlib/riviera"/>
     <Option Name="CompiledLibDirActivehdl" Val="$PCACHEDIR/compile_simlib/activehdl"/>
     <Option Name="BoardPart" Val=""/>
+    <Option Name="SourceMgmtMode" Val="DisplayOnly"/>
     <Option Name="ActiveSimSet" Val="sim_1"/>
     <Option Name="DefaultLib" Val="xil_defaultlib"/>
     <Option Name="ProjectType" Val="Default"/>
-    <Option Name="IPRepoPath" Val="$PPRDIR/../../vivado/Arm_ipi_repository"/>
+    <Option Name="IPRepoPath" Val="V:/vivado/Arm_ipi_repository"/>
     <Option Name="IPOutputRepo" Val="$PCACHEDIR/ip"/>
     <Option Name="IPCachePermission" Val="read"/>
     <Option Name="IPCachePermission" Val="write"/>
@@ -63,7 +64,16 @@
       <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sources_1/bd/block_diagram/m3_for_arty_a7.bd">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../m3_for_arty_a7/block_diagram/m3_for_arty_a7.bd"/>
+          <Attr Name="ImportPath" Val="V:/hardware/m3_for_arty_a7/block_diagram/m3_for_arty_a7.bd"/>
+          <Attr Name="ImportTime" Val="1561546691"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/imports/m3_for_arty_a7/block_diagram/tri_io_buf.v">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="V:/hardware/m3_for_arty_a7/block_diagram/tri_io_buf.v"/>
           <Attr Name="ImportTime" Val="1561546691"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -79,19 +89,9 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/m3_for_arty_a7/block_diagram/tri_io_buf.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../m3_for_arty_a7/block_diagram/tri_io_buf.v"/>
-          <Attr Name="ImportTime" Val="1561546691"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PSRCDIR/sources_1/imports/m3_for_arty_a7/m3_for_arty_a7/bram_a7.hex">
         <FileInfo SFType="MIF">
-          <Attr Name="ImportPath" Val="$PPRDIR/../m3_for_arty_a7/m3_for_arty_a7/bram_a7.hex"/>
+          <Attr Name="ImportPath" Val="V:/hardware/m3_for_arty_a7/m3_for_arty_a7/bram_a7.hex"/>
           <Attr Name="ImportTime" Val="1561546691"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -121,7 +121,7 @@
       <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sim_1/imports/testbench/cmsdk_uart_capture.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../m3_for_arty_a7/testbench/cmsdk_uart_capture.v"/>
+          <Attr Name="ImportPath" Val="V:/hardware/m3_for_arty_a7/testbench/cmsdk_uart_capture.v"/>
           <Attr Name="ImportTime" Val="1562850639"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -130,7 +130,7 @@
       </File>
       <File Path="$PSRCDIR/sim_1/imports/testbench/tb_m3_for_arty.v">
         <FileInfo SFType="SVerilog">
-          <Attr Name="ImportPath" Val="$PPRDIR/../m3_for_arty_a7/testbench/tb_m3_for_arty.v"/>
+          <Attr Name="ImportPath" Val="V:/hardware/m3_for_arty_a7/testbench/tb_m3_for_arty.v"/>
           <Attr Name="ImportTime" Val="1562850639"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -139,7 +139,6 @@
       </File>
       <File Path="$PPRDIR/../m3_for_arty_a7/testbench/Micron_N25Q128A13E/code/N25Qxxx.v">
         <FileInfo RelPath="Micron_N25Q128A13E/code/N25Qxxx.v">
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -147,7 +146,6 @@
       </File>
       <File Path="$PPRDIR/../m3_for_arty_a7/testbench/S25fl128s/model/s25fl128s.v">
         <FileInfo RelPath="S25fl128s/model/s25fl128s.v">
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -155,7 +153,7 @@
       </File>
       <File Path="$PSRCDIR/sim_1/imports/testbench/qspi_a7.hex">
         <FileInfo SFType="MIF">
-          <Attr Name="ImportPath" Val="$PPRDIR/../m3_for_arty_a7/testbench/qspi_a7.hex"/>
+          <Attr Name="ImportPath" Val="V:/hardware/m3_for_arty_a7/testbench/qspi_a7.hex"/>
           <Attr Name="ImportTime" Val="1561546690"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -169,20 +167,20 @@
       </File>
       <File Path="$PSRCDIR/sim_1/imports/testbench/wave_files/wave_daplink.wcfg">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../m3_for_arty_a7/testbench/wave_files/wave_daplink.wcfg"/>
+          <Attr Name="ImportPath" Val="V:/hardware/m3_for_arty_a7/testbench/wave_files/wave_daplink.wcfg"/>
           <Attr Name="ImportTime" Val="1561546690"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
       <File Path="$PSRCDIR/sim_1/imports/testbench/wave_files/wave_daplink.do">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../m3_for_arty_a7/testbench/wave_files/wave_daplink.do"/>
+          <Attr Name="ImportPath" Val="V:/hardware/m3_for_arty_a7/testbench/wave_files/wave_daplink.do"/>
           <Attr Name="ImportTime" Val="1561546690"/>
         </FileInfo>
       </File>
       <File Path="$PSRCDIR/sim_1/imports/testbench/wave_files/wave_no_daplink.do">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../m3_for_arty_a7/testbench/wave_files/wave_no_daplink.do"/>
+          <Attr Name="ImportPath" Val="V:/hardware/m3_for_arty_a7/testbench/wave_files/wave_no_daplink.do"/>
           <Attr Name="ImportTime" Val="1561546690"/>
         </FileInfo>
       </File>
@@ -195,7 +193,7 @@
         <Option Name="TransportPathDelay" Val="0"/>
         <Option Name="TransportIntDelay" Val="0"/>
         <Option Name="SrcSet" Val="sources_1"/>
-        <Option Name="XSimWcfgFile" Val="$PPRDIR/../m3_for_arty_a7/testbench/wave_files/wave_daplink.wcfg"/>
+        <Option Name="XSimWcfgFile" Val="V:/hardware/m3_for_arty_a7/testbench/wave_files/wave_daplink.wcfg"/>
       </Config>
     </FileSet>
     <FileSet Name="utils_1" Type="Utils" RelSrcDir="$PSRCDIR/utils_1">
@@ -226,15 +224,13 @@
   <Runs Version="1" Minor="10">
     <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7a100tftg256-2" ConstrsSet="constrs_1" Description="Higher performance designs, resource sharing is turned off, the global fanout guide is set to a lower number, FSM extraction forced to one-hot, LUT combining is disabled, equivalent registers are preserved, SRL are inferred  with a larger threshold" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Flow_PerfOptimized_high" Flow="Vivado Synthesis 2018">
-          <Desc>Higher performance designs, resource sharing is turned off, the global fanout guide is set to a lower number, FSM extraction forced to one-hot, LUT combining is disabled, equivalent registers are preserved, SRL are inferred  with a larger threshold</Desc>
-        </StratHandle>
+        <StratHandle Name="Flow_PerfOptimized_high" Flow="Vivado Synthesis 2018"/>
         <Step Id="synth_design">
           <Option Id="ResourceSharing">2</Option>
-          <Option Id="FsmExtraction">1</Option>
-          <Option Id="ShregMinSize">5</Option>
           <Option Id="NoCombineLuts">1</Option>
           <Option Id="KeepEquivalentRegisters">1</Option>
+          <Option Id="FsmExtraction">1</Option>
+          <Option Id="ShregMinSize">5</Option>
           <Option Id="RepFanoutThreshold">400</Option>
         </Step>
       </Strategy>
@@ -244,9 +240,7 @@
     </Run>
     <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7a100tftg256-2" ConstrsSet="constrs_1" Description="Ignore timing constraints for placing Block RAM and DSPs, use wirelength instead, and perform aggressive replication of high fanout drivers." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Performance_WLBlockPlacementFanoutOpt" Flow="Vivado Implementation 2019">
-          <Desc>Ignore timing constraints for placing Block RAM and DSPs, use wirelength instead, and perform aggressive replication of high fanout drivers.</Desc>
-        </StratHandle>
+        <StratHandle Name="Performance_WLBlockPlacementFanoutOpt" Flow="Vivado Implementation 2019"/>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
