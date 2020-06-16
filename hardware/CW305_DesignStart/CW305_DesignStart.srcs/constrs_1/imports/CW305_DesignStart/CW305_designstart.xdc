@@ -60,12 +60,7 @@ set_property PACKAGE_PIN K15 [get_ports k15_sel]
 
 # Debug on JP3:
 # --------------------------------------------------
-set_property PACKAGE_PIN A12 [get_ports swv]
-#set_property PACKAGE_PIN A14 [get_ports ]
-#set_property PACKAGE_PIN A15 [get_ports ]
-#set_property PACKAGE_PIN C12 [get_ports ]
-#set_property PACKAGE_PIN B14 [get_ports ]
-#set_property PACKAGE_PIN B16 [get_ports ]
+set_property PACKAGE_PIN B16 [get_ports swv]
 #set_property PACKAGE_PIN C13 [get_ports ]
 
 set_property PACKAGE_PIN C11 [get_ports { SWOTDO }]
@@ -73,6 +68,14 @@ set_property PACKAGE_PIN B12 [get_ports { TDI }]
 set_property PACKAGE_PIN C14 [get_ports { nTRST }]
 set_property PACKAGE_PIN A13 [get_ports swdio]
 set_property PACKAGE_PIN B15 [get_ports swclk]
+
+set_property PACKAGE_PIN B14 [get_ports TRACEDATA[3] ]
+set_property PACKAGE_PIN C12 [get_ports TRACEDATA[2] ]
+set_property PACKAGE_PIN A15 [get_ports TRACEDATA[1] ]
+set_property PACKAGE_PIN A14 [get_ports TRACEDATA[0] ]
+set_property PACKAGE_PIN C16 [get_ports TRCENA ]
+set_property PACKAGE_PIN A12 [get_ports TRACECLK_OUT ]
+
 
 # TODO: sort out later, may lead to SWD debugging issues?
 # (required because otherwise P+R fails with "Poor placement for routing between an IO pin and BUFG")

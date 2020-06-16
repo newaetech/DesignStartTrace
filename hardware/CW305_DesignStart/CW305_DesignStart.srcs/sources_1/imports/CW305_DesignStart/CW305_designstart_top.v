@@ -42,6 +42,10 @@ module CW305_designstart_top (
 
   output wire swv,
 
+  output wire TRACECLK_OUT,
+  output wire TRCENA,
+  output wire [3:0] TRACEDATA,
+
   output wire ext_clock,
   output wire trig_out,
   input  wire uart_rxd,
@@ -61,6 +65,7 @@ module CW305_designstart_top (
   wire m3_reset_out;
   wire swotdo;
   wire nTDOEN;
+  wire TRACECLK;
 
   assign swdio = SWDOEN ? SWDO : 1'bz;
   assign SWDI = swdio;
@@ -81,7 +86,6 @@ module CW305_designstart_top (
   // controls where program is fetched from:
   wire [1:0] cfg = 2'b01;
 
-
   `ifndef __ICARUS__
   m3_for_arty_a7 m3_for_arty_a7_i
        (.SWCLK                  (swclk),
@@ -101,11 +105,12 @@ module CW305_designstart_top (
         .gpio_rtl_0_tri_o       (trig_out),
         .usb_uart_rxd           (uart_rxd),
         .usb_uart_txd           (uart_txd),
-
-        // connect to DIP switches to get right setting...
         .CFGITCMEN              (cfg),
         .M3_RESET_OUT           (m3_reset_out),
         .locked                 (),
+        .TRCENA                 (TRCENA),
+        .TRACECLK               (TRACECLK),
+        .TRACEDATA              (TRACEDATA),
 
         // unused AXI port inputs:
         .CM3_CODE_AXI3_arready  (1'b0),
@@ -148,6 +153,7 @@ module CW305_designstart_top (
 
 
     // choose and buffer input clock based on J16 dip switch:
+  `ifndef __ICARUS__
     BUFGCTRL CCLK_MUX (
        .O                       (sys_clock),    // Clock output
        .CE0                     (1'b1),         // Clock enable input for I0
@@ -159,6 +165,9 @@ module CW305_designstart_top (
        .S0                      (~j16_sel),     // Clock select for I0
        .S1                      (j16_sel)       // Clock select for I1
     );
+  `else
+    assign sys_clock = j16_sel? pll_clk1 : tio_clkin;
+  `endif
 
 
 
@@ -166,6 +175,7 @@ module CW305_designstart_top (
   // SWO/TDO mux logic was left for us to handle:
   assign swotdo = JTAGNSW? tdo : swv;
 
+  `ifndef __ICARUS__
   OBUF #(
          .DRIVE (12),                  // Specify the output drive strength
          .IOSTANDARD ("DEFAULT")       // Specify the I/O standard
@@ -175,6 +185,24 @@ module CW305_designstart_top (
          .I (swotdo)
         ); 
      
+  `else
+  assign SWOTDO = swotdo;
+  `endif
+
+
+  `ifndef __ICARUS__
+  ODDR TRACECLK_ODDR (
+     .Q(TRACECLK_OUT),   // 1-bit DDR output
+     .C(TRACECLK),   // 1-bit clock input
+     .CE(1'b1), // 1-bit clock enable input
+     .D1(1'b1), // 1-bit data input (positive edge)
+     .D2(1'b0), // 1-bit data input (negative edge)
+     .R(1'b0),   // 1-bit reset
+     .S(1'b0)    // 1-bit set
+  );
+  `else
+  assign TRACECLK_OUT = TRACECLK;
+  `endif
 
 
 endmodule
