@@ -1,0 +1,4 @@
+tb.v
+../hdl/CW305_designstart_top.v
+../hdl/cw305_usb_reg_fe.v
+../hdl/reg_trace.v
