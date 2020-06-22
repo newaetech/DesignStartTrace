@@ -34,6 +34,7 @@
 #include "uart.h"
 #include "spi.h"
 #include "main.h"
+#include "arm_etm.h"
 
 
 // simpleserial and AES:
@@ -54,8 +55,8 @@ void enable_itm()
                    // The HCLK of F105 is 8MHz so x is 0, and the F103 is 72MHz so x is 8
                    // (not needed for parallel mode)
     //TPI->SPPR = 0; // parallel trace mode
-    TPI->SPPR = 1; // SWO with Manchester encoding
-    //TPI->SPPR = 2; // SWO with NRZ encoding
+    //TPI->SPPR = 1; // SWO with Manchester encoding
+    TPI->SPPR = 2; // SWO with NRZ encoding
     //TPI->FFCR = 0x102; // packet framing enabled
     TPI->FFCR = 0x100; // for DWT/ITM only, no ETM
     //if (trace_lanes == 1) {TPI->CSPSR =0x00000001;}
@@ -70,6 +71,45 @@ void enable_itm()
              | (1 << ITM_TCR_ITMENA_Pos); // Main enable for ITM
     ITM->TER = 0xFFFFFFFF; // Enable all stimulus ports
     ITM->TPR = 0x00000000; // allow unpriviledged access
+
+    // Configure DWT:
+    DWT->CTRL = (0xf << DWT_CTRL_POSTINIT_Pos);// countdown counter for PC sampling, must be written
+                                               // before enabling PC sampling
+    DWT->CTRL = (1 << DWT_CTRL_CYCTAP_Pos)     // Prescaler for PC sampling: 0 = x32, 1 = x512
+              | (8 << DWT_CTRL_POSTPRESET_Pos) // PC sampling postscaler
+              | (0 << DWT_CTRL_PCSAMPLENA_Pos) // disable PC sampling
+              | (1 << DWT_CTRL_SYNCTAP_Pos)    // sync packets every 16M cycles
+              | (0 << DWT_CTRL_EXCTRCENA_Pos)  // disable exception trace
+              | (1 << DWT_CTRL_CYCCNTENA_Pos); // enable cycle counter
+
+    // Configure DWT PC comparator 0:
+    DWT->COMP0 = 0x000002BC;
+    DWT->MASK0 = 0;
+    DWT->FUNCTION0 = (0 << DWT_FUNCTION_DATAVMATCH_Pos) // address match
+                   | (0 << DWT_FUNCTION_CYCMATCH_Pos)
+                   | (0 << DWT_FUNCTION_EMITRANGE_Pos) 
+                   //| (8 << DWT_FUNCTION_FUNCTION_Pos); // CMPMATCH event
+                   | (4 << DWT_FUNCTION_FUNCTION_Pos); // Watchpoint debug event
+
+
+    // Configure ETM:
+    ETM->LAR = 0xC5ACCE55;
+    ETM_SetupMode();
+    ETM->CR = ETM_CR_ETMEN  // Enable ETM output port
+            | ETM_CR_STALL_PROCESSOR; // Stall processor when fifo is full
+    ETM->TRACEIDR = 2; // Trace bus ID for TPIU
+    ETM->FFLR = 8; // Stall when less than 8 bytes free in FIFO (range 1..24).
+                   // Larger values mean less latency in trace, but more stalls.
+    ETM->TEEVR = 0x00000020;    // EmbeddedICE comparator 0
+    //ETM->TEEVR = 0x00000021;    // EmbeddedICE comparator 1
+                                // encoding: 000=A, 101=A or B -> 0x6000
+                                // resource A = EmbeddedICE comparator 0: 0x20
+                                // resource B = EmbeddedICE comparator 1: 0x21 << 7 = 0x1800 (!previously missing a zero!)
+    //ETM->TEEVR = 0x00006180;    // EmbeddedICE comparator 0 or 1 (!what??)
+    //ETM->TEEVR = 0x00001820;    // EmbeddedICE comparator 0 or 1
+    ETM->TESSEICR = 0xf; // set EmbeddedICE watchpoint 0 as a TraceEnable start resource. 
+    ETM->TECR1 = 0; // tracing is unaffected by the trace start/stop logic
+    ETM_TraceMode();
 }
 
 
@@ -147,6 +187,29 @@ uint8_t info(uint8_t* x)
 	return 0x00;
 }
 
+uint8_t setcomp0(uint8_t* x)
+{
+        uint32_t val;
+        val = x[3] + (x[2] << 8) + (x[1] << 16) + (x[0] << 24);
+        DWT->COMP0 = val;
+	return 0x00;
+}
+
+
+uint8_t getcomp0(uint8_t* x)
+{
+        uint32_t val;
+        val = DWT->COMP0;
+        x[3] = val & 0xff;
+        x[2] = (val >> 8) & 0xff;
+        x[1] = (val >> 16) & 0xff;
+        x[0] = (val >> 24) & 0xff;
+	simpleserial_put('r', 4, x);
+	return 0x00;
+}
+
+
+
 int main(void)
 {
         uint8_t tmp[KEY_LENGTH] = {DEFAULT_KEY};
@@ -170,6 +233,8 @@ int main(void)
 	simpleserial_addcmd('t', 0, test_itm);
 	simpleserial_addcmd('c', 0, itm_print1);
 	simpleserial_addcmd('d', 0, itm_print2);
+	simpleserial_addcmd('s', 4, setcomp);
+	simpleserial_addcmd('g', 4, getcomp);
 
         enable_itm();
 
