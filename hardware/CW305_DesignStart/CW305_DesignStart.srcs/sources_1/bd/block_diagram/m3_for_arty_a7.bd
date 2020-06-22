@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x7932AACA596BE718",
+      "boundary_crc": "0xBB2565706313CC00",
       "device": "xc7a100tftg256-2",
       "name": "m3_for_arty_a7",
       "synth_flow_mode": "None",
@@ -122,7 +122,7 @@
           },
           "MAX_BURST_LENGTH": {
             "value": "16",
-            "value_src": "default"
+            "value_src": "default_prop"
           },
           "NUM_READ_OUTSTANDING": {
             "value": "1",
@@ -342,6 +342,36 @@
       },
       "nTDOEN": {
         "direction": "O"
+      },
+      "TRACECLK": {
+        "type": "clk",
+        "direction": "O",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "m3_for_arty_a7_Cortex_M3_0_0_TRACECLK",
+            "value_src": "default_prop"
+          },
+          "FREQ_HZ": {
+            "value": "100000000",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.000",
+            "value_src": "default"
+          }
+        }
+      },
+      "TRCENA": {
+        "direction": "O"
+      },
+      "TRACEDATA": {
+        "direction": "O",
+        "left": "3",
+        "right": "0"
       }
     },
     "components": {
@@ -896,16 +926,16 @@
               }
             },
             "interface_nets": {
-              "auto_pc_to_s00_couplers": {
-                "interface_ports": [
-                  "M_AXI",
-                  "auto_pc/M_AXI"
-                ]
-              },
               "s00_couplers_to_auto_pc": {
                 "interface_ports": [
                   "S_AXI",
                   "auto_pc/S_AXI"
+                ]
+              },
+              "auto_pc_to_s00_couplers": {
+                "interface_ports": [
+                  "M_AXI",
+                  "auto_pc/M_AXI"
                 ]
               }
             },
@@ -1088,12 +1118,6 @@
           }
         },
         "interface_nets": {
-          "axi_interconnect_0_to_s00_couplers": {
-            "interface_ports": [
-              "S00_AXI",
-              "s00_couplers/S_AXI"
-            ]
-          },
           "s00_couplers_to_xbar": {
             "interface_ports": [
               "s00_couplers/M_AXI",
@@ -1106,16 +1130,22 @@
               "m00_couplers/M_AXI"
             ]
           },
-          "m01_couplers_to_axi_interconnect_0": {
+          "axi_interconnect_0_to_s00_couplers": {
             "interface_ports": [
-              "M01_AXI",
-              "m01_couplers/M_AXI"
+              "S00_AXI",
+              "s00_couplers/S_AXI"
             ]
           },
           "xbar_to_m00_couplers": {
             "interface_ports": [
               "xbar/M00_AXI",
               "m00_couplers/S_AXI"
+            ]
+          },
+          "m01_couplers_to_axi_interconnect_0": {
+            "interface_ports": [
+              "M01_AXI",
+              "m01_couplers/M_AXI"
             ]
           },
           "m02_couplers_to_axi_interconnect_0": {
@@ -1296,22 +1326,16 @@
       }
     },
     "interface_nets": {
-      "Cortex_M3_0_CM3_SYS_AXI3": {
+      "axi_interconnect_0_M01_AXI": {
         "interface_ports": [
-          "Cortex_M3_0/CM3_SYS_AXI3",
-          "axi_interconnect_0/S00_AXI"
+          "axi_gpio_0/S_AXI",
+          "axi_interconnect_0/M01_AXI"
         ]
       },
-      "Cortex_M3_0_CM3_CODE_AXI3": {
+      "axi_interconnect_0_M02_AXI": {
         "interface_ports": [
-          "CM3_CODE_AXI3",
-          "Cortex_M3_0/CM3_CODE_AXI3"
-        ]
-      },
-      "axi_interconnect_0_M00_AXI": {
-        "interface_ports": [
-          "axi_uartlite_0/S_AXI",
-          "axi_interconnect_0/M00_AXI"
+          "axi_bram_ctrl_0/S_AXI",
+          "axi_interconnect_0/M02_AXI"
         ]
       },
       "axi_uartlite_0_UART": {
@@ -1320,10 +1344,10 @@
           "axi_uartlite_0/UART"
         ]
       },
-      "axi_interconnect_0_M01_AXI": {
+      "axi_gpio_0_GPIO": {
         "interface_ports": [
-          "axi_gpio_0/S_AXI",
-          "axi_interconnect_0/M01_AXI"
+          "gpio_rtl_0",
+          "axi_gpio_0/GPIO"
         ]
       },
       "axi_bram_ctrl_0_BRAM_PORTA": {
@@ -1332,16 +1356,22 @@
           "blk_mem_gen_0/BRAM_PORTA"
         ]
       },
-      "axi_gpio_0_GPIO": {
+      "axi_interconnect_0_M00_AXI": {
         "interface_ports": [
-          "gpio_rtl_0",
-          "axi_gpio_0/GPIO"
+          "axi_uartlite_0/S_AXI",
+          "axi_interconnect_0/M00_AXI"
         ]
       },
-      "axi_interconnect_0_M02_AXI": {
+      "Cortex_M3_0_CM3_CODE_AXI3": {
         "interface_ports": [
-          "axi_bram_ctrl_0/S_AXI",
-          "axi_interconnect_0/M02_AXI"
+          "CM3_CODE_AXI3",
+          "Cortex_M3_0/CM3_CODE_AXI3"
+        ]
+      },
+      "Cortex_M3_0_CM3_SYS_AXI3": {
+        "interface_ports": [
+          "Cortex_M3_0/CM3_SYS_AXI3",
+          "axi_interconnect_0/S00_AXI"
         ]
       }
     },
@@ -1540,6 +1570,24 @@
         "ports": [
           "Cortex_M3_0/nTDOEN",
           "nTDOEN"
+        ]
+      },
+      "Cortex_M3_0_TRACECLK": {
+        "ports": [
+          "Cortex_M3_0/TRACECLK",
+          "TRACECLK"
+        ]
+      },
+      "Cortex_M3_0_TRCENA": {
+        "ports": [
+          "Cortex_M3_0/TRCENA",
+          "TRCENA"
+        ]
+      },
+      "Cortex_M3_0_TRACEDATA": {
+        "ports": [
+          "Cortex_M3_0/TRACEDATA",
+          "TRACEDATA"
         ]
       }
     },

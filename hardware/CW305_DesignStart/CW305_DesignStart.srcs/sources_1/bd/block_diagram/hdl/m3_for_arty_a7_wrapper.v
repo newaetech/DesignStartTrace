@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-//Date        : Fri Jun 12 17:22:25 2020
+//Date        : Sun Jun 14 23:14:24 2020
 //Host        : qed running 64-bit major release  (build 9200)
 //Command     : generate_target m3_for_arty_a7_wrapper.bd
 //Design      : m3_for_arty_a7_wrapper
@@ -54,6 +54,9 @@ module m3_for_arty_a7_wrapper
     SWV,
     TDI,
     TDO,
+    TRACECLK,
+    TRACEDATA,
+    TRCENA,
     ext_clock,
     gpio_rtl_0_tri_o,
     locked,
@@ -107,6 +110,9 @@ module m3_for_arty_a7_wrapper
   output SWV;
   input TDI;
   output TDO;
+  output TRACECLK;
+  output [3:0]TRACEDATA;
+  output TRCENA;
   output ext_clock;
   output [0:0]gpio_rtl_0_tri_o;
   output locked;
@@ -161,6 +167,9 @@ module m3_for_arty_a7_wrapper
   wire SWV;
   wire TDI;
   wire TDO;
+  wire TRACECLK;
+  wire [3:0]TRACEDATA;
+  wire TRCENA;
   wire ext_clock;
   wire [0:0]gpio_rtl_0_tri_o;
   wire locked;
@@ -216,6 +225,9 @@ module m3_for_arty_a7_wrapper
         .SWV(SWV),
         .TDI(TDI),
         .TDO(TDO),
+        .TRACECLK(TRACECLK),
+        .TRACEDATA(TRACEDATA),
+        .TRCENA(TRCENA),
         .ext_clock(ext_clock),
         .gpio_rtl_0_tri_o(gpio_rtl_0_tri_o),
         .locked(locked),

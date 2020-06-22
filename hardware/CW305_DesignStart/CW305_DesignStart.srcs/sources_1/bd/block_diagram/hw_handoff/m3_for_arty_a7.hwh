@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<EDKSYSTEM EDWVERSION="1.2" TIMESTAMP="Fri Jun 12 17:22:29 2020" VIVADOVERSION="2019.1">
+<EDKSYSTEM EDWVERSION="1.2" TIMESTAMP="Sun Jun 14 23:14:24 2020" VIVADOVERSION="2019.1">
 
   <SYSTEMINFO ARCH="artix7" DEVICE="7a100t" NAME="m3_for_arty_a7" PACKAGE="ftg256" SPEEDGRADE="-2"/>
 
@@ -87,6 +87,36 @@
     <PORT DIR="O" NAME="nTDOEN" SIGIS="undef" SIGNAME="Cortex_M3_0_nTDOEN">
       <CONNECTIONS>
         <CONNECTION INSTANCE="Cortex_M3_0" PORT="nTDOEN"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT CLKFREQUENCY="100000000" DIR="O" NAME="TRACECLK" SIGIS="clk" SIGNAME="Cortex_M3_0_TRACECLK">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="Cortex_M3_0" PORT="TRACECLK"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="O" NAME="TRCENA" SIGIS="undef" SIGNAME="Cortex_M3_0_TRCENA">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="Cortex_M3_0" PORT="TRCENA"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="O" LEFT="3" NAME="TRACEDATA" RIGHT="0" SIGIS="undef" SIGNAME="Cortex_M3_0_TRACEDATA">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="Cortex_M3_0" PORT="TRACEDATA"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="I" NAME="usb_uart_rxd" SIGIS="undef" SIGNAME="axi_uartlite_0_rx">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="axi_uartlite_0" PORT="rx"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="O" NAME="usb_uart_txd" SIGIS="undef" SIGNAME="axi_uartlite_0_tx">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="axi_uartlite_0" PORT="tx"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="O" LEFT="0" NAME="gpio_rtl_0_tri_o" RIGHT="0" SIGIS="undef" SIGNAME="axi_gpio_0_gpio_io_o">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="axi_gpio_0" PORT="gpio_io_o"/>
       </CONNECTIONS>
     </PORT>
     <PORT DIR="O" NAME="CM3_CODE_AXI3_wlast" SIGIS="undef" SIGNAME="Cortex_M3_0_WLASTC">
@@ -252,21 +282,6 @@
     <PORT DIR="O" LEFT="1" NAME="CM3_CODE_AXI3_awburst" RIGHT="0" SIGIS="undef" SIGNAME="Cortex_M3_0_AWBURSTC">
       <CONNECTIONS>
         <CONNECTION INSTANCE="Cortex_M3_0" PORT="AWBURSTC"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="I" NAME="usb_uart_rxd" SIGIS="undef" SIGNAME="axi_uartlite_0_rx">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="axi_uartlite_0" PORT="rx"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="O" NAME="usb_uart_txd" SIGIS="undef" SIGNAME="axi_uartlite_0_tx">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="axi_uartlite_0" PORT="tx"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="O" LEFT="0" NAME="gpio_rtl_0_tri_o" RIGHT="0" SIGIS="undef" SIGNAME="axi_gpio_0_gpio_io_o">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="axi_gpio_0" PORT="gpio_io_o"/>
       </CONNECTIONS>
     </PORT>
   </EXTERNALPORTS>
@@ -1156,9 +1171,21 @@
             <CONNECTION INSTANCE="External_Ports" PORT="nTDOEN"/>
           </CONNECTIONS>
         </PORT>
-        <PORT DIR="O" NAME="TRCENA" SIGIS="undef"/>
-        <PORT DIR="O" NAME="TRACECLK" SIGIS="clk"/>
-        <PORT DIR="O" LEFT="3" NAME="TRACEDATA" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="O" NAME="TRCENA" SIGIS="undef" SIGNAME="Cortex_M3_0_TRCENA">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="External_Ports" PORT="TRCENA"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="TRACECLK" SIGIS="clk" SIGNAME="Cortex_M3_0_TRACECLK">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="External_Ports" PORT="TRACECLK"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="3" NAME="TRACEDATA" RIGHT="0" SIGIS="undef" SIGNAME="Cortex_M3_0_TRACEDATA">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="External_Ports" PORT="TRACEDATA"/>
+          </CONNECTIONS>
+        </PORT>
         <PORT DIR="O" NAME="SWV" SIGIS="undef" SIGNAME="Cortex_M3_0_SWV">
           <CONNECTIONS>
             <CONNECTION INSTANCE="External_Ports" PORT="SWV"/>

@@ -309,6 +309,9 @@ proc create_root_design { parentCell } {
   set SWV [ create_bd_port -dir O SWV ]
   set TDI [ create_bd_port -dir I TDI ]
   set TDO [ create_bd_port -dir O TDO ]
+  set TRACECLK [ create_bd_port -dir O -type clk TRACECLK ]
+  set TRACEDATA [ create_bd_port -dir O -from 3 -to 0 TRACEDATA ]
+  set TRCENA [ create_bd_port -dir O TRCENA ]
   set ext_clock [ create_bd_port -dir O -type clk ext_clock ]
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {CM3_CODE_AXI3} \
@@ -470,6 +473,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net Cortex_M3_0_SWV [get_bd_ports SWV] [get_bd_pins Cortex_M3_0/SWV]
   connect_bd_net -net Cortex_M3_0_SYSRESETREQ [get_bd_pins Clocks_and_Resets/sysresetreq] [get_bd_pins Cortex_M3_0/SYSRESETREQ]
   connect_bd_net -net Cortex_M3_0_TDO [get_bd_ports TDO] [get_bd_pins Cortex_M3_0/TDO]
+  connect_bd_net -net Cortex_M3_0_TRACECLK [get_bd_ports TRACECLK] [get_bd_pins Cortex_M3_0/TRACECLK]
+  connect_bd_net -net Cortex_M3_0_TRACEDATA [get_bd_ports TRACEDATA] [get_bd_pins Cortex_M3_0/TRACEDATA]
+  connect_bd_net -net Cortex_M3_0_TRCENA [get_bd_ports TRCENA] [get_bd_pins Cortex_M3_0/TRCENA]
   connect_bd_net -net Cortex_M3_0_nTDOEN [get_bd_ports nTDOEN] [get_bd_pins Cortex_M3_0/nTDOEN]
   connect_bd_net -net SWCLK_1 [get_bd_ports SWCLK] [get_bd_pins Cortex_M3_0/SWCLKTCK]
   connect_bd_net -net SWDI_1 [get_bd_ports SWDI] [get_bd_pins Cortex_M3_0/SWDITMS]

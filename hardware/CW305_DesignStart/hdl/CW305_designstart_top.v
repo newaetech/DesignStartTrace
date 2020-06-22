@@ -23,12 +23,14 @@ of the authors and should not be interpreted as representing official policies,
 either expressed or implied, of NewAE Technology Inc.
 */
 
-`timescale 1 ps / 1 ps
+`timescale 1 ns / 1 ps
 `default_nettype none
 
 module CW305_designstart_top #(
   parameter pBYTECNT_SIZE = 7,
-  parameter pADDR_WIDTH = 21
+  parameter pADDR_WIDTH = 21,
+  parameter pBUFFER_SIZE = 64,
+  parameter pMATCH_RULES = 8
 )(
   // clocks and resets:
   input  wire resetn,
@@ -276,19 +278,124 @@ module CW305_designstart_top #(
    );
 
 
+   wire [4:0] clksettings; // TODO-later
+   wire [pMATCH_RULES-1:0] matching_pattern;
+   wire [pBUFFER_SIZE-1:0] matching_buffer;
+   wire synchronized;
+   wire [pBUFFER_SIZE-1:0] last_blurb;
+
+   wire [pMATCH_RULES-1:0] pattern_enable;
+   wire trace_reset_sync;
+   wire [2:0] trace_width;
+
+   wire [pBUFFER_SIZE-1:0] trace_pattern0;
+   wire [pBUFFER_SIZE-1:0] trace_pattern1;
+   wire [pBUFFER_SIZE-1:0] trace_pattern2;
+   wire [pBUFFER_SIZE-1:0] trace_pattern3;
+   wire [pBUFFER_SIZE-1:0] trace_pattern4;
+   wire [pBUFFER_SIZE-1:0] trace_pattern5;
+   wire [pBUFFER_SIZE-1:0] trace_pattern6;
+   wire [pBUFFER_SIZE-1:0] trace_pattern7;
+
+   wire [pBUFFER_SIZE-1:0] trace_mask0;
+   wire [pBUFFER_SIZE-1:0] trace_mask1;
+   wire [pBUFFER_SIZE-1:0] trace_mask2;
+   wire [pBUFFER_SIZE-1:0] trace_mask3;
+   wire [pBUFFER_SIZE-1:0] trace_mask4;
+   wire [pBUFFER_SIZE-1:0] trace_mask5;
+   wire [pBUFFER_SIZE-1:0] trace_mask6;
+   wire [pBUFFER_SIZE-1:0] trace_mask7;
+
+
    reg_trace #(
-      .pBYTECNT_SIZE            (pBYTECNT_SIZE)
+      .pADDR_WIDTH              (pADDR_WIDTH),
+      .pBYTECNT_SIZE            (pBYTECNT_SIZE),
+      .pBUFFER_SIZE             (pBUFFER_SIZE),
+      .pMATCH_RULES             (pMATCH_RULES)
    ) U_reg_pw (
-      .reset_i          (reset), 
-      .usb_clk          (clk_usb_buf), 
-      .reg_address      (reg_address), 
-      .reg_bytecnt      (reg_bytecnt), 
-      .read_data        (read_data), 
-      .write_data       (write_data),
-      .reg_read         (reg_read), 
-      .reg_write        (reg_write), 
-      .reg_addrvalid    (reg_addrvalid)
+      .reset_i                  (reset), 
+      .usb_clk                  (clk_usb_buf), 
+      .reg_address              (reg_address), 
+      .reg_bytecnt              (reg_bytecnt), 
+      .read_data                (read_data), 
+      .write_data               (write_data),
+      .reg_read                 (reg_read), 
+      .reg_write                (reg_write), 
+      .reg_addrvalid            (reg_addrvalid),
+
+      .O_clksettings            (clksettings),
+
+      .I_matching_pattern       (matching_pattern),
+      .I_matching_buffer        (matching_buffer ),
+      .I_synchronized           (synchronized    ),
+      .I_last_blurb             (last_blurb      ),
+
+      .O_pattern_enable         (pattern_enable  ),
+      .O_trace_reset_sync       (trace_reset_sync),
+      .O_trace_width            (trace_width     ),
+
+      .O_trace_pattern0         (trace_pattern0  ),
+      .O_trace_pattern1         (trace_pattern1  ),
+      .O_trace_pattern2         (trace_pattern2  ),
+      .O_trace_pattern3         (trace_pattern3  ),
+      .O_trace_pattern4         (trace_pattern4  ),
+      .O_trace_pattern5         (trace_pattern5  ),
+      .O_trace_pattern6         (trace_pattern6  ),
+      .O_trace_pattern7         (trace_pattern7  ),
+
+      .O_trace_mask0            (trace_mask0     ),
+      .O_trace_mask1            (trace_mask1     ),
+      .O_trace_mask2            (trace_mask2     ),
+      .O_trace_mask3            (trace_mask3     ),
+      .O_trace_mask4            (trace_mask4     ),
+      .O_trace_mask5            (trace_mask5     ),
+      .O_trace_mask6            (trace_mask6     ),
+      .O_trace_mask7            (trace_mask7     )
    );
+
+
+   trace_trigger #(
+      .pBUFFER_SIZE             (pBUFFER_SIZE),
+      .pMATCH_RULES             (pMATCH_RULES)
+   ) U_trace_trigger (
+      .TRACECLK                 (ext_clock),
+      .TRACEDATA                (TRACEDATA),
+      .TRCENA                   (TRCENA),
+      .reset                    (reset),
+      .I_pattern_enable         (pattern_enable  ),
+      .I_toggle                 (1'b0            ),
+      .I_reset_sync             (trace_reset_sync),
+      .I_trace_width            (trace_width     ),
+      .I_pattern0               (trace_pattern0  ),
+      .I_pattern1               (trace_pattern1  ),
+      .I_pattern2               (trace_pattern2  ),
+      .I_pattern3               (trace_pattern3  ),
+      .I_pattern4               (trace_pattern4  ),
+      .I_pattern5               (trace_pattern5  ),
+      .I_pattern6               (trace_pattern6  ),
+      .I_pattern7               (trace_pattern7  ),
+      .I_mask0                  (trace_mask0     ),
+      .I_mask1                  (trace_mask1     ),
+      .I_mask2                  (trace_mask2     ),
+      .I_mask3                  (trace_mask3     ),
+      .I_mask4                  (trace_mask4     ),
+      .I_mask5                  (trace_mask5     ),
+      .I_mask6                  (trace_mask6     ),
+      .I_mask7                  (trace_mask7     ),
+      .O_matching_pattern       (matching_pattern),
+      .O_matching_buffer        (matching_buffer ),
+      .O_last_blurb             (last_blurb      ),
+      .O_trace_trig_out         (  ),
+
+     // debug only ports:
+      .O_buffer                 (),
+      .O_revbuffer              (),
+      .O_valid_buffer           (),
+      .O_synchronized           (synchronized),
+      .O_blurb_count            (),
+      .O_blurb_ready            ()
+   );
+
 
    `ifdef ILA_REG
        ila_reg I_reg_ila (

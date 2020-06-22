@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-//Date        : Fri Jun 12 17:22:25 2020
+//Date        : Sun Jun 14 23:14:24 2020
 //Host        : qed running 64-bit major release  (build 9200)
 //Command     : generate_target m3_for_arty_a7.bd
 //Design      : m3_for_arty_a7
@@ -528,6 +528,9 @@ module m3_for_arty_a7
     SWV,
     TDI,
     TDO,
+    TRACECLK,
+    TRACEDATA,
+    TRCENA,
     ext_clock,
     gpio_rtl_0_tri_o,
     locked,
@@ -581,6 +584,9 @@ module m3_for_arty_a7
   output SWV;
   input TDI;
   output TDO;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.TRACECLK CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.TRACECLK, CLK_DOMAIN m3_for_arty_a7_Cortex_M3_0_0_TRACECLK, FREQ_HZ 100000000, INSERT_VIP 0, PHASE 0.000" *) output TRACECLK;
+  output [3:0]TRACEDATA;
+  output TRCENA;
   (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.EXT_CLOCK CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.EXT_CLOCK, ASSOCIATED_BUSIF CM3_CODE_AXI3, CLK_DOMAIN /Clocks_and_Resets/clk_wiz_0_clk_out1, FREQ_HZ 100000000, INSERT_VIP 0, PHASE 0.0" *) output ext_clock;
   (* X_INTERFACE_INFO = "xilinx.com:interface:gpio:1.0 gpio_rtl_0 TRI_O" *) output [0:0]gpio_rtl_0_tri_o;
   output locked;
@@ -666,6 +672,9 @@ module m3_for_arty_a7
   wire Cortex_M3_0_SWV;
   wire Cortex_M3_0_SYSRESETREQ;
   wire Cortex_M3_0_TDO;
+  wire Cortex_M3_0_TRACECLK;
+  wire [3:0]Cortex_M3_0_TRACEDATA;
+  wire Cortex_M3_0_TRCENA;
   wire Cortex_M3_0_nTDOEN;
   wire SWCLK_1;
   wire SWDI_1;
@@ -793,6 +802,9 @@ module m3_for_arty_a7
   assign SWV = Cortex_M3_0_SWV;
   assign TDI_1 = TDI;
   assign TDO = Cortex_M3_0_TDO;
+  assign TRACECLK = Cortex_M3_0_TRACECLK;
+  assign TRACEDATA[3:0] = Cortex_M3_0_TRACEDATA;
+  assign TRCENA = Cortex_M3_0_TRCENA;
   assign axi_uartlite_0_UART_RxD = usb_uart_rxd;
   assign ext_clock = clk_wiz_0_clk_out1;
   assign gpio_rtl_0_tri_o[0] = axi_gpio_0_GPIO_TRI_O;
@@ -888,6 +900,9 @@ module m3_for_arty_a7
         .SYSRESETn(Clocks_and_Resets_sysresetn),
         .TDI(TDI_1),
         .TDO(Cortex_M3_0_TDO),
+        .TRACECLK(Cortex_M3_0_TRACECLK),
+        .TRACEDATA(Cortex_M3_0_TRACEDATA),
+        .TRCENA(Cortex_M3_0_TRCENA),
         .WLASTC(Cortex_M3_0_CM3_CODE_AXI3_WLAST),
         .WLASTS(Cortex_M3_0_CM3_SYS_AXI3_WLAST),
         .WREADYC(Cortex_M3_0_CM3_CODE_AXI3_WREADY),
