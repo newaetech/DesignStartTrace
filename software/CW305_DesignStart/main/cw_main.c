@@ -54,14 +54,15 @@ void enable_itm()
     TPI->ACPR = 1; // Trace clock = HCLK/(x+1) = 8MHz = UART 's baudrate
                    // The HCLK of F105 is 8MHz so x is 0, and the F103 is 72MHz so x is 8
                    // (not needed for parallel mode)
-    //TPI->SPPR = 0; // parallel trace mode
+    TPI->SPPR = 0; // parallel trace mode
     //TPI->SPPR = 1; // SWO with Manchester encoding
-    TPI->SPPR = 2; // SWO with NRZ encoding
-    //TPI->FFCR = 0x102; // packet framing enabled
-    TPI->FFCR = 0x100; // for DWT/ITM only, no ETM
+    //TPI->SPPR = 2; // SWO with NRZ encoding
+    TPI->FFCR = 0x102; // packet framing enabled
+    //TPI->FFCR = 0x100; // for DWT/ITM only, no ETM
     //if (trace_lanes == 1) {TPI->CSPSR =0x00000001;}
     //else if (trace_lanes == 2) {TPI->CSPSR =0x00000002;}
     //else if (trace_lanes == 4) {TPI->CSPSR =0x00000008;}
+    TPI->CSPSR =0x00000008;
 
     // Configure ITM:
     ITM->LAR = 0xC5ACCE55;
@@ -83,13 +84,13 @@ void enable_itm()
               | (1 << DWT_CTRL_CYCCNTENA_Pos); // enable cycle counter
 
     // Configure DWT PC comparator 0:
-    DWT->COMP0 = 0x000002BC;
+    DWT->COMP0 = 0x000003EC;
     DWT->MASK0 = 0;
     DWT->FUNCTION0 = (0 << DWT_FUNCTION_DATAVMATCH_Pos) // address match
                    | (0 << DWT_FUNCTION_CYCMATCH_Pos)
                    | (0 << DWT_FUNCTION_EMITRANGE_Pos) 
-                   //| (8 << DWT_FUNCTION_FUNCTION_Pos); // CMPMATCH event
-                   | (4 << DWT_FUNCTION_FUNCTION_Pos); // Watchpoint debug event
+                   | (8 << DWT_FUNCTION_FUNCTION_Pos); // CMPMATCH event
+                   //| (4 << DWT_FUNCTION_FUNCTION_Pos); // Watchpoint debug event
 
 
     // Configure ETM:
@@ -233,8 +234,8 @@ int main(void)
 	simpleserial_addcmd('t', 0, test_itm);
 	simpleserial_addcmd('c', 0, itm_print1);
 	simpleserial_addcmd('d', 0, itm_print2);
-	simpleserial_addcmd('s', 4, setcomp);
-	simpleserial_addcmd('g', 4, getcomp);
+	simpleserial_addcmd('s', 4, setcomp0);
+	simpleserial_addcmd('g', 4, getcomp0);
 
         enable_itm();
 

@@ -25,6 +25,7 @@
 #=================================================
 import logging
 import time
+import re
 from .CW305 import CW305, CW305_USB
 from chipwhisperer.common.utils import util
 
@@ -52,12 +53,50 @@ class CW305_DesignStart(CW305):
 
     def __init__(self):
         super().__init__()
-        # should be sufficient for all UPKA operations:
+        # should be sufficient; TODO-check:
         self._clksleeptime = 200
+        self.slurp_defines()
 
 
     def set_ss(self, ss):
         self.ss = ss
+
+
+    def slurp_defines(self):
+        """ Parse Verilog defines file so we can access register and bit
+        definitions by name and avoid 'magic numbers'.
+        """
+        self.verilog_define_matches = 0
+        # TODO-later: move defines file to package:
+        # defines_file = pkg_resources.resource_filename('phywhisperer', 'firmware/defines.v')
+        defines_file = '../hardware/CW305_DesignStart/hdl/defines.v'
+        defines = open(defines_file, 'r')
+        define_regex_base  =   re.compile(r'`define')
+        define_regex_radix =   re.compile(r'`define\s+?(\w+).+?\'([bdh])([0-9a-fA-F]+)')
+        define_regex_noradix = re.compile(r'`define\s+?(\w+?)\s+?(\d+?)')
+        for define in defines:
+            if define_regex_base.search(define):
+                match = define_regex_radix.search(define)
+                if match:
+                    self.verilog_define_matches += 1
+                    if match.group(2) == 'b':
+                        radix = 2
+                    elif match.group(2) == 'h':
+                        radix = 16
+                    else:
+                        radix = 10
+                    setattr(self, match.group(1), int(match.group(3),radix))
+                else:
+                    match = define_regex_noradix.search(define)
+                    if match:
+                        self.verilog_define_matches += 1
+                        setattr(self, match.group(1), int(match.group(2),10))
+                    else:
+                        logging.warning("Couldn't parse line: %s", define)
+        # make sure everything is cool:
+        assert self.verilog_define_matches == 36, "Trouble parsing Verilog defines file (%s): didn't find the right number of defines." % defines_file
+        defines.close()
+
 
 
     def simpleserial_write(self, cmd, data, printresult=False):
@@ -88,6 +127,38 @@ class CW305_DesignStart(CW305):
         self.ss.simpleserial_write('g', bytearray(4))
         time.sleep(0.1)
         return self.ss.read().split('\n')[0][1:]
+
+
+    def set_pattern_match(self, index, pattern, mask=[0xff]*8):
+        """Sets pattern match and mask parameters
+
+        Args:
+            index: match index [0-7]
+            pattern: list of 8-bit integers, pattern match value
+            mask: list of 8-bit integers, pattern mask value
+
+        """
+        self.fpga_write(self.REG_TRACE_PATTERN0+index, pattern)
+        self.fpga_write(self.REG_TRACE_MASK0+index, mask)
+
+
+    def synced(self):
+        """Checks that trace trigger module is synchronized.
+
+
+        """
+        assert self.fpga_read(self.REG_SYNCHRONIZED, 1)[0] == 1, 'Not synchronized!'
+
+
+    def get_trace_match_address(self):
+        """Returns the address portion of a PC match.
+
+        """
+        raw = self.fpga_read(self.REG_MATCHING_BUFFER, 7)
+        # first check that the matching packet is PC match packet:
+        assert raw[:3].tolist() == [5, 8, 32], "Hmm, this doesn't look like a PC match?"
+        return (raw[-1] << 24) + (raw[-2] << 16) + (raw[-3] << 8) + raw[-4]
+
 
 
     # TODO or remove or pass to SS?
