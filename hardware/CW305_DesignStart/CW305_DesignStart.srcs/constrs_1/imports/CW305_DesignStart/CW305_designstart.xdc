@@ -29,6 +29,11 @@ create_generated_clock -name cpu_clk [get_pins m3_for_arty_a7_i/Clocks_and_Reset
 # virtual clock:
 create_clock -period 100.000 -name slow_out_clk
 
+create_generated_clock -name TRACECLK \ 
+ -source [get_pins {m3_for_arty_a7_i/Clocks_and_Resets/clk_wiz_0/inst/mmcm_adv_inst/CLKOUT0}] \
+ -divide_by 2 [get_pins {m1_for_arty_a7_i/Cortex_M3_0/inst/u_CORTEXM3INTEGRATION/u_cm3_tpiu/u_cm3_tpiu_trace_clk/trace_clk_reg/Q}]
+
+
 # UART has no timing requirements:
 set_input_delay -clock [get_clocks slow_out_clk] -add_delay 0.500 [get_ports uart_rxd]
 set_output_delay -clock [get_clocks slow_out_clk] -add_delay 0.500 [get_ports uart_txd]

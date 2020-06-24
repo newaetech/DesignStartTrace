@@ -89,6 +89,8 @@ module CW305_designstart_top #(
   wire nTDOEN;
   wire TRACECLK;
 
+  wire trace_trig_out;
+
   assign swdio = SWDOEN ? SWDO : 1'bz;
   assign SWDI = swdio;
 
@@ -102,7 +104,8 @@ module CW305_designstart_top #(
   end
 
   assign led1 = count[22];              // clock alive
-  assign led2 = ~m3_reset_out;          // LED off when reset is inactive
+  //assign led2 = ~m3_reset_out;          // LED off when reset is inactive
+  assign led2 = trace_trig_out;         // TODO: temporary?
   assign led3 = uart_rxd ^ uart_txd;    // UART activity
 
   // controls where program is fetched from:
@@ -287,6 +290,7 @@ module CW305_designstart_top #(
    wire [pMATCH_RULES-1:0] pattern_enable;
    wire trace_reset_sync;
    wire [2:0] trace_width;
+   wire trig_toggle;
 
    wire [pBUFFER_SIZE-1:0] trace_pattern0;
    wire [pBUFFER_SIZE-1:0] trace_pattern1;
@@ -305,6 +309,21 @@ module CW305_designstart_top #(
    wire [pBUFFER_SIZE-1:0] trace_mask5;
    wire [pBUFFER_SIZE-1:0] trace_mask6;
    wire [pBUFFER_SIZE-1:0] trace_mask7;
+
+   wire [7:0] trace_count0;
+   wire [7:0] trace_count1;
+   wire [7:0] trace_count2;
+   wire [7:0] trace_count3;
+   wire [7:0] trace_count4;
+   wire [7:0] trace_count5;
+   wire [7:0] trace_count6;
+   wire [7:0] trace_count7;
+
+
+   wire [pBUFFER_SIZE-1:0] revbuffer;
+   wire valid_buffer;
+   wire [2:0] blurb_count;
+   wire blurb_ready;
 
 
    reg_trace #(
@@ -333,6 +352,7 @@ module CW305_designstart_top #(
       .O_pattern_enable         (pattern_enable  ),
       .O_trace_reset_sync       (trace_reset_sync),
       .O_trace_width            (trace_width     ),
+      .O_trig_toggle            (trig_toggle     ),
 
       .O_trace_pattern0         (trace_pattern0  ),
       .O_trace_pattern1         (trace_pattern1  ),
@@ -350,7 +370,16 @@ module CW305_designstart_top #(
       .O_trace_mask4            (trace_mask4     ),
       .O_trace_mask5            (trace_mask5     ),
       .O_trace_mask6            (trace_mask6     ),
-      .O_trace_mask7            (trace_mask7     )
+      .O_trace_mask7            (trace_mask7     ),
+
+      .I_trace_count0           (trace_count0    ),
+      .I_trace_count1           (trace_count1    ),
+      .I_trace_count2           (trace_count2    ),
+      .I_trace_count3           (trace_count3    ),
+      .I_trace_count4           (trace_count4    ),
+      .I_trace_count5           (trace_count5    ),
+      .I_trace_count6           (trace_count6    ),
+      .I_trace_count7           (trace_count7    )
    );
 
 
@@ -363,7 +392,7 @@ module CW305_designstart_top #(
       .TRCENA                   (TRCENA),
       .reset                    (reset),
       .I_pattern_enable         (pattern_enable  ),
-      .I_toggle                 (1'b0            ),
+      .I_toggle                 (trig_toggle     ),
       .I_reset_sync             (trace_reset_sync),
       .I_trace_width            (trace_width     ),
       .I_pattern0               (trace_pattern0  ),
@@ -382,18 +411,26 @@ module CW305_designstart_top #(
       .I_mask5                  (trace_mask5     ),
       .I_mask6                  (trace_mask6     ),
       .I_mask7                  (trace_mask7     ),
+      .O_trace_count0           (trace_count0    ),
+      .O_trace_count1           (trace_count1    ),
+      .O_trace_count2           (trace_count2    ),
+      .O_trace_count3           (trace_count3    ),
+      .O_trace_count4           (trace_count4    ),
+      .O_trace_count5           (trace_count5    ),
+      .O_trace_count6           (trace_count6    ),
+      .O_trace_count7           (trace_count7    ),
       .O_matching_pattern       (matching_pattern),
       .O_matching_buffer        (matching_buffer ),
       .O_last_blurb             (last_blurb      ),
-      .O_trace_trig_out         (  ),
+      .O_trace_trig_out         (trace_trig_out  ),
 
      // debug only ports:
       .O_buffer                 (),
-      .O_revbuffer              (),
-      .O_valid_buffer           (),
+      .O_revbuffer              (revbuffer),
+      .O_valid_buffer           (valid_buffer),
       .O_synchronized           (synchronized),
-      .O_blurb_count            (),
-      .O_blurb_ready            ()
+      .O_blurb_count            (blurb_count),
+      .O_blurb_ready            (blurb_ready)
    );
 
 
@@ -415,8 +452,26 @@ module CW305_designstart_top #(
           .probe12      (reg_addrvalid),        // input wire [0:0]  probe12 
           .probe13      (32'b0)                 // input wire [31:0] probe13 
        );
-
    `endif
+
+   `ifdef ILA_TRACE
+       ila_trace1 I_trace_ila (
+          .clk          (ext_clock),            // input wire clk
+          .probe0       (TRCENA),               // input wire [0:0]  probe0  
+          .probe1       (TRACECLK),             // input wire [0:0]  probe1 
+          .probe2       (TRACEDATA),            // input wire [3:0]  probe2 
+          .probe3       (trace_width),          // input wire [2:0]  probe3 
+          .probe4       (blurb_count),          // input wire [2:0]  probe4 
+          .probe5       (blurb_ready),          // input wire [0:0]  probe5 
+          .probe6       (valid_buffer),         // input wire [0:0]  probe6 
+          .probe7       (matching_pattern),     // input wire [7:0]  probe7 
+          .probe8       (matching_buffer),      // input wire [63:0] probe8 
+          .probe9       (last_blurb),           // input wire [63:0] probe9 
+          .probe10      (revbuffer),            // input wire [63:0] probe10 
+          .probe11      (synchronized)          // input wire [0:0]  probe11 
+       );
+   `endif
+
 
 
 

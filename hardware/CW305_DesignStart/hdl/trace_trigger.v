@@ -50,6 +50,14 @@ module trace_trigger #(
   input  wire [pBUFFER_SIZE-1:0] I_mask5,
   input  wire [pBUFFER_SIZE-1:0] I_mask6,
   input  wire [pBUFFER_SIZE-1:0] I_mask7,
+  output reg  [7:0] O_trace_count0,
+  output reg  [7:0] O_trace_count1,
+  output reg  [7:0] O_trace_count2,
+  output reg  [7:0] O_trace_count3,
+  output reg  [7:0] O_trace_count4,
+  output reg  [7:0] O_trace_count5,
+  output reg  [7:0] O_trace_count6,
+  output reg  [7:0] O_trace_count7,
   output reg  [pMATCH_RULES-1:0] O_matching_pattern,
   output reg  [pBUFFER_SIZE-1:0] O_matching_buffer,
   output reg  [pBUFFER_SIZE-1:0] O_last_blurb,
@@ -111,8 +119,8 @@ module trace_trigger #(
 
 
    // shift trace data into buffer:
-   always @(posedge TRACECLK or negedge reset) begin
-      if (!reset)
+   always @(posedge TRACECLK) begin
+      if (reset)
          buffer <= 0;
       else begin
          if (I_trace_width == 3'd4)
@@ -138,8 +146,8 @@ module trace_trigger #(
 
 
    // Use sync packets to synchronize ourselves:
-   always @(posedge TRACECLK or negedge reset) begin
-      if (!reset) begin
+   always @(posedge TRACECLK) begin
+      if (reset) begin
          synchronized <= 1'b0;
          valid_count <= 3'b0;
          trace_width_r <= 3'b0;
@@ -180,12 +188,20 @@ module trace_trigger #(
    assign match = |match_bits;
 
    // generate trigger signal:
-   always @(posedge TRACECLK or negedge reset) begin
-      if (!reset) begin
+   always @(posedge TRACECLK) begin
+      if (reset) begin
          O_trace_trig_out <= 1'b0;
          O_matching_pattern <= 8'b0;
          O_matching_buffer <= 0;
          match_bits_prev <= 8'b0;
+         O_trace_count0 <= 0;
+         O_trace_count1 <= 0;
+         O_trace_count2 <= 0;
+         O_trace_count3 <= 0;
+         O_trace_count4 <= 0;
+         O_trace_count5 <= 0;
+         O_trace_count6 <= 0;
+         O_trace_count7 <= 0;
       end
 
       else begin
@@ -209,6 +225,16 @@ module trace_trigger #(
             O_matching_pattern <= match_bits;
             O_matching_buffer <= revbuffer;
          end
+
+         if (match_bits[0]) O_trace_count0 = O_trace_count0 + 1;
+         if (match_bits[1]) O_trace_count1 = O_trace_count1 + 1;
+         if (match_bits[2]) O_trace_count2 = O_trace_count2 + 1;
+         if (match_bits[3]) O_trace_count3 = O_trace_count3 + 1;
+         if (match_bits[4]) O_trace_count4 = O_trace_count4 + 1;
+         if (match_bits[5]) O_trace_count5 = O_trace_count5 + 1;
+         if (match_bits[6]) O_trace_count6 = O_trace_count6 + 1;
+         if (match_bits[7]) O_trace_count7 = O_trace_count7 + 1;
+
       end
 
    end
@@ -219,8 +245,8 @@ module trace_trigger #(
    // the snapshot.
    // TODO: if pBUFFER_SIZE changes, this needs to change too. Can't think of a
    // better way to do this short of more complex parsing logic.
-   always @(posedge TRACECLK or negedge reset) begin
-      if (!reset) begin
+   always @(posedge TRACECLK) begin
+      if (reset) begin
          O_last_blurb <= 0;
          blurb_count <= 3'b0;
          blurb_ready <= 1'b0;

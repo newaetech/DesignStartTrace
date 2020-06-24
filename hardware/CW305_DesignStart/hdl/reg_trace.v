@@ -55,6 +55,7 @@ module reg_trace #(
    output reg  [pMATCH_RULES-1:0]               O_pattern_enable,
    output reg                                   O_trace_reset_sync,
    output reg  [2:0]                            O_trace_width,
+   output reg                                   O_trig_toggle,
 
    output reg  [pBUFFER_SIZE-1:0]               O_trace_pattern0,
    output reg  [pBUFFER_SIZE-1:0]               O_trace_pattern1,
@@ -72,7 +73,17 @@ module reg_trace #(
    output reg  [pBUFFER_SIZE-1:0]               O_trace_mask4,
    output reg  [pBUFFER_SIZE-1:0]               O_trace_mask5,
    output reg  [pBUFFER_SIZE-1:0]               O_trace_mask6,
-   output reg  [pBUFFER_SIZE-1:0]               O_trace_mask7
+   output reg  [pBUFFER_SIZE-1:0]               O_trace_mask7,
+
+   input  wire [7:0]                            I_trace_count0,
+   input  wire [7:0]                            I_trace_count1,
+   input  wire [7:0]                            I_trace_count2,
+   input  wire [7:0]                            I_trace_count3,
+   input  wire [7:0]                            I_trace_count4,
+   input  wire [7:0]                            I_trace_count5,
+   input  wire [7:0]                            I_trace_count6,
+   input  wire [7:0]                            I_trace_count7
+
 );
 
 
@@ -96,10 +107,11 @@ module reg_trace #(
             `REG_PATTERN_ENABLE:        reg_read_data[pMATCH_RULES-1:0] <= O_pattern_enable;
             `REG_TRACE_RESET_SYNC:      reg_read_data[0] <= O_trace_reset_sync;
             `REG_TRACE_WIDTH:           reg_read_data[2:0] <= O_trace_width;
+            `REG_TRIG_TOGGLE:           reg_read_data[0] <= O_trig_toggle;
 
             `REG_MATCHING_PATTERN:      reg_read_data[pMATCH_RULES-1:0] <= I_matching_pattern;
             `REG_MATCHING_BUFFER:       reg_read_data <= I_matching_buffer[reg_bytecnt*8 +: 8];
-            `REG_SYNCHRONIZED:          reg_read_data <= I_synchronized;
+            `REG_SYNCHRONIZED:          reg_read_data[0] <= I_synchronized;
             `REG_LAST_BLURB:            reg_read_data <= I_last_blurb[reg_bytecnt*8 +: 8];
 
             `REG_TRACE_PATTERN0:        reg_read_data <= O_trace_pattern0[reg_bytecnt*8 +: 8];
@@ -119,6 +131,16 @@ module reg_trace #(
             `REG_TRACE_MASK5:           reg_read_data <= O_trace_mask5[reg_bytecnt*8 +: 8];
             `REG_TRACE_MASK6:           reg_read_data <= O_trace_mask6[reg_bytecnt*8 +: 8];
             `REG_TRACE_MASK7:           reg_read_data <= O_trace_mask7[reg_bytecnt*8 +: 8];
+
+            `REG_TRACE_COUNT0:          reg_read_data <= I_trace_count0;
+            `REG_TRACE_COUNT1:          reg_read_data <= I_trace_count1;
+            `REG_TRACE_COUNT2:          reg_read_data <= I_trace_count2;
+            `REG_TRACE_COUNT3:          reg_read_data <= I_trace_count3;
+            `REG_TRACE_COUNT4:          reg_read_data <= I_trace_count4;
+            `REG_TRACE_COUNT5:          reg_read_data <= I_trace_count5;
+            `REG_TRACE_COUNT6:          reg_read_data <= I_trace_count6;
+            `REG_TRACE_COUNT7:          reg_read_data <= I_trace_count7;
+
          endcase
       end
       else
@@ -136,7 +158,8 @@ module reg_trace #(
          O_clksettings <= 0;
          O_pattern_enable <= 0;
          O_trace_reset_sync <= 0;
-         O_trace_width <= 0;
+         O_trace_width <= 4;    // default to 4-lane operation, matching default FW setting
+         O_trig_toggle <= 1;
          O_trace_pattern0 <= 0;
          O_trace_pattern1 <= 0;
          O_trace_pattern2 <= 0;
@@ -163,6 +186,7 @@ module reg_trace #(
                `REG_PATTERN_ENABLE:     O_pattern_enable <= write_data[pMATCH_RULES-1:0];
                `REG_TRACE_RESET_SYNC:   O_trace_reset_sync <= write_data[0];
                `REG_TRACE_WIDTH:        O_trace_width <= write_data[2:0];
+               `REG_TRIG_TOGGLE:        O_trig_toggle <= write_data[0];
 
                `REG_TRACE_PATTERN0:     O_trace_pattern0[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_PATTERN1:     O_trace_pattern1[reg_bytecnt*8 +: 8] <= write_data;
