@@ -84,30 +84,34 @@ void enable_itm()
               | (1 << DWT_CTRL_CYCCNTENA_Pos); // enable cycle counter
 
     // Configure DWT PC comparator 0:
-    DWT->COMP0 = 0x000003EC;
+    DWT->COMP0 = 0x000003E6;
     DWT->MASK0 = 0;
     DWT->FUNCTION0 = (0 << DWT_FUNCTION_DATAVMATCH_Pos) // address match
                    | (0 << DWT_FUNCTION_CYCMATCH_Pos)
                    | (0 << DWT_FUNCTION_EMITRANGE_Pos) 
-                   | (8 << DWT_FUNCTION_FUNCTION_Pos); // CMPMATCH event
-                   //| (4 << DWT_FUNCTION_FUNCTION_Pos); // Watchpoint debug event
+                   | (8 << DWT_FUNCTION_FUNCTION_Pos); // Iaddr CMPMATCH event
+
+    // Configure DWT PC comparator 1:
+    DWT->COMP1 = 0x000003F4;
+    DWT->MASK1 = 0;
+    DWT->FUNCTION1 = (0 << DWT_FUNCTION_DATAVMATCH_Pos) // address match
+                   | (0 << DWT_FUNCTION_CYCMATCH_Pos)
+                   | (0 << DWT_FUNCTION_EMITRANGE_Pos) 
+                   | (8 << DWT_FUNCTION_FUNCTION_Pos); // Iaddr CMPMATCH event
 
 
     // Configure ETM:
     ETM->LAR = 0xC5ACCE55;
     ETM_SetupMode();
-    ETM->CR = ETM_CR_ETMEN  // Enable ETM output port
-            | ETM_CR_STALL_PROCESSOR; // Stall processor when fifo is full
+    ETM->CR = ETM_CR_ETMEN; // Enable ETM output port
+            // portmode appears to have no effect?
+            //| ETM_CR_PORTMODE_1_1; //(0x00002000, 1:1)
+            //| ETM_CR_PORTMODE_2_1; // 2:1
     ETM->TRACEIDR = 2; // Trace bus ID for TPIU
-    ETM->FFLR = 8; // Stall when less than 8 bytes free in FIFO (range 1..24).
-                   // Larger values mean less latency in trace, but more stalls.
-    ETM->TEEVR = 0x00000020;    // EmbeddedICE comparator 0
+    ETM->FFLR = 0; // Stall processor when FIFO is full
+    //ETM->TEEVR = 0x00000020;    // EmbeddedICE comparator 0
     //ETM->TEEVR = 0x00000021;    // EmbeddedICE comparator 1
-                                // encoding: 000=A, 101=A or B -> 0x6000
-                                // resource A = EmbeddedICE comparator 0: 0x20
-                                // resource B = EmbeddedICE comparator 1: 0x21 << 7 = 0x1800 (!previously missing a zero!)
-    //ETM->TEEVR = 0x00006180;    // EmbeddedICE comparator 0 or 1 (!what??)
-    //ETM->TEEVR = 0x00001820;    // EmbeddedICE comparator 0 or 1
+    ETM->TEEVR = 0x000150a0;    // EmbeddedICE comparator 0 or 1
     ETM->TESSEICR = 0xf; // set EmbeddedICE watchpoint 0 as a TraceEnable start resource. 
     ETM->TECR1 = 0; // tracing is unaffected by the trace start/stop logic
     ETM_TraceMode();
@@ -135,20 +139,6 @@ uint8_t test_itm(uint8_t* x)
         ITM_Print(0, "ITM alive!");
 	return 0x00;
 }
-
-
-uint8_t itm_print1(uint8_t* x)
-{
-        ITM_Print(0, "111");
-	return 0x00;
-}
-
-uint8_t itm_print2(uint8_t* x)
-{
-        ITM_Print(0, "222");
-	return 0x00;
-}
-
 
 
 uint8_t get_mask (uint8_t* m)
@@ -188,6 +178,14 @@ uint8_t info(uint8_t* x)
 	return 0x00;
 }
 
+uint8_t settessicr(uint8_t* x)
+{
+        uint32_t val;
+        val = x[3] + (x[2] << 8) + (x[1] << 16) + (x[0] << 24);
+        ETM->TESSEICR = val;
+	return 0x00;
+}
+
 uint8_t setcomp0(uint8_t* x)
 {
         uint32_t val;
@@ -195,7 +193,6 @@ uint8_t setcomp0(uint8_t* x)
         DWT->COMP0 = val;
 	return 0x00;
 }
-
 
 uint8_t getcomp0(uint8_t* x)
 {
@@ -209,6 +206,28 @@ uint8_t getcomp0(uint8_t* x)
 	return 0x00;
 }
 
+uint8_t getccer(uint8_t* x)
+{
+        uint32_t val;
+        //val = ETM->CCER;
+        val = ETM->IDR;
+        x[3] = val & 0xff;
+        x[2] = (val >> 8) & 0xff;
+        x[1] = (val >> 16) & 0xff;
+        x[0] = (val >> 24) & 0xff;
+	simpleserial_put('r', 4, x);
+	return 0x00;
+}
+
+
+
+uint8_t setteevr(uint8_t* x)
+{
+        uint32_t val;
+        val = x[3] + (x[2] << 8) + (x[1] << 16) + (x[0] << 24);
+        ETM->TEEVR = val;
+	return 0x00;
+}
 
 
 int main(void)
@@ -232,10 +251,11 @@ int main(void)
 	simpleserial_addcmd('i', 0, info);
 	simpleserial_addcmd('m', 18, get_mask);
 	simpleserial_addcmd('t', 0, test_itm);
-	simpleserial_addcmd('c', 0, itm_print1);
-	simpleserial_addcmd('d', 0, itm_print2);
 	simpleserial_addcmd('s', 4, setcomp0);
 	simpleserial_addcmd('g', 4, getcomp0);
+	simpleserial_addcmd('e', 4, setteevr);
+	simpleserial_addcmd('G', 4, getccer);
+	simpleserial_addcmd('T', 4, settessicr);
 
         enable_itm();
 
