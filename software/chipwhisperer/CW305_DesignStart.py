@@ -50,6 +50,22 @@ class CW305_DesignStart(CW305):
 
     _name = "ChipWhisperer CW305 (Artix-7)"
 
+    # must be in sync with firmware:
+    regs = {
+            'DWT_CTRL':     '00',
+            'DWT_COMP0':    '01',
+            'DWT_COMP1':    '02',
+            'ETM_CR':       '03',
+            'ETM_TESSEICR': '04',
+            'ETM_TEEVR':    '05',
+            'ETM_TECR1':    '06',
+            'TPI_ACPR':     '07',
+            'TPI_SPPR':     '08',
+            'TPI_FFCR':     '09',
+            'TPI_CSPSR':    '0a',
+            'ITM_TCR':      '0b'
+           }
+
 
     def __init__(self):
         super().__init__()
@@ -108,25 +124,34 @@ class CW305_DesignStart(CW305):
             print(self.ss.read().split('\n')[0])
 
 
-    def set_comp0(self, data, printresult=False):
-        """Set the Cortex DWT->COMP0 register
-
+    def set_reg(self, reg, data, printresult=False):
+        """Set the Cortex debug register
         Args:
+            reg (string): one of self.regs
             data (string): 8-character hex string, value to write to COMP0 (e.g. '1000F004')
         """
-        self.ss.simpleserial_write('s', util.hexStrToByteArray(data))
-        time.sleep(0.1)
-        if printresult:
-            print(self.ss.read().split('\n')[0])
+        if reg in self.regs:
+            data = self.regs[reg] + data
+            self.ss.simpleserial_write('s', util.hexStrToByteArray(data))
+            time.sleep(0.1)
+            if printresult:
+                print(self.ss.read().split('\n')[0])
+        else:
+            logging.error('Register %s does not exist.', reg)
 
 
-    def get_comp0(self):
-        """Reads the Cortex DWT->COMP0 register
-
+    def get_reg(self, reg):
+        """Reads a Cortex debug register
+        Args:
+            reg (string): one of self.regs
         """
-        self.ss.simpleserial_write('g', bytearray(4))
-        time.sleep(0.1)
-        return self.ss.read().split('\n')[0][1:]
+        if reg in self.regs:
+            data = self.regs[reg] + '00000000'
+            self.ss.simpleserial_write('g', util.hexStrToByteArray(data))
+            time.sleep(0.1)
+            return self.ss.read().split('\n')[0][1:]
+        else:
+            logging.error('Register %s does not exist.', reg)
 
 
     def set_pattern_match(self, index, pattern, mask=[0xff]*8):
@@ -157,7 +182,18 @@ class CW305_DesignStart(CW305):
         raw = self.fpga_read(self.REG_MATCHING_BUFFER, 7)
         # first check that the matching packet is PC match packet:
         assert raw[:3].tolist() == [5, 8, 32], "Hmm, this doesn't look like a PC match?"
+        # TODO: fix bit 0's as per TPI framing weirdness!
         return (raw[-1] << 24) + (raw[-2] << 16) + (raw[-3] << 8) + raw[-4]
+
+
+    def print_match(self):
+        """Prints the last matching pattern.
+
+        """
+        buf = 0
+        for i,b in enumerate(self.fpga_read(self.REG_MATCHING_BUFFER, 8)):
+            buf += (b<<8*(7-i))
+        print('0x%016x' % buf)
 
 
 

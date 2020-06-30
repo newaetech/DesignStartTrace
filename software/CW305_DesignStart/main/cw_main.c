@@ -47,6 +47,63 @@
 #include "xuartlite.h"
 
 
+uint8_t setreg(uint8_t* x)
+{
+        uint32_t val;
+        val = x[4] + (x[3] << 8) + (x[2] << 16) + (x[1] << 24);
+//0:  DWT->CTRL
+//1:  DWT->COMP0
+//2:  DWT->COMP1
+//3:  ETM->CR
+//4:  ETM->TESSEICR
+//5:  ETM->TEEVR
+//6:  ETM->TECR1
+//7:  TPI->ACPR
+//8:  TPI->SPPR
+//9:  TPI->FFCR
+//10: TPI->CSPSR
+//11: ITM->TCR
+        if       (x[0] == 0)    {DWT->CTRL = val;}
+        else if  (x[0] == 1)    {DWT->COMP0 = val;}
+        else if  (x[0] == 2)    {DWT->COMP1 = val;}
+        else if  (x[0] == 3)    {ETM_SetupMode(); ETM->CR = val; ETM_TraceMode();}
+        else if  (x[0] == 4)    {ETM_SetupMode(); ETM->TESSEICR = val; ETM_TraceMode();}
+        else if  (x[0] == 5)    {ETM_SetupMode(); ETM->TEEVR   = val; ETM_TraceMode();}
+        else if  (x[0] == 6)    {ETM_SetupMode(); ETM->TECR1   = val; ETM_TraceMode();}
+        else if  (x[0] == 7)    {TPI->ACPR    = val;}
+        else if  (x[0] == 8)    {TPI->SPPR    = val;}
+        else if  (x[0] == 9)    {TPI->FFCR    = val;}
+        else if  (x[0] == 10)   {TPI->CSPSR   = val;}
+        else if  (x[0] == 11)   {ITM->TCR     = val;}
+
+	return 0x00;
+}
+
+
+uint8_t getreg(uint8_t* x)
+{
+        uint32_t val;
+        if       (x[0] == 0)    {val = DWT->CTRL;}
+        else if  (x[0] == 1)    {val = DWT->COMP0;}
+        else if  (x[0] == 2)    {val = DWT->COMP1 ;}
+        else if  (x[0] == 3)    {val = ETM->CR;}
+        else if  (x[0] == 4)    {val = ETM->TESSEICR;}
+        else if  (x[0] == 5)    {val = ETM->TEEVR;}
+        else if  (x[0] == 6)    {val = ETM->TECR1;}
+        else if  (x[0] == 7)    {val = TPI->ACPR;}
+        else if  (x[0] == 8)    {val = TPI->SPPR;}
+        else if  (x[0] == 9)    {val = TPI->FFCR;}
+        else if  (x[0] == 10)   {val = TPI->CSPSR;}
+        else if  (x[0] == 11)   {val = ITM->TCR;}
+
+        x[3] = val & 0xff;
+        x[2] = (val >> 8) & 0xff;
+        x[1] = (val >> 16) & 0xff;
+        x[0] = (val >> 24) & 0xff;
+	simpleserial_put('r', 4, x);
+	return 0x00;
+}
+
 void enable_itm()
 {
     // Configure TPI
@@ -178,57 +235,6 @@ uint8_t info(uint8_t* x)
 	return 0x00;
 }
 
-uint8_t settessicr(uint8_t* x)
-{
-        uint32_t val;
-        val = x[3] + (x[2] << 8) + (x[1] << 16) + (x[0] << 24);
-        ETM->TESSEICR = val;
-	return 0x00;
-}
-
-uint8_t setcomp0(uint8_t* x)
-{
-        uint32_t val;
-        val = x[3] + (x[2] << 8) + (x[1] << 16) + (x[0] << 24);
-        DWT->COMP0 = val;
-	return 0x00;
-}
-
-uint8_t getcomp0(uint8_t* x)
-{
-        uint32_t val;
-        val = DWT->COMP0;
-        x[3] = val & 0xff;
-        x[2] = (val >> 8) & 0xff;
-        x[1] = (val >> 16) & 0xff;
-        x[0] = (val >> 24) & 0xff;
-	simpleserial_put('r', 4, x);
-	return 0x00;
-}
-
-uint8_t getccer(uint8_t* x)
-{
-        uint32_t val;
-        //val = ETM->CCER;
-        val = ETM->IDR;
-        x[3] = val & 0xff;
-        x[2] = (val >> 8) & 0xff;
-        x[1] = (val >> 16) & 0xff;
-        x[0] = (val >> 24) & 0xff;
-	simpleserial_put('r', 4, x);
-	return 0x00;
-}
-
-
-
-uint8_t setteevr(uint8_t* x)
-{
-        uint32_t val;
-        val = x[3] + (x[2] << 8) + (x[1] << 16) + (x[0] << 24);
-        ETM->TEEVR = val;
-	return 0x00;
-}
-
 
 int main(void)
 {
@@ -251,11 +257,8 @@ int main(void)
 	simpleserial_addcmd('i', 0, info);
 	simpleserial_addcmd('m', 18, get_mask);
 	simpleserial_addcmd('t', 0, test_itm);
-	simpleserial_addcmd('s', 4, setcomp0);
-	simpleserial_addcmd('g', 4, getcomp0);
-	simpleserial_addcmd('e', 4, setteevr);
-	simpleserial_addcmd('G', 4, getccer);
-	simpleserial_addcmd('T', 4, settessicr);
+	simpleserial_addcmd('s', 5, setreg);
+	simpleserial_addcmd('g', 5, getreg);
 
         enable_itm();
 
