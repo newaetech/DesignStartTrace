@@ -174,6 +174,16 @@ module CW305_designstart_top #(
         .CM3_CODE_AXI3_wstrb    (),
         .CM3_CODE_AXI3_wvalid   ()
        );
+
+  `else 
+     // for Verilog testbench, emulate trace pins:
+     assign ext_clock = sys_clock;
+     tb_trace_generator U_tb_trace_generator
+          (.clk                    (sys_clock),
+           .reset                  (reset),
+           .trig_out               (trig_out),
+           .TRACEDATA              (TRACEDATA)
+          );
   `endif
 
 

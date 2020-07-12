@@ -1,7 +1,10 @@
 LOGFILE=make.log
 WAVEFORMAT=fst
 
-all: compile run
+all: testcase compile run
+
+testcase:
+	python3 gen_trace_data.py
 
 compile:
 	iverilog -ccmdfile \

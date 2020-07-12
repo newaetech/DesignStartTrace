@@ -28,7 +28,7 @@ module trace_trigger #(
 )(
   input  wire TRACECLK,
   input  wire [3:0] TRACEDATA,
-  input  wire TRCENA,
+  input  wire TRCENA, // TODO- need to use it?
   input  wire reset,
   input  wire [pMATCH_RULES-1:0] I_pattern_enable,
   input  wire I_toggle,

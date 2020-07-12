@@ -54,7 +54,7 @@ module tb();
     reg l14_sel;
     reg pushbutton;
     reg pll_clk1;
-    reg tio_clkin;
+    wire tio_clkin;
 
     wire led1;
     wire led2;
@@ -93,7 +93,6 @@ module tb();
       l14_sel = 0;
       pushbutton = 1;
       pll_clk1 = 0;
-      tio_clkin = 0;
 
       // pushbutton = ~rst
       #(pUSB_CLOCK_PERIOD*2) pushbutton = 0;
@@ -101,19 +100,27 @@ module tb();
       #(pUSB_CLOCK_PERIOD*10);
 
 
+      /*
       $display("Test read and write:");
       for (i = 0; i < 10; i += 1) begin
          //write_data = 'h66;
          write_data = 32'h12345678 + i;
-         write_word('h03, write_data);
+         write_word('h030, write_data);
          #(pUSB_CLOCK_PERIOD*4);
-         read_word('h03, read_data);
+         read_word('h030, read_data);
          #(pUSB_CLOCK_PERIOD*4);
          if (read_data !== write_data) begin
             $display("Error (iteration=%3d)! wrote %h, read %h", i, write_data, read_data);
             errors += 1;
          end
       end
+      */
+
+      // enable all patterns:
+      write_byte(`REG_PATTERN_ENABLE, 0, 8'hff);
+
+      $display("Writing match rules:");
+      `include "registers.v"
 
       #(pUSB_CLOCK_PERIOD*150);
       $display("done!");
@@ -136,6 +143,7 @@ module tb();
 
 
    assign usb_data = usb_wrn? 8'bz : usb_wdata;
+   assign tio_clkin = pll_clk1;
 
 
    task write_byte;
@@ -191,6 +199,26 @@ module tb();
          read_byte(address, subbyte, data[subbyte*8 +: 8]);
       if (pVERBOSE)
          $display("Read %0h", data);
+   endtask
+
+
+   task write_match_rule;
+      input [7:0] rule;
+      input [63:0] pattern;
+      input [7:0] bytes;
+      int subbyte;
+      reg [pADDR_WIDTH-pBYTECNT_SIZE-1:0] pattern_address, mask_address;
+      reg [7:0] mask_byte;
+      pattern_address = `REG_TRACE_PATTERN0 + rule;
+      mask_address = `REG_TRACE_MASK0 + rule;
+      for (subbyte = 0; subbyte < 8; subbyte = subbyte + 1) begin
+         write_byte(pattern_address, subbyte, pattern[(7-subbyte)*8 +: 8]);
+         if (subbyte >= bytes)
+            mask_byte = 8'hff;
+         else
+            mask_byte = 8'h00;
+         write_byte(mask_address, subbyte, mask_byte);
+      end
    endtask
 
 

@@ -168,14 +168,14 @@ module reg_trace #(
          O_trace_pattern5 <= 0;
          O_trace_pattern6 <= 0;
          O_trace_pattern7 <= 0;
-         O_trace_mask0 <= 0;
-         O_trace_mask1 <= 0;
-         O_trace_mask2 <= 0;
-         O_trace_mask3 <= 0;
-         O_trace_mask4 <= 0;
-         O_trace_mask5 <= 0;
-         O_trace_mask6 <= 0;
-         O_trace_mask7 <= 0;
+         O_trace_mask0 <= {pBUFFER_SIZE{1'b1}};
+         O_trace_mask1 <= {pBUFFER_SIZE{1'b1}};
+         O_trace_mask2 <= {pBUFFER_SIZE{1'b1}};
+         O_trace_mask3 <= {pBUFFER_SIZE{1'b1}};
+         O_trace_mask4 <= {pBUFFER_SIZE{1'b1}};
+         O_trace_mask5 <= {pBUFFER_SIZE{1'b1}};
+         O_trace_mask6 <= {pBUFFER_SIZE{1'b1}};
+         O_trace_mask7 <= {pBUFFER_SIZE{1'b1}};
       end
 
       else begin
