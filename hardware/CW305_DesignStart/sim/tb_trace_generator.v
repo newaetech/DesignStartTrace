@@ -44,7 +44,7 @@ always @(posedge clk) begin
    if (reset) begin
       i <= 0;
       TRACEDATA <= 0;
-      trig_out <= 0; // TODO-later
+      trig_out <= 0; // TODO-later?
    end
    else begin
       i <= i + 1;

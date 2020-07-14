@@ -37,7 +37,7 @@ module tb();
     parameter pUSB_CLOCK_PERIOD = 10;
     parameter pPLL_CLOCK_PERIOD = 6;
     parameter pSEED = 1;
-    parameter pTIMEOUT = 200000;
+    parameter pTIMEOUT = 100000;
     parameter pVERBOSE = 1;
 
     reg usb_clk;
@@ -55,6 +55,7 @@ module tb();
     reg pushbutton;
     reg pll_clk1;
     wire tio_clkin;
+    wire trig_out;
 
     wire led1;
     wire led2;
@@ -67,13 +68,21 @@ module tb();
     int seed;
     int errors;
     int i;
+    int match_index;
+
     
     reg [31:0] read_data;
     reg [31:0] write_data;
 
+    wire trace_clk = pll_clk1;  // shorthand for testbench
+
+   reg [63:0] matchdata[0:255];
+   int cycle;
+
    initial begin
       seed = pSEED;
       errors = 0;
+      match_index = 0;
       $display("Running with pSEED=%0d", pSEED);
       //$urandom(seed);
       $dumpfile("results/tb.fst");
@@ -99,6 +108,7 @@ module tb();
       #(pUSB_CLOCK_PERIOD*2) pushbutton = 1;
       #(pUSB_CLOCK_PERIOD*10);
 
+      $readmemh("matchtimes.mem", matchdata);
 
       /*
       $display("Test read and write:");
@@ -119,16 +129,56 @@ module tb();
       // enable all patterns:
       write_byte(`REG_PATTERN_ENABLE, 0, 8'hff);
 
-      $display("Writing match rules:");
-      `include "registers.v"
+      // set trigger to pulse:
+      write_byte(`REG_TRIG_TOGGLE, 0, 8'h0);
 
-      #(pUSB_CLOCK_PERIOD*150);
+      // enable trace trigger output:
+      write_byte(`REG_TRACE_TRIG_ENABLE, 0, 8'h1);
+
+      $display("Writing match rules...");
+      `include "registers.v"
       $display("done!");
+
+   end
+
+
+   // check triggers thread:
+   // TODO: evolve to read from FIFO
+   always @(posedge trig_out) begin
+      if (matchdata[match_index] == 64'hFFFF_FFFF_FFFF_FFFF) begin
+         errors += 1;
+         $display("ERROR: trigger received at time %0t but all expected triggers have already been received!", $time);
+      end
+      else if (matchdata[match_index][55:0] == cycle) begin
+         $display("Correct trigger at time %0t for rule %0d", $time, matchdata[match_index][63:56]);
+         match_index += 1;
+      end
+      else begin
+         errors += 1;
+         $display("ERROR: unexpected trigger at time %0t. Expected match for rule %0d was cycle=%0d but current cycle=%0d", $time, matchdata[match_index][63:56], matchdata[match_index][55:0], cycle);
+         match_index += 1;
+      end
+   end
+
+   // finish upon going through all expected triggers:
+   initial begin
+      #(pUSB_CLOCK_PERIOD*100);
+      wait (matchdata[match_index] == 64'hFFFF_FFFF_FFFF_FFFF);
+      #(pUSB_CLOCK_PERIOD*10);
+      $display("All expected triggers processed.");
       if (errors)
          $display("SIMULATION FAILED (%0d errors).", errors);
       else
          $display("Simulation passed");
       $finish;
+   end
+
+   // maintain a cycle counter
+   always @(posedge trace_clk) begin
+      if (pushbutton == 0)
+         cycle <= 0;
+      else
+         cycle <= cycle + 1;
    end
 
 
@@ -213,6 +263,7 @@ module tb();
       mask_address = `REG_TRACE_MASK0 + rule;
       for (subbyte = 0; subbyte < 8; subbyte = subbyte + 1) begin
          write_byte(pattern_address, subbyte, pattern[(7-subbyte)*8 +: 8]);
+         // TODO: allow for other mask settings?
          if (subbyte >= bytes)
             mask_byte = 8'hff;
          else
@@ -255,6 +306,7 @@ module tb();
        //.tio_trigger        (tio_trigger),
        //.tio_clkout         (tio_clkout ),
        .tio_clkin          (tio_clkin  ),
+       .trig_out           (trig_out),
 
        // unused here:
        .swclk              (1'b0),

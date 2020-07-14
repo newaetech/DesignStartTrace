@@ -28,6 +28,7 @@
 `define REG_TRACE_RESET_SYNC    'h011
 `define REG_TRACE_WIDTH         'h012
 `define REG_TRIG_TOGGLE         'h013
+`define REG_TRACE_TRIG_ENABLE   'h014
 
 `define REG_MATCHING_PATTERN    'h020
 `define REG_MATCHING_BUFFER     'h021

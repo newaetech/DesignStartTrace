@@ -90,6 +90,7 @@ module CW305_designstart_top #(
   wire TRACECLK;
 
   wire trace_trig_out;
+  wire m3_trig_out;
 
   assign swdio = SWDOEN ? SWDO : 1'bz;
   assign SWDI = swdio;
@@ -107,6 +108,8 @@ module CW305_designstart_top #(
   //assign led2 = ~m3_reset_out;          // LED off when reset is inactive
   assign led2 = trace_trig_out;         // TODO: temporary?
   assign led3 = uart_rxd ^ uart_txd;    // UART activity
+
+  assign trig_out = trace_trig_enable? trace_trig_out : m3_trig_out;
 
   // controls where program is fetched from:
   wire [1:0] cfg = 2'b01;
@@ -127,7 +130,7 @@ module CW305_designstart_top #(
         .reset                  (resetn),
         .sys_clock              (sys_clock),
         .ext_clock              (ext_clock),
-        .gpio_rtl_0_tri_o       (trig_out),
+        .gpio_rtl_0_tri_o       (m3_trig_out),
         .usb_uart_rxd           (uart_rxd),
         .usb_uart_txd           (uart_txd),
         .CFGITCMEN              (cfg),
@@ -181,7 +184,7 @@ module CW305_designstart_top #(
      tb_trace_generator U_tb_trace_generator
           (.clk                    (sys_clock),
            .reset                  (reset),
-           .trig_out               (trig_out),
+           .trig_out               (),
            .TRACEDATA              (TRACEDATA)
           );
   `endif
@@ -301,6 +304,7 @@ module CW305_designstart_top #(
    wire trace_reset_sync;
    wire [2:0] trace_width;
    wire trig_toggle;
+   wire trace_trig_enable;
 
    wire [pBUFFER_SIZE-1:0] trace_pattern0;
    wire [pBUFFER_SIZE-1:0] trace_pattern1;
@@ -363,6 +367,7 @@ module CW305_designstart_top #(
       .O_trace_reset_sync       (trace_reset_sync),
       .O_trace_width            (trace_width     ),
       .O_trig_toggle            (trig_toggle     ),
+      .O_trace_trig_enable      (trace_trig_enable),
 
       .O_trace_pattern0         (trace_pattern0  ),
       .O_trace_pattern1         (trace_pattern1  ),

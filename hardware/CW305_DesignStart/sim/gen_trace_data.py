@@ -26,20 +26,23 @@
 
 import random
 
-# TODO: add random seed for repeatable randomization, time counter, expected trace match output
+# initial value to make things line up:
+time = 2
+
+# TODO: add random seed for repeatable randomization, expected trace match output
 
 def sync_frame(n=1):
-    inc_time(8)
+    inc_time(8*n)
     for i in range(n):
         mem.write('// sync frame:\n')
         # TODO: check whether sync frames start or finish with 7; also, allow for short frames
         #mem.write('7 f f f f f f f\n\n')
         mem.write('f f f f f f f 7\n\n')
 
-def random_frame(n=1, minlen=1, maxlen=16):
+def random_frame(n=1, minlen=2, maxlen=16):
     total_nibbles = 0
     for i in range(n):
-        nibbles = random.randrange(minlen, maxlen)
+        nibbles = random.randrange(minlen, maxlen, 2)
         total_nibbles += nibbles
         mem.write('// random %d-nibble frame:\n' % nibbles)
         for j in range(nibbles):
@@ -65,7 +68,7 @@ def match_frame(payload, rule=0):
     payload: list of bytes
     rule: int, rule number to program to DUT
     """
-    inc_time(len(payload))
+    inc_time(len(payload)*2)
     # generate the trace data:
     hexpayload = '0x'
     for x in payload:
@@ -77,12 +80,12 @@ def match_frame(payload, rule=0):
     # generate the register setup data:
     regs.write("write_match_rule(%d, 'h%s, %d);\n" % (rule, hexpayload[2:], len(payload)))
     # log the expected match time:
-    # TODO
+    matchtimes.write('%016x\n' % ((rule << 56) + time))
 
 
 def inc_time(nibbles):
-    #TODO
-    pass
+    global time
+    time += nibbles
 
 
 # open output files that will be read by the Verilog testbench:
@@ -91,13 +94,27 @@ regs = open('registers.v', 'w+')
 matchtimes = open('matchtimes.mem', 'w+')
 
 # create trace data:
-sync_frame(20)
-match_frame([0xab,0x12,0x34,0x56])
+
+# lots of sync frames initially to allow all setup register writes to be done:
+sync_frame(200)
+
+# first match:
+random_frame(2)
+sync_frame(2)
+match_frame([0xab,0x12,0x34,0x56], rule=1)
+
+# second match:
 random_frame(3)
+sync_frame(10)
+match_frame([0xff, 0xee, 0xdd, 0xcc], rule=2)
+
 sync_frame(10)
 
 # done:
 mem.close()
 regs.close()
+
+# indicate there are no more matches:
+matchtimes.write('%016x\n' % 0xffffffffffffffff)
 matchtimes.close()
 
