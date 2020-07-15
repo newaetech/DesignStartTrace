@@ -46,7 +46,7 @@ def random_frame(n=1, minlen=2, maxlen=16):
         total_nibbles += nibbles
         mem.write('// random %d-nibble frame:\n' % nibbles)
         for j in range(nibbles):
-            mem.write('%s ' % hex(random.randrange(0,15))[2:])
+            mem.write('%01x ' % (random.randrange(0,15)))
         mem.write('\n\n')
     inc_time(total_nibbles)
 
@@ -72,10 +72,10 @@ def match_frame(payload, rule=0):
     # generate the trace data:
     hexpayload = '0x'
     for x in payload:
-        hexpayload += hex(x)[2:]
+        hexpayload += '%02x' % x
     mem.write('// matching payload: %s (%s)\n' % (payload, hexpayload))
     for x in payload:
-        mem.write('%s %s ' % (hex(x & 0xf)[2:], hex((x>>4) & 0xf)[2:]))
+        mem.write('%01x %01x ' % (x & 0xf, (x>>4) & 0xf))
     mem.write('\n\n')
     # generate the register setup data:
     regs.write("write_match_rule(%d, 'h%s, %d);\n" % (rule, hexpayload[2:], len(payload)))
@@ -107,6 +107,13 @@ match_frame([0xab,0x12,0x34,0x56], rule=1)
 random_frame(3)
 sync_frame(10)
 match_frame([0xff, 0xee, 0xdd, 0xcc], rule=2)
+
+# third match:
+sync_frame(10)
+random_frame(2)
+sync_frame(1)
+match_frame([0x01, 0x20, 0x03, 0x40, 0x05, 0x60, 0x07, 0x80], rule=3)
+
 
 sync_frame(10)
 

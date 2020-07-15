@@ -258,17 +258,23 @@ module tb();
       input [7:0] bytes;
       int subbyte;
       reg [pADDR_WIDTH-pBYTECNT_SIZE-1:0] pattern_address, mask_address;
-      reg [7:0] mask_byte;
+      reg [63:0] mask;
       pattern_address = `REG_TRACE_PATTERN0 + rule;
       mask_address = `REG_TRACE_MASK0 + rule;
+      // TODO: allow for other mask settings?
+      case (bytes)
+         1: mask = 64'h0000_0000_0000_00ff;
+         2: mask = 64'h0000_0000_0000_ffff;
+         3: mask = 64'h0000_0000_00ff_ffff;
+         4: mask = 64'h0000_0000_ffff_ffff;
+         5: mask = 64'h0000_00ff_ffff_ffff;
+         6: mask = 64'h0000_ffff_ffff_ffff;
+         7: mask = 64'h00ff_ffff_ffff_ffff;
+         8: mask = 64'hffff_ffff_ffff_ffff;
+      endcase
       for (subbyte = 0; subbyte < 8; subbyte = subbyte + 1) begin
          write_byte(pattern_address, subbyte, pattern[(7-subbyte)*8 +: 8]);
-         // TODO: allow for other mask settings?
-         if (subbyte >= bytes)
-            mask_byte = 8'hff;
-         else
-            mask_byte = 8'h00;
-         write_byte(mask_address, subbyte, mask_byte);
+         write_byte(mask_address, subbyte, mask[(7-subbyte)*8 +: 8]);
       end
    endtask
 
