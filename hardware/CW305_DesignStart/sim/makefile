@@ -12,6 +12,7 @@ compile:
 	-Wportbind \
 	-Wselect-range \
 	-I../hdl \
+	-I../../phywhisperer/software/phywhisperer/firmware \
 
 run:
 	vvp -l$(LOGFILE) a.out -$(WAVEFORMAT)

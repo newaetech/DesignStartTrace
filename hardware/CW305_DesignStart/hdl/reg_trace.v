@@ -33,7 +33,7 @@ module reg_trace #(
 
 // Interface to cw305_usb_reg_fe:
    input  wire                                  usb_clk,
-   input  wire [pADDR_WIDTH-1:pBYTECNT_SIZE]    reg_address,     // Address of register
+   input  wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address,     // Address of register
    input  wire [pBYTECNT_SIZE-1:0]              reg_bytecnt,  // Current byte count
    output wire [7:0]                            read_data,       //
    input  wire [7:0]                            write_data,      //
@@ -50,7 +50,6 @@ module reg_trace #(
    input  wire [pMATCH_RULES-1:0]               I_matching_pattern,
    input  wire [pBUFFER_SIZE-1:0]               I_matching_buffer,
    input  wire                                  I_synchronized,
-   input  wire [pBUFFER_SIZE-1:0]               I_last_blurb,
 
    output reg  [pMATCH_RULES-1:0]               O_pattern_enable,
    output reg                                   O_trace_reset_sync,
@@ -83,15 +82,20 @@ module reg_trace #(
    input  wire [7:0]                            I_trace_count4,
    input  wire [7:0]                            I_trace_count5,
    input  wire [7:0]                            I_trace_count6,
-   input  wire [7:0]                            I_trace_count7
+   input  wire [7:0]                            I_trace_count7,
+
+   output wire                                  selected
 
 );
 
 
    wire [63:0] name = {8'h65, 8'h63, 8'h61, 8'h72, 8'h54, 8'h6d, 8'h72, 8'h41}; // ASCII for 'ArmTrace'
-   wire [31:0] buildtime;
    reg  [7:0] reg_read_data;
    wire [7:0] rev = 8'h00;
+   wire [63:0] trace_count;
+
+   assign selected = reg_addrvalid & reg_address[6:5] == `TRACE_REG_SELECT;
+   wire [4:0] address = reg_address[4:0];
 
 
    //////////////////////////////////
@@ -99,8 +103,7 @@ module reg_trace #(
    //////////////////////////////////
    always @(posedge usb_clk) begin
       if (reg_addrvalid && reg_read) begin
-         case (reg_address)
-            `REG_BUILDTIME:             reg_read_data <= buildtime[reg_bytecnt*8 +: 8];
+         case (address)
             `REG_NAME:                  reg_read_data <= name[reg_bytecnt*8 +: 8];
             `REG_REV:                   reg_read_data <= rev;
             `REG_CLKSETTINGS:           reg_read_data[4:0] <= O_clksettings;
@@ -114,7 +117,6 @@ module reg_trace #(
             `REG_MATCHING_PATTERN:      reg_read_data[pMATCH_RULES-1:0] <= I_matching_pattern;
             `REG_MATCHING_BUFFER:       reg_read_data <= I_matching_buffer[reg_bytecnt*8 +: 8];
             `REG_SYNCHRONIZED:          reg_read_data[0] <= I_synchronized;
-            `REG_LAST_BLURB:            reg_read_data <= I_last_blurb[reg_bytecnt*8 +: 8];
 
             `REG_TRACE_PATTERN0:        reg_read_data <= O_trace_pattern0[reg_bytecnt*8 +: 8];
             `REG_TRACE_PATTERN1:        reg_read_data <= O_trace_pattern1[reg_bytecnt*8 +: 8];
@@ -134,14 +136,7 @@ module reg_trace #(
             `REG_TRACE_MASK6:           reg_read_data <= O_trace_mask6[reg_bytecnt*8 +: 8];
             `REG_TRACE_MASK7:           reg_read_data <= O_trace_mask7[reg_bytecnt*8 +: 8];
 
-            `REG_TRACE_COUNT0:          reg_read_data <= I_trace_count0;
-            `REG_TRACE_COUNT1:          reg_read_data <= I_trace_count1;
-            `REG_TRACE_COUNT2:          reg_read_data <= I_trace_count2;
-            `REG_TRACE_COUNT3:          reg_read_data <= I_trace_count3;
-            `REG_TRACE_COUNT4:          reg_read_data <= I_trace_count4;
-            `REG_TRACE_COUNT5:          reg_read_data <= I_trace_count5;
-            `REG_TRACE_COUNT6:          reg_read_data <= I_trace_count6;
-            `REG_TRACE_COUNT7:          reg_read_data <= I_trace_count7;
+            `REG_TRACE_COUNT:           reg_read_data <= trace_count[reg_bytecnt*8 +: 8];
 
          endcase
       end
@@ -150,6 +145,15 @@ module reg_trace #(
    end
 
    assign read_data = reg_read_data;
+
+   assign trace_count = {I_trace_count0,
+                         I_trace_count1,
+                         I_trace_count2,
+                         I_trace_count3,
+                         I_trace_count4,
+                         I_trace_count5,
+                         I_trace_count6,
+                         I_trace_count7};
 
 
    //////////////////////////////////
@@ -183,7 +187,7 @@ module reg_trace #(
 
       else begin
          if (reg_addrvalid && reg_write) begin
-            case (reg_address)
+            case (address)
                `REG_CLKSETTINGS:        O_clksettings <= write_data;
 
                `REG_PATTERN_ENABLE:     O_pattern_enable <= write_data[pMATCH_RULES-1:0];
@@ -220,16 +224,6 @@ module reg_trace #(
                `REG_SYNCHRONIZED:       I_synchronized <= write_data;
                `REG_LAST_BLURB:         I_last_blurb[reg_bytecnt*8 +: 8] <= write_data;
                 */
-
-   `ifndef __ICARUS__
-      USR_ACCESSE2 U_buildtime (
-         .CFGCLK(),
-         .DATA(buildtime),
-         .DATAVALID()
-      );
-   `else
-      assign buildtime = 0;
-   `endif
 
 
 endmodule

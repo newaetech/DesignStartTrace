@@ -19,48 +19,40 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-`define REG_BUILDTIME           'h000
-`define REG_NAME                'h001
-`define REG_REV                 'h002
-`define REG_CLKSETTINGS         'h003
+`define TRACE_REG_SELECT        3'b010
 
-`define REG_PATTERN_ENABLE      'h010
-`define REG_TRACE_RESET_SYNC    'h011
-`define REG_TRACE_WIDTH         'h012
-`define REG_TRIG_TOGGLE         'h013
-`define REG_TRACE_TRIG_ENABLE   'h014
+`define REG_NAME                5'h00
+`define REG_REV                 5'h01
+`define REG_CLKSETTINGS         5'h02
 
-`define REG_MATCHING_PATTERN    'h020
-`define REG_MATCHING_BUFFER     'h021
-`define REG_SYNCHRONIZED        'h022
-`define REG_LAST_BLURB          'h023
+`define REG_PATTERN_ENABLE      5'h03
+`define REG_TRACE_RESET_SYNC    5'h04
+`define REG_TRACE_WIDTH         5'h05
+`define REG_TRIG_TOGGLE         5'h06
+`define REG_TRACE_TRIG_ENABLE   5'h07
 
-`define REG_TRACE_PATTERN0      'h030
-`define REG_TRACE_PATTERN1      'h031
-`define REG_TRACE_PATTERN2      'h032
-`define REG_TRACE_PATTERN3      'h033
-`define REG_TRACE_PATTERN4      'h034
-`define REG_TRACE_PATTERN5      'h035
-`define REG_TRACE_PATTERN6      'h036
-`define REG_TRACE_PATTERN7      'h037
+`define REG_MATCHING_PATTERN    5'h08
+`define REG_MATCHING_BUFFER     5'h09
+`define REG_SYNCHRONIZED        5'h0a
 
-`define REG_TRACE_MASK0         'h040
-`define REG_TRACE_MASK1         'h041
-`define REG_TRACE_MASK2         'h042
-`define REG_TRACE_MASK3         'h043
-`define REG_TRACE_MASK4         'h044
-`define REG_TRACE_MASK5         'h045
-`define REG_TRACE_MASK6         'h046
-`define REG_TRACE_MASK7         'h047
+`define REG_TRACE_PATTERN0      5'h0b
+`define REG_TRACE_PATTERN1      5'h0c
+`define REG_TRACE_PATTERN2      5'h0d
+`define REG_TRACE_PATTERN3      5'h0e
+`define REG_TRACE_PATTERN4      5'h0f
+`define REG_TRACE_PATTERN5      5'h10
+`define REG_TRACE_PATTERN6      5'h11
+`define REG_TRACE_PATTERN7      5'h12
 
-`define REG_TRACE_COUNT0        'h050
-`define REG_TRACE_COUNT1        'h051
-`define REG_TRACE_COUNT2        'h052
-`define REG_TRACE_COUNT3        'h053
-`define REG_TRACE_COUNT4        'h054
-`define REG_TRACE_COUNT5        'h055
-`define REG_TRACE_COUNT6        'h056
-`define REG_TRACE_COUNT7        'h057
+`define REG_TRACE_MASK0         5'h13
+`define REG_TRACE_MASK1         5'h14
+`define REG_TRACE_MASK2         5'h15
+`define REG_TRACE_MASK3         5'h16
+`define REG_TRACE_MASK4         5'h17
+`define REG_TRACE_MASK5         5'h18
+`define REG_TRACE_MASK6         5'h19
+`define REG_TRACE_MASK7         5'h1a
 
+`define REG_TRACE_COUNT         5'h1b
 
 

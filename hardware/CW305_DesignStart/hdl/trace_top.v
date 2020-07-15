@@ -51,18 +51,18 @@ module trace_top #(
 
 );
 
-
    wire isout;
    wire [7:0] cmdfifo_din;
    wire [7:0] cmdfifo_dout;
-   wire [pADDR_WIDTH-1:pBYTECNT_SIZE]  reg_address;
+   wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address;
    wire [pBYTECNT_SIZE-1:0]  reg_bytecnt;
    wire [7:0]   write_data;
    wire [7:0]   read_data;
+   wire [7:0]   read_data_trace;
+   wire [7:0]   read_data_main;
    wire         reg_read;
    wire         reg_write;
    wire         reg_addrvalid;
-
 
    assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
    assign cmdfifo_din = USB_Data;
@@ -94,7 +94,6 @@ module trace_top #(
    wire [pMATCH_RULES-1:0] matching_pattern;
    wire [pBUFFER_SIZE-1:0] matching_buffer;
    wire synchronized;
-   wire [pBUFFER_SIZE-1:0] last_blurb;
 
    wire [pMATCH_RULES-1:0] pattern_enable;
    wire trace_reset_sync;
@@ -134,6 +133,22 @@ module trace_top #(
    wire [2:0] blurb_count;
    wire blurb_ready;
 
+   wire [17:0] fifo_in_data;
+   wire [17:0] fifo_out_data;
+   wire fifo_wr;
+   wire fifo_read;
+   wire fifo_flush;
+   wire fifo_write_allowed;
+   wire fifo_overflow_blocked;
+   wire fifo_full;
+   wire fifo_empty;
+   wire capture_done;
+   wire [5:0] fifo_status;
+
+   wire [`FE_SELECT_WIDTH-1:0] fe_select;
+   wire reg_main_selected;
+   wire reg_trace_selected;
+
 
    reg_trace #(
       .pADDR_WIDTH              (pADDR_WIDTH),
@@ -145,7 +160,7 @@ module trace_top #(
       .usb_clk                  (usb_clk), 
       .reg_address              (reg_address), 
       .reg_bytecnt              (reg_bytecnt), 
-      .read_data                (read_data), 
+      .read_data                (read_data_trace), 
       .write_data               (write_data),
       .reg_read                 (reg_read), 
       .reg_write                (reg_write), 
@@ -156,7 +171,6 @@ module trace_top #(
       .I_matching_pattern       (matching_pattern),
       .I_matching_buffer        (matching_buffer ),
       .I_synchronized           (synchronized    ),
-      .I_last_blurb             (last_blurb      ),
 
       .O_pattern_enable         (pattern_enable  ),
       .O_trace_reset_sync       (trace_reset_sync),
@@ -189,7 +203,60 @@ module trace_top #(
       .I_trace_count4           (trace_count4    ),
       .I_trace_count5           (trace_count5    ),
       .I_trace_count6           (trace_count6    ),
-      .I_trace_count7           (trace_count7    )
+      .I_trace_count7           (trace_count7    ),
+
+      .selected                 (reg_trace_selected)
+   );
+
+
+   reg_main #(
+      .pBYTECNT_SIZE            (pBYTECNT_SIZE)
+   ) U_reg_main (
+      .reset_i          (reset), 
+      .cwusb_clk        (usb_clk), 
+      .reg_address      (reg_address[7:0]), 
+      .reg_bytecnt      (reg_bytecnt), 
+      .read_data        (read_data_main), 
+      .write_data       (write_data),
+      .reg_read         (reg_read), 
+      .reg_write        (reg_write), 
+      .reg_addrvalid    (reg_addrvalid),
+
+      .fe_select        (fe_select),
+
+      .I_fifo_data      (fifo_out_data),
+      .I_fifo_empty     (fifo_empty),
+      .O_fifo_read      (fifo_read),
+      .I_fifo_status    (fifo_status),
+
+      .selected         (reg_main_selected)
+   );
+
+   assign read_data = reg_main_selected? read_data_main :
+                      reg_trace_selected?  read_data_trace : 0;
+
+
+   fifo U_fifo (
+      .reset_i                  (reset),
+      .cwusb_clk                (usb_clk),
+      .fe_clk                   (trace_clk),
+
+      .O_fifo_full              (fifo_full),
+      .O_fifo_overflow_blocked  (fifo_overflow_blocked),
+      .I_data                   (fifo_in_data),
+      .I_wr                     (fifo_wr),
+
+      .I_fifo_read              (fifo_read),
+      .I_fifo_flush             (fifo_flush),
+      .I_clear_read_flags       (1'b0), // TODO
+      .I_clear_write_flags      (1'b0), // TODO
+
+      .O_data                   (fifo_out_data),
+      .O_fifo_status            (fifo_status),
+      .O_fifo_write_allowed     (fifo_write_allowed),
+      .O_fifo_empty             (fifo_empty),
+
+      .I_custom_fifo_stat_flag  (1'b0)      // TODO
    );
 
 
@@ -231,7 +298,7 @@ module trace_top #(
       .O_trace_count7           (trace_count7    ),
       .O_matching_pattern       (matching_pattern),
       .O_matching_buffer        (matching_buffer ),
-      .O_last_blurb             (last_blurb      ),
+      .O_last_blurb             (),     // TODO-remove?
       .O_trace_trig_out         (O_trace_trig_out),
 
      // debug only ports:
@@ -276,7 +343,7 @@ module trace_top #(
           .probe6       (valid_buffer),         // input wire [0:0]  probe6 
           .probe7       (matching_pattern),     // input wire [7:0]  probe7 
           .probe8       (matching_buffer),      // input wire [63:0] probe8 
-          .probe9       (last_blurb),           // input wire [63:0] probe9 
+          .probe9       (64'b0),                // input wire [63:0] probe9 
           .probe10      (revbuffer),            // input wire [63:0] probe10 
           .probe11      (synchronized)          // input wire [0:0]  probe11 
        );
