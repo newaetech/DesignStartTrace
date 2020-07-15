@@ -1,6 +1,7 @@
 tb.v
 tb_trace_generator.v
 ../hdl/CW305_designstart_top.v
+../hdl/trace_top.v
 ../hdl/cw305_usb_reg_fe.v
 ../hdl/reg_trace.v
 ../hdl/trace_trigger.v
