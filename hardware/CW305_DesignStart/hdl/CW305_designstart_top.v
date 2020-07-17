@@ -38,6 +38,11 @@ module CW305_designstart_top #(
   input  wire pll_clk1,
   output wire ext_clock,
 
+  // for simulation only:
+  `ifdef __ICARUS__
+  input wire  I_trigger_clk,
+  `endif
+
   // debug:
   inout  wire swdio,
   input  wire swclk,
@@ -270,6 +275,10 @@ module CW305_designstart_top #(
       .TRACEDATA        (TRACEDATA),
       .O_trace_trig_out (trace_trig_out),
       .O_trace_trig_enable (trace_trig_enable),
+
+      `ifdef __ICARUS__
+      .I_trigger_clk    (I_trigger_clk),
+      `endif
                                   
       .USB_Data         (USB_Data ),
       .USB_Addr         (USB_Addr ),

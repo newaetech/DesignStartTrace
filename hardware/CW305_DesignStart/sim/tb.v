@@ -37,8 +37,9 @@ module tb();
     parameter pBYTECNT_SIZE = 7;
     parameter pUSB_CLOCK_PERIOD = 10;
     parameter pPLL_CLOCK_PERIOD = 6;
+    parameter pTRIGGER_CLOCK_PERIOD = 2;
     parameter pSEED = 1;
-    parameter pTIMEOUT = 100000;
+    parameter pTIMEOUT = 5000;
     parameter pVERBOSE = 1;
 
     reg usb_clk;
@@ -55,6 +56,7 @@ module tb();
     reg l14_sel;
     reg pushbutton;
     reg pll_clk1;
+    reg trigger_clk;
     wire tio_clkin;
     wire trig_out;
 
@@ -103,6 +105,7 @@ module tb();
       l14_sel = 0;
       pushbutton = 1;
       pll_clk1 = 0;
+      trigger_clk = 0;
 
       // pushbutton = ~rst
       #(pUSB_CLOCK_PERIOD*2) pushbutton = 0;
@@ -110,22 +113,6 @@ module tb();
       #(pUSB_CLOCK_PERIOD*10);
 
       $readmemh("matchtimes.mem", matchdata);
-
-      /*
-      $display("Test read and write:");
-      for (i = 0; i < 10; i += 1) begin
-         //write_data = 'h66;
-         write_data = 32'h12345678 + i;
-         write_word('h030, write_data);
-         #(pUSB_CLOCK_PERIOD*4);
-         read_word('h030, read_data);
-         #(pUSB_CLOCK_PERIOD*4);
-         if (read_data !== write_data) begin
-            $display("Error (iteration=%3d)! wrote %h, read %h", i, write_data, read_data);
-            errors += 1;
-         end
-      end
-      */
 
       // enable all patterns:
       write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'hff);
@@ -139,6 +126,8 @@ module tb();
       $display("Writing match rules...");
       `include "registers.v"
       $display("done!");
+
+      write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
 
       //read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
 
@@ -288,6 +277,7 @@ module tb();
 
    always #(pUSB_CLOCK_PERIOD/2) usb_clk = !usb_clk;
    always #(pPLL_CLOCK_PERIOD/2) pll_clk1 = !pll_clk1;
+   always #(pTRIGGER_CLOCK_PERIOD/2) trigger_clk = !trigger_clk;
 
 
    CW305_designstart_top #(
@@ -320,6 +310,8 @@ module tb();
        //.tio_clkout         (tio_clkout ),
        .tio_clkin          (tio_clkin  ),
        .trig_out           (trig_out),
+
+       .I_trigger_clk      (trigger_clk),
 
        // unused here:
        .swclk              (1'b0),

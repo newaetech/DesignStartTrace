@@ -56,6 +56,7 @@ module reg_trace #(
    output reg  [2:0]                            O_trace_width,
    output reg                                   O_trig_toggle,
    output reg                                   O_trace_trig_enable,
+   output reg                                   O_capture_rules_mode,
 
    output reg  [pBUFFER_SIZE-1:0]               O_trace_pattern0,
    output reg  [pBUFFER_SIZE-1:0]               O_trace_pattern1,
@@ -102,7 +103,7 @@ module reg_trace #(
    // read logic:
    //////////////////////////////////
    always @(posedge usb_clk) begin
-      if (reg_addrvalid && reg_read) begin
+      if (selected && reg_read) begin
          case (address)
             `REG_NAME:                  reg_read_data <= name[reg_bytecnt*8 +: 8];
             `REG_REV:                   reg_read_data <= rev;
@@ -113,6 +114,7 @@ module reg_trace #(
             `REG_TRACE_WIDTH:           reg_read_data[2:0] <= O_trace_width;
             `REG_TRIG_TOGGLE:           reg_read_data[0] <= O_trig_toggle;
             `REG_TRACE_TRIG_ENABLE:     reg_read_data[0] <= O_trace_trig_enable;
+            `REG_CAPTURE_MODE:          reg_read_data[0] <= O_capture_rules_mode;
 
             `REG_MATCHING_PATTERN:      reg_read_data[pMATCH_RULES-1:0] <= I_matching_pattern;
             `REG_MATCHING_BUFFER:       reg_read_data <= I_matching_buffer[reg_bytecnt*8 +: 8];
@@ -167,6 +169,7 @@ module reg_trace #(
          O_trace_width <= 4;    // default to 4-lane operation, matching default FW setting
          O_trig_toggle <= 1;
          O_trace_trig_enable <= 0;
+         O_capture_rules_mode <= 0;
          O_trace_pattern0 <= 0;
          O_trace_pattern1 <= 0;
          O_trace_pattern2 <= 0;
@@ -186,7 +189,7 @@ module reg_trace #(
       end
 
       else begin
-         if (reg_addrvalid && reg_write) begin
+         if (selected && reg_write) begin
             case (address)
                `REG_CLKSETTINGS:        O_clksettings <= write_data;
 
@@ -195,6 +198,7 @@ module reg_trace #(
                `REG_TRACE_WIDTH:        O_trace_width <= write_data[2:0];
                `REG_TRIG_TOGGLE:        O_trig_toggle <= write_data[0];
                `REG_TRACE_TRIG_ENABLE:  O_trace_trig_enable <= write_data[0];
+               `REG_CAPTURE_MODE:       O_capture_rules_mode <= write_data[0];
 
                `REG_TRACE_PATTERN0:     O_trace_pattern0[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_PATTERN1:     O_trace_pattern1[reg_bytecnt*8 +: 8] <= write_data;

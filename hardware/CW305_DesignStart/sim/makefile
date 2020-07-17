@@ -14,6 +14,15 @@ compile:
 	-I../hdl \
 	-I../../phywhisperer/software/phywhisperer/firmware \
 
+nofifo:
+	iverilog -ccmdfile_nofifo \
+	-g2005-sv \
+	-Wportbind \
+	-Wselect-range \
+	-I../hdl \
+	-I../../phywhisperer/software/phywhisperer/firmware \
+	-DNOFIFO \
+
 run:
 	vvp -l$(LOGFILE) a.out -$(WAVEFORMAT)
 

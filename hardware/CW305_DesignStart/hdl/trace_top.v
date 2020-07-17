@@ -30,11 +30,22 @@ module trace_top #(
   parameter pBYTECNT_SIZE = 7,
   parameter pADDR_WIDTH = 21,
   parameter pBUFFER_SIZE = 64,
-  parameter pMATCH_RULES = 8
+  parameter pMATCH_RULES = 8,
+  parameter pTRIGGER_DELAY_WIDTH = 20,
+  parameter pTRIGGER_WIDTH_WIDTH = 17,
+  parameter pNUM_TRIGGER_PULSES = 8,
+  parameter pNUM_TRIGGER_WIDTH = 4,
+  parameter pCAPTURE_LEN_WIDTH = 24,
+  parameter pTIMESTAMP_FULL_WIDTH = 16,
+  parameter pTIMESTAMP_SHORT_WIDTH = 8
 )(
   input  wire trace_clk,
   input  wire usb_clk,
   input  wire reset,
+
+  `ifdef __ICARUS__
+  input wire  I_trigger_clk, // for simulation only
+  `endif
 
   // trace:
   input  wire TRCENA,
@@ -50,6 +61,10 @@ module trace_top #(
   input wire          USB_nCS
 
 );
+
+   parameter pALL_TRIGGER_DELAY_WIDTHS = 24*pNUM_TRIGGER_PULSES;
+   parameter pALL_TRIGGER_WIDTH_WIDTHS = 24*pNUM_TRIGGER_PULSES;
+   parameter pCAPTURE_DELAY_WIDTH = pTRIGGER_DELAY_WIDTH - 2;
 
    wire isout;
    wire [7:0] cmdfifo_din;
@@ -98,6 +113,7 @@ module trace_top #(
    wire [pMATCH_RULES-1:0] pattern_enable;
    wire trace_reset_sync;
    wire [2:0] trace_width;
+   wire capture_rules_mode;
    wire trig_toggle;
 
    wire [pBUFFER_SIZE-1:0] trace_pattern0;
@@ -144,10 +160,38 @@ module trace_top #(
    wire fifo_empty;
    wire capture_done;
    wire [5:0] fifo_status;
+   wire arm;
+   wire reg_arm;
 
    wire [`FE_SELECT_WIDTH-1:0] fe_select;
    wire reg_main_selected;
    wire reg_trace_selected;
+
+   wire trigger_enable;
+   wire [pNUM_TRIGGER_WIDTH-1:0] num_triggers;
+   wire [pALL_TRIGGER_DELAY_WIDTHS-1:0] trigger_delay;
+   wire [pALL_TRIGGER_WIDTH_WIDTHS-1:0] trigger_width;
+   wire trigger_match;
+
+   wire psen;
+   wire psincdec;
+   wire psdone;
+   wire trigger_clk_locked;
+   wire trigger_clk;    // TODO: add trigger_clk to .xdc file
+
+   wire [pCAPTURE_LEN_WIDTH-1:0] capture_len;
+   wire count_writes;
+   wire capture_enable_pulse;
+
+   wire fe_event;
+   wire [1:0] fe_data_cmd;
+   wire [15:0] max_short_timestamp;
+   wire [pTIMESTAMP_FULL_WIDTH-1:0] fe_time;
+   wire [1:0] fe_command;
+   wire fe_fifo_wr;
+
+   wire capturing;
+   wire capture_enable;
 
 
    reg_trace #(
@@ -155,7 +199,7 @@ module trace_top #(
       .pBYTECNT_SIZE            (pBYTECNT_SIZE),
       .pBUFFER_SIZE             (pBUFFER_SIZE),
       .pMATCH_RULES             (pMATCH_RULES)
-   ) U_reg_pw (
+   ) U_reg_trace (
       .reset_i                  (reset), 
       .usb_clk                  (usb_clk), 
       .reg_address              (reg_address), 
@@ -177,6 +221,7 @@ module trace_top #(
       .O_trace_width            (trace_width     ),
       .O_trig_toggle            (trig_toggle     ),
       .O_trace_trig_enable      (O_trace_trig_enable),
+      .O_capture_rules_mode     (capture_rules_mode),
 
       .O_trace_pattern0         (trace_pattern0  ),
       .O_trace_pattern1         (trace_pattern1  ),
@@ -210,7 +255,10 @@ module trace_top #(
 
 
    reg_main #(
-      .pBYTECNT_SIZE            (pBYTECNT_SIZE)
+      .pBYTECNT_SIZE            (pBYTECNT_SIZE),
+      .pNUM_TRIGGER_PULSES      (pNUM_TRIGGER_PULSES),
+      .pNUM_TRIGGER_WIDTH       (pNUM_TRIGGER_WIDTH),
+      .pCAPTURE_LEN_WIDTH       (pCAPTURE_LEN_WIDTH)
    ) U_reg_main (
       .reset_i          (reset), 
       .cwusb_clk        (usb_clk), 
@@ -229,6 +277,25 @@ module trace_top #(
       .O_fifo_read      (fifo_read),
       .I_fifo_status    (fifo_status),
 
+      .fe_clk           (trace_clk),
+      .O_arm            (arm),
+      .O_reg_arm        (reg_arm),
+      .I_flushing       (fifo_flush),
+      .O_capture_len    (capture_len),
+      .O_count_writes   (count_writes),
+      .I_capture_enable_pulse (capture_enable_pulse),
+
+      // Trigger:
+      .O_trigger_delay  (trigger_delay),
+      .O_trigger_width  (trigger_width),
+      .O_trigger_enable (trigger_enable),
+      .O_num_triggers   (num_triggers),
+
+      // Trigger clock phase shift:
+      .O_psincdec       (psincdec),
+      .O_psen           (psen),
+      .I_psdone         (psdone),
+
       .selected         (reg_main_selected)
    );
 
@@ -236,6 +303,7 @@ module trace_top #(
                       reg_trace_selected?  read_data_trace : 0;
 
 
+   `ifndef NOFIFO // for clean compilation
    fifo U_fifo (
       .reset_i                  (reset),
       .cwusb_clk                (usb_clk),
@@ -258,8 +326,10 @@ module trace_top #(
 
       .I_custom_fifo_stat_flag  (1'b0)      // TODO
    );
+   `endif
 
 
+   /*
    trace_trigger #(
       .pBUFFER_SIZE             (pBUFFER_SIZE),
       .pMATCH_RULES             (pMATCH_RULES)
@@ -309,8 +379,149 @@ module trace_top #(
       .O_blurb_count            (blurb_count),
       .O_blurb_ready            (blurb_ready)
    );
+   */
 
 
+   fe_capture_main #(
+      .pTIMESTAMP_FULL_WIDTH    (pTIMESTAMP_FULL_WIDTH),
+      .pTIMESTAMP_SHORT_WIDTH   (pTIMESTAMP_SHORT_WIDTH),
+      .pCAPTURE_LEN_WIDTH       (pCAPTURE_LEN_WIDTH)
+   ) U_fe_capture_main (
+      .reset_i                  (reset), 
+      .cwusb_clk                (usb_clk),
+      .fe_clk                   (trace_clk), 
+
+      .I_timestamps_disable     (1'b0), // TODO?
+      .I_arm                    (arm),
+      .I_reg_arm                (reg_arm),
+      .I_capture_len            (capture_len),
+      .I_count_writes           (count_writes),
+
+      .I_event                  (fe_event),
+      .I_data_cmd               (fe_data_cmd),
+      .I_max_short_timestamp    (max_short_timestamp),
+      .O_fifo_time              (fe_time),
+      .O_fifo_command           (fe_command),
+      .O_fifo_wr                (fe_fifo_wr),
+
+      .O_fifo_flush             (fifo_flush),
+      .O_capture_done           (capture_done),
+      .I_fifo_overflow_blocked  (fifo_overflow_blocked),
+      .I_fifo_full              (fifo_full),
+      .I_fifo_empty             (fifo_empty),
+
+      .O_capturing              (capturing),
+      .I_capture_enable         (capture_enable)
+   );
+
+
+   fe_capture_trace #(
+      .pBUFFER_SIZE             (pBUFFER_SIZE),
+      .pTIMESTAMP_FULL_WIDTH    (pTIMESTAMP_FULL_WIDTH),
+      .pTIMESTAMP_SHORT_WIDTH   (pTIMESTAMP_SHORT_WIDTH),
+      .pMATCH_RULES             (pMATCH_RULES)
+   ) U_fe_capture_trace (
+      .usb_clk                  (usb_clk),
+      .reset                    (reset),
+
+   /* FRONT END CONNECTIONS */
+      .trace_clk                (trace_clk),
+      .trace_data               (TRACEDATA),
+
+   /* GENERIC FRONT END CONNECTIONS */
+      .O_event                  (fe_event),
+      .O_data_cmd               (fe_data_cmd),
+      .I_fifo_time              (fe_time),
+      .I_fifo_command           (fe_command),
+      .I_fifo_wr                (fe_fifo_wr),
+      .O_max_short_timestamp    (max_short_timestamp),
+
+   /* REGISTER CONNECTIONS */
+      .O_fifo_fe_status         (synchronized),
+      .I_trace_width            (trace_width),
+      .I_reset_sync             (trace_reset_sync),
+      .I_capture_rules_mode     (capture_rules_mode),
+      .I_pattern_enable         (pattern_enable  ),
+
+      .I_pattern0               (trace_pattern0),
+      .I_pattern1               (trace_pattern1),
+      .I_pattern2               (trace_pattern2),
+      .I_pattern3               (trace_pattern3),
+      .I_pattern4               (trace_pattern4),
+      .I_pattern5               (trace_pattern5),
+      .I_pattern6               (trace_pattern6),
+      .I_pattern7               (trace_pattern7),
+      .I_mask0                  (trace_mask0),
+      .I_mask1                  (trace_mask1),
+      .I_mask2                  (trace_mask2),
+      .I_mask3                  (trace_mask3),
+      .I_mask4                  (trace_mask4),
+      .I_mask5                  (trace_mask5),
+      .I_mask6                  (trace_mask6),
+      .I_mask7                  (trace_mask7),
+
+   /* FIFO CONNECTIONS */
+      .O_fifo_data              (fifo_in_data),
+      .O_fifo_wr                (fifo_wr),
+      .I_fifo_write_allowed     (fifo_write_allowed),
+
+   /* TRIGGER  CONNECTIONS */
+      .O_trigger_match          (trigger_match)
+
+   /* PATTERN MATCHER CONNECTIONS
+      .O_pm_data                (),
+      .O_pm_data_valid          () */
+
+);
+
+   `ifndef __ICARUS__
+   // TODO: generate this in Vivado:
+       clk_wiz_0 U_trigger_clock (
+         .reset        (reset),
+         .clk_in1      (trace_clk),
+         .clk_out1     (trigger_clk),
+         // Dynamic phase shift ports
+         .psclk        (clk_usb_buf),
+         .psen         (psen),
+         .psincdec     (psincdec),
+         .psdone       (psdone),
+         // Status and control signals
+         .locked       (trigger_clk_locked)
+      );
+   `else
+      assign trigger_clk_locked = 1'b1;
+      assign psdone = 1'b1;
+      assign trigger_clk = I_trigger_clk;
+   `endif
+
+
+   pw_trigger #(
+      .pCAPTURE_DELAY_WIDTH     (pCAPTURE_DELAY_WIDTH),
+      .pTRIGGER_DELAY_WIDTH     (pTRIGGER_DELAY_WIDTH),
+      .pTRIGGER_WIDTH_WIDTH     (pTRIGGER_WIDTH_WIDTH),
+      .pALL_TRIGGER_DELAY_WIDTHS(pALL_TRIGGER_DELAY_WIDTHS),
+      .pALL_TRIGGER_WIDTH_WIDTHS(pALL_TRIGGER_WIDTH_WIDTHS),
+      .pNUM_TRIGGER_PULSES      (pNUM_TRIGGER_PULSES),
+      .pNUM_TRIGGER_WIDTH       (pNUM_TRIGGER_WIDTH)
+   ) U_trigger (
+      .reset_i          (reset),
+      .trigger_clk      (trigger_clk),
+      .fe_clk           (trace_clk),
+      .O_trigger        (O_trace_trig_out),
+      .I_capture_delay  (18'b0),    // TODO- not needed?
+      .I_trigger_delay  (trigger_delay),
+      .I_trigger_width  (trigger_width),
+      .I_trigger_enable (trigger_enable),
+      .I_num_triggers   (num_triggers),
+      .O_capture_enable_pulse (capture_enable_pulse),
+      .I_match          (trigger_match),
+      .I_capturing      (capturing),
+      .O_capture_enable (capture_enable)
+   );
+
+
+
+   // TODO: update ILAs
    `ifdef ILA_REG
        ila_reg I_reg_ila (
           .clk          (usb_clk),              // input wire clk
