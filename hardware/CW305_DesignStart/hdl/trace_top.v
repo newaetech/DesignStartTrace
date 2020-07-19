@@ -52,6 +52,7 @@ module trace_top #(
   input  wire [3:0] TRACEDATA,
   output wire O_trace_trig_out,
   output wire O_trace_trig_enable,
+  input  wire m3_trig,
 
   // USB:
   inout wire [7:0]    USB_Data,
@@ -466,7 +467,8 @@ module trace_top #(
       .I_fifo_write_allowed     (fifo_write_allowed),
 
    /* TRIGGER  CONNECTIONS */
-      .O_trigger_match          (trigger_match)
+      .O_trigger_match          (trigger_match),
+      .m3_trig                  (m3_trig)
 
    /* PATTERN MATCHER CONNECTIONS
       .O_pm_data                (),

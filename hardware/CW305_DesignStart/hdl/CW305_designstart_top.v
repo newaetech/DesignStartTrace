@@ -192,7 +192,8 @@ module CW305_designstart_top #(
      tb_trace_generator U_tb_trace_generator
           (.clk                    (sys_clock),
            .reset                  (reset),
-           .TRACEDATA              (TRACEDATA)
+           .TRACEDATA              (TRACEDATA),
+           .trig_out               (m3_trig_out)
           );
   `endif
 
@@ -275,6 +276,7 @@ module CW305_designstart_top #(
       .TRACEDATA        (TRACEDATA),
       .O_trace_trig_out (trace_trig_out),
       .O_trace_trig_enable (trace_trig_enable),
+      .m3_trig          (m3_trig_out),
 
       `ifdef __ICARUS__
       .I_trigger_clk    (I_trigger_clk),

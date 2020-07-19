@@ -29,7 +29,8 @@ either expressed or implied, of NewAE Technology Inc.
 module tb_trace_generator (
   input  wire clk,
   input  wire reset,
-  output reg  [3:0] TRACEDATA
+  output reg  [3:0] TRACEDATA,
+  output reg  trig_out
 );
 
 reg [15:0] i;
@@ -47,6 +48,11 @@ always @(posedge clk) begin
    else begin
       i <= i + 1;
       TRACEDATA <= tracedata[i];
+      //if ( (tracedata[i] != 4'h7) && (tracedata[i] != 4'hf) )
+      if (i == 'h628) // TODO-temp, for bringup
+         trig_out <= 1'b1;
+      else
+         trig_out <= 1'b0;
    end
 end
 
