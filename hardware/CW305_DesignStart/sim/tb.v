@@ -127,6 +127,8 @@ module tb();
       `include "registers.v"
       $display("done!");
 
+      write_byte(`TRACE_REG_SELECT, `REG_CAPTURE_MODE, 0, 8'h1);
+
       write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
 
       //read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);

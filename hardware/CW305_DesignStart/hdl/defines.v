@@ -68,7 +68,7 @@
 //                 +------------------------++------------------+-----++------------------------++------------------------+
 // data command:   |         zeros          ||    FIFO status   | 0 0 ||      Rule match #      ||    short time stamp    |
 //                 +------------------------++------------------+-----++------------------------++------------------------+
-// raw  command:   |         zeros          ||    FIFO status   | 0 1 ||                 match data word                  |
+// raw  command:   |         zeros          ||    FIFO status   | 0 1 ||    match data byte     ||    short time stamp    |
 //                 +------------------------++------------------+-----++------------------------++------------------------+
 // time command:   |         zeros          ||    FIFO status   | 1 0 ||              long     time      stamp            |
 //                 +------------------------++------------------+-----++------------------------++------------------------+
@@ -90,9 +90,6 @@
 
 `define FE_FIFO_DATA_START 8
 `define FE_FIFO_DATA_LEN 8
-
-`define FE_FIFO_DATA_WORD_START 0
-`define FE_FIFO_DATA_WORD_LEN 16
 
 `define FE_FIFO_STRM_EMPTY 8'h0
 
