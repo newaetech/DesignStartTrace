@@ -1,10 +1,11 @@
 LOGFILE=make.log
 WAVEFORMAT=fst
+SEED=1
 
 all: testcase compile run
 
 testcase:
-	python3 gen_trace_data.py
+	python3 gen_trace_data.py --seed $(SEED)
 
 compile:
 	iverilog -ccmdfile \

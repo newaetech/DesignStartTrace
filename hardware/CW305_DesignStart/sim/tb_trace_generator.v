@@ -35,9 +35,11 @@ module tb_trace_generator (
 
 reg [15:0] i;
 reg [3:0] tracedata [0:32767];
+reg [63:0] trigtime [0:1];
 
 initial begin
    $readmemh("tracedata.mem", tracedata);
+   $readmemh("swtrigtime.mem", trigtime);
 end
 
 always @(posedge clk) begin
@@ -48,8 +50,7 @@ always @(posedge clk) begin
    else begin
       i <= i + 1;
       TRACEDATA <= tracedata[i];
-      //if ( (tracedata[i] != 4'h7) && (tracedata[i] != 4'hf) )
-      if (i == 'h628) // TODO-temp, for bringup
+      if (i == trigtime[0])
          trig_out <= 1'b1;
       else
          trig_out <= 1'b0;

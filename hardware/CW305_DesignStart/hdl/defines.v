@@ -55,7 +55,7 @@
 `define REG_TRACE_MASK6         5'h1b
 `define REG_TRACE_MASK7         5'h1c
 
-`define REG_TRACE_COUNT         5'h1b
+`define REG_TRACE_COUNT         5'h1d
 
 // Rule match number: currently we have 8 rules, need 3 bis; allow for 32 -> 5 bits
 // FE status: single bit, synchronized or not? Is this even useful? Maybe only as part of stream command / also available as register read?

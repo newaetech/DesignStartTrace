@@ -40,7 +40,7 @@ module tb();
     parameter pTRIGGER_CLOCK_PERIOD = 2;
     parameter pSEED = 1;
     parameter pTIMEOUT = 5000;
-    parameter pVERBOSE = 1;
+    parameter pVERBOSE = 0;
 
     reg usb_clk;
     wire [7:0] usb_data;
@@ -74,7 +74,6 @@ module tb();
     int match_index;
 
     
-    reg [31:0] read_data;
     reg [31:0] write_data;
 
     wire trace_clk = pll_clk1;  // shorthand for testbench
@@ -82,8 +81,25 @@ module tb();
    reg [63:0] matchdata[0:255];
    int cycle;
 
+   reg [31:0] read_data;
+   reg [1:0] command;
+   reg fifo_stat_empty;
+   reg fifo_stat_underflow;
+   reg fifo_stat_empty_threshold;
+   reg fifo_stat_full;
+   reg fifo_stat_overflow_blocked;
+   reg fifo_stat_synchronized;
+   reg [7:0] fifo_match_rule;
+   reg [7:0] fifo_timestamp;
+   reg [7:0] expected_rule;
+   reg [31:0] expected_time;
+
+   bit setup_done;
+
+
    initial begin
       seed = pSEED;
+      setup_done = 0;
       errors = 0;
       match_index = 0;
       $display("Running with pSEED=%0d", pSEED);
@@ -123,8 +139,10 @@ module tb();
       // set trigger to pulse:
       write_byte(`TRACE_REG_SELECT, `REG_TRIG_TOGGLE, 0, 8'h0);
 
-      // disable soft trigger from target processor:
-      write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_ENABLE, 0, 8'h0);
+      // enable soft trigger from target processor:
+      write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_ENABLE, 0, 8'h1);
+
+      write_byte(`MAIN_REG_SELECT, `REG_COUNTER_QUICK_START, 0, 8'h1);
 
       $display("Writing match rules...");
       `include "registers.v"
@@ -134,40 +152,8 @@ module tb();
 
       write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
 
-      //read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
+      setup_done = 1;
 
-   end
-
-
-   // check triggers thread:
-   // TODO: evolve to read from FIFO
-   always @(posedge trig_out) begin
-      if (matchdata[match_index] == 64'hFFFF_FFFF_FFFF_FFFF) begin
-         errors += 1;
-         $display("ERROR: trigger received at time %0t but all expected triggers have already been received!", $time);
-      end
-      else if (matchdata[match_index][55:0] == cycle) begin
-         $display("Correct trigger at time %0t for rule %0d", $time, matchdata[match_index][63:56]);
-         match_index += 1;
-      end
-      else begin
-         errors += 1;
-         $display("ERROR: unexpected trigger at time %0t. Expected match for rule %0d was cycle=%0d but current cycle=%0d", $time, matchdata[match_index][63:56], matchdata[match_index][55:0], cycle);
-         match_index += 1;
-      end
-   end
-
-   // finish upon going through all expected triggers:
-   initial begin
-      #(pUSB_CLOCK_PERIOD*100);
-      wait (matchdata[match_index] == 64'hFFFF_FFFF_FFFF_FFFF);
-      #(pUSB_CLOCK_PERIOD*10);
-      $display("All expected triggers processed.");
-      if (errors)
-         $display("SIMULATION FAILED (%0d errors).", errors);
-      else
-         $display("Simulation passed");
-      $finish;
    end
 
    // maintain a cycle counter
@@ -186,6 +172,37 @@ module tb();
       $display("ERROR: global timeout");
       $display("SIMULATION FAILED (%0d errors).", errors);
       $finish;
+   end
+
+
+   // FIFO read thread (match rules version):
+   initial begin
+      #10 wait(setup_done);
+      match_index = 0;
+      while (matchdata[match_index] != 64'hFFFF_FFFF_FFFF_FFFF) begin
+         wait_fifo_not_empty();
+         read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
+         expected_rule = matchdata[match_index][63:56];
+         expected_time = matchdata[match_index][55:0];
+         if (fifo_match_rule != expected_rule) begin
+            errors += 1;
+            $display("ERROR on match event %0d: expected match rule %0d, got %0d", match_index, expected_rule, fifo_match_rule);
+         end
+         if (fifo_timestamp != expected_time) begin
+            errors += 1;
+            $display("ERROR on match event %0d: expected timestamp %0d, got %0d", match_index, expected_time, fifo_timestamp);
+         end
+         match_index += 1;
+      end
+
+      #(pUSB_CLOCK_PERIOD*10);
+      $display("All expected events processed.");
+      if (errors)
+         $display("SIMULATION FAILED (%0d errors).", errors);
+      else
+         $display("Simulation passed");
+      $finish;
+
    end
 
 
@@ -278,6 +295,40 @@ module tb();
          write_byte(`TRACE_REG_SELECT, mask_address, subbyte, mask[(7-subbyte)*8 +: 8]);
       end
    endtask
+
+
+   task wait_fifo_empty;
+      bit fifo_empty = 0;
+      while (fifo_empty == 0) begin
+         read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_STAT, 0, fifo_empty);
+      end
+   endtask
+
+
+   task wait_fifo_not_empty;
+      bit fifo_empty = 1;
+      read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_STAT, 0, fifo_empty);
+      while (fifo_empty == 1) begin
+         // TODO: currently assuming no long timestamps
+         read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_STAT, 0, fifo_empty);
+      end
+   endtask
+
+
+   task read_fifo;
+      read_word(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, read_data);
+      command = read_data[`FE_FIFO_CMD_START +: `FE_FIFO_CMD_BIT_LEN];
+
+      fifo_stat_empty =           read_data[18+`FIFO_STAT_EMPTY];
+      fifo_stat_underflow =       read_data[18+`FIFO_STAT_UNDERFLOW];
+      fifo_stat_empty_threshold = read_data[18+`FIFO_STAT_EMPTY_THRESHOLD];
+      fifo_stat_full =            read_data[18+`FIFO_STAT_FULL];
+      fifo_stat_overflow_blocked= read_data[18+`FIFO_STAT_OVERFLOW_BLOCKED];
+      fifo_stat_synchronized =    read_data[18+`FIFO_STAT_SYNC_FLAG];
+      fifo_match_rule =           read_data[15:8];
+      fifo_timestamp  =           read_data[7:0];
+   endtask
+
 
 
    always #(pUSB_CLOCK_PERIOD/2) usb_clk = !usb_clk;

@@ -25,11 +25,18 @@
 # either expressed or implied, of NewAE Technology Inc.
 
 import random
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--seed", type=int, default=1)
+args = parser.parse_args()
+
+random.seed(args.seed)
 
 # initial value to make things line up:
 time = 2
+last_event_time = 0
 
-# TODO: add random seed for repeatable randomization, expected trace match output
 
 def sync_frame(n=1):
     inc_time(8*n)
@@ -38,6 +45,13 @@ def sync_frame(n=1):
         # TODO: check whether sync frames start or finish with 7; also, allow for short frames
         #mem.write('7 f f f f f f f\n\n')
         mem.write('f f f f f f f 7\n\n')
+
+
+def sw_trig():
+    global last_event_time
+    trig.write('%016x\n' % time)
+    last_event_time = time + 2 # adjust for delays in the RTL
+
 
 def random_frame(n=1, minlen=2, maxlen=16):
     total_nibbles = 0
@@ -68,6 +82,7 @@ def match_frame(payload, rule=0):
     payload: list of bytes
     rule: int, rule number to program to DUT
     """
+    global last_event_time
     inc_time(len(payload)*2)
     # generate the trace data:
     hexpayload = '0x'
@@ -80,7 +95,10 @@ def match_frame(payload, rule=0):
     # generate the register setup data:
     regs.write("write_match_rule(%d, 'h%s, %d);\n" % (rule, hexpayload[2:], len(payload)))
     # log the expected match time:
-    matchtimes.write('%016x\n' % ((rule << 56) + time))
+    rule = 2**rule;
+    matchtimes.write('%016x\n' % ((rule << 56) + time-last_event_time))
+    print("Time=%d, last_event_time=%d, file gets: %0d\n" % (time, last_event_time, time-last_event_time))
+    last_event_time = time + 1 # adjust for delays in the RTL
 
 
 def inc_time(nibbles):
@@ -92,6 +110,7 @@ def inc_time(nibbles):
 mem = open('tracedata.mem', 'w+')
 regs = open('registers.v', 'w+')
 matchtimes = open('matchtimes.mem', 'w+')
+trig = open('swtrigtime.mem', 'w+')
 
 # create trace data:
 
@@ -99,6 +118,7 @@ matchtimes = open('matchtimes.mem', 'w+')
 sync_frame(200)
 
 # first match:
+sw_trig()
 random_frame(2)
 sync_frame(2)
 match_frame([0xab,0x12,0x34,0x56], rule=1)
@@ -120,6 +140,7 @@ sync_frame(10)
 # done:
 mem.close()
 regs.close()
+trig.close()
 
 # indicate there are no more matches:
 matchtimes.write('%016x\n' % 0xffffffffffffffff)

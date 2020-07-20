@@ -183,6 +183,7 @@ module trace_top #(
 
    wire [pCAPTURE_LEN_WIDTH-1:0] capture_len;
    wire count_writes;
+   wire counter_quick_start;
    wire capture_enable_pulse;
 
    wire fe_event;
@@ -286,6 +287,7 @@ module trace_top #(
       .I_flushing       (fifo_flush),
       .O_capture_len    (capture_len),
       .O_count_writes   (count_writes),
+      .O_counter_quick_start (counter_quick_start),
       .I_capture_enable_pulse (capture_enable_pulse),
 
       // Trigger:
@@ -399,6 +401,7 @@ module trace_top #(
       .I_reg_arm                (reg_arm),
       .I_capture_len            (capture_len),
       .I_count_writes           (count_writes),
+      .I_counter_quick_start    (counter_quick_start),
 
       .I_event                  (fe_event),
       .I_data_cmd               (fe_data_cmd),
