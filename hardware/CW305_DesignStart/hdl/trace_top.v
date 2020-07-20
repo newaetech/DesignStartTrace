@@ -51,7 +51,6 @@ module trace_top #(
   input  wire TRCENA,
   input  wire [3:0] TRACEDATA,
   output wire O_trace_trig_out,
-  output wire O_trace_trig_enable,
   input  wire m3_trig,
 
   // USB:
@@ -112,6 +111,7 @@ module trace_top #(
    wire synchronized;
 
    wire [pMATCH_RULES-1:0] pattern_enable;
+   wire [pMATCH_RULES-1:0] pattern_trig_enable;
    wire trace_reset_sync;
    wire [2:0] trace_width;
    wire capture_rules_mode;
@@ -169,6 +169,7 @@ module trace_top #(
    wire reg_trace_selected;
 
    wire trigger_enable;
+   wire soft_trig_enable;
    wire [pNUM_TRIGGER_WIDTH-1:0] num_triggers;
    wire [pALL_TRIGGER_DELAY_WIDTHS-1:0] trigger_delay;
    wire [pALL_TRIGGER_WIDTH_WIDTHS-1:0] trigger_width;
@@ -218,10 +219,11 @@ module trace_top #(
       .I_synchronized           (synchronized    ),
 
       .O_pattern_enable         (pattern_enable  ),
+      .O_pattern_trig_enable    (pattern_trig_enable),
       .O_trace_reset_sync       (trace_reset_sync),
       .O_trace_width            (trace_width     ),
       .O_trig_toggle            (trig_toggle     ),
-      .O_trace_trig_enable      (O_trace_trig_enable),
+      .O_soft_trig_enable       (soft_trig_enable),
       .O_capture_rules_mode     (capture_rules_mode),
 
       .O_trace_pattern0         (trace_pattern0  ),
@@ -443,6 +445,8 @@ module trace_top #(
       .I_reset_sync             (trace_reset_sync),
       .I_capture_rules_mode     (capture_rules_mode),
       .I_pattern_enable         (pattern_enable  ),
+      .I_pattern_trig_enable    (pattern_trig_enable),
+      .I_soft_trig_enable       (soft_trig_enable),
 
       .I_pattern0               (trace_pattern0),
       .I_pattern1               (trace_pattern1),

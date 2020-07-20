@@ -49,6 +49,8 @@ module fe_capture_trace #(
     input  wire I_reset_sync,
     input  wire I_capture_rules_mode,
     input  wire [pMATCH_RULES-1:0] I_pattern_enable,
+    input  wire [pMATCH_RULES-1:0] I_pattern_trig_enable,
+    input  wire I_soft_trig_enable,
 
     input  wire [pBUFFER_SIZE-1:0] I_pattern0, 
     input  wire [pBUFFER_SIZE-1:0] I_pattern1,
@@ -94,11 +96,10 @@ module fe_capture_trace #(
    wire match;
    wire [pMATCH_RULES-1:0] match_bits;
    reg  [pMATCH_RULES-1:0] match_bits_r;
-   reg  [pMATCH_RULES-1:0] match_bits_r2;
-   reg  [pMATCH_RULES-1:0] match_bits_r3;
-   wire [pMATCH_RULES-1:0] match_rule;
+   reg  [pMATCH_RULES-1:0] match_rule;
    wire [pBUFFER_SIZE-1:0] pattern[pMATCH_RULES-1:0];
    wire [pBUFFER_SIZE-1:0] mask[pMATCH_RULES-1:0];
+   reg  m3_trig_r;
 
    assign mask[0] = I_mask0;
    assign mask[1] = I_mask1;
@@ -124,7 +125,8 @@ module fe_capture_trace #(
    assign O_data_cmd = I_capture_rules_mode? `FE_FIFO_CMD_DATA : `FE_FIFO_CMD_STAT;
    assign O_max_short_timestamp = 2**`FE_FIFO_SHORTTIME_LEN-1;
 
-   assign O_trigger_match = m3_trig; // TODO (feeding pw_trigger, when programmed to do so)
+   assign O_trigger_match = (m3_trig & !m3_trig_r & I_soft_trig_enable) ||
+                            ( |(match_bits & I_pattern_trig_enable)  & !(|(match_bits_r & I_pattern_trig_enable)) );
 
 
    // shift trace data into buffer:
@@ -210,12 +212,6 @@ module fe_capture_trace #(
 
    end
 
-   // HERE HERE HERE!!! at this point we know when data should be sent over
-   // for capture, if we're in capture state. Need to decide whether PM
-   // logic should be kept in separate module, or here; think it should be here
-   // since we already need a long buffer here and don't want to replicate that
-   // (or pass it on over?) pattern_matcher_usb is a single always block, very small
-   // module, so yeah let's absorb it here I think
 
    // look for match:
    generate 
@@ -232,19 +228,16 @@ module fe_capture_trace #(
     always @ (posedge trace_clk) begin
        if (reset) begin
           match_bits_r <= 0;
-          match_bits_r2 <= 0;
-          match_bits_r3 <= 0;
+          m3_trig_r <= 0;
        end
        else begin
-          match_bits_r2 <= match_bits_r;
-          match_bits_r3 <= match_bits_r2;
+          m3_trig_r <= m3_trig;
+          match_bits_r <= match_bits;
           if (match)
-             match_bits_r <= match_bits;
+             match_rule <= match_bits;
        end
     end
 
-    // note: it may be possible to tweak the FSM timing to avoid needing 3 sync stages?
-    assign match_rule = match_bits_r3;
 
    // FIFO write logic.
    // note: could maybe get away with combinatorial logic here?

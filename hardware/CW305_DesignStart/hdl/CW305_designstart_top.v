@@ -94,7 +94,6 @@ module CW305_designstart_top #(
   wire nTDOEN;
   wire TRACECLK;
 
-  wire trace_trig_enable;
   wire trace_trig_out;
   wire m3_trig_out;
 
@@ -117,7 +116,7 @@ module CW305_designstart_top #(
   assign led2 = trace_trig_out;         // TODO: temporary?
   assign led3 = uart_rxd ^ uart_txd;    // UART activity
 
-  assign trig_out = trace_trig_enable? trace_trig_out : m3_trig_out;
+  assign trig_out = trace_trig_out;
 
   // controls where program is fetched from:
   wire [1:0] cfg = 2'b01;
@@ -275,7 +274,6 @@ module CW305_designstart_top #(
       .TRCENA           (TRCENA   ),
       .TRACEDATA        (TRACEDATA),
       .O_trace_trig_out (trace_trig_out),
-      .O_trace_trig_enable (trace_trig_enable),
       .m3_trig          (m3_trig_out),
 
       `ifdef __ICARUS__
