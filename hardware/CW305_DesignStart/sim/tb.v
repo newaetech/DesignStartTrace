@@ -29,7 +29,7 @@ either expressed or implied, of NewAE Technology Inc.
 `timescale 1ns / 1ns
 `default_nettype none 
 
-`include "defines.v"
+`include "defines_trace.v"
 `include "defines_pw.v"
 
 module tb();

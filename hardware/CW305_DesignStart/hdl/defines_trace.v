@@ -8,7 +8,7 @@
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
-// Description: 
+// Description: Defines for trace-specific registers and logic.
 // 
 // Dependencies: 
 // 
@@ -57,13 +57,6 @@
 
 `define REG_TRACE_COUNT         5'h1d
 
-// Rule match number: currently we have 8 rules, need 3 bis; allow for 32 -> 5 bits
-// FE status: single bit, synchronized or not? Is this even useful? Maybe only as part of stream command / also available as register read?
-// so, no FE status; 11 bits left for "short" timestamp (2**11 = 2048) -> yep will still require long timestamp
-// Have a second data mode (or use stream command or stat command) which outputs raw blurb data instead: one data byte and timestamp
-// Except: for STAT, doesn't make sense to lost a byte on every entry to what would be a static time=0! So instead have the start
-// of each STAT blurb preceeded by a long time stamp. BUT, this is not a case currently accounted for by fe_capture_main.v.
-
 // FIFO bitfields:
 //                   31 30 29 28 27 26 25 24   23 22 21 20 19 18 17 16   15 14 13 12 11 10  9  8   7  6  5  4  3  2  1  0
 //                 +------------------------++------------------+-----++------------------------++------------------------+
@@ -75,7 +68,6 @@
 //                 +------------------------++------------------+-----++------------------------++------------------------+
 // stream command: |         zeros          ||    FIFO status   | 1 1 ||      stream status     ||          zeros         |
 //                 +------------------------++------------------+-----++------------------------++------------------------+
-
 
 `define FE_FIFO_CMD_DATA 2'b00
 `define FE_FIFO_CMD_STAT 2'b01

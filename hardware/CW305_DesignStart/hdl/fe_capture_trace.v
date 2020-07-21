@@ -20,7 +20,7 @@
 
 `timescale 1ns / 1ps
 `default_nettype none
-`include "defines.v"
+`include "defines_trace.v"
 
 module fe_capture_trace #(
     parameter pBUFFER_SIZE = 64, // in bits

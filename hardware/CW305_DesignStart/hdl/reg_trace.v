@@ -21,7 +21,7 @@
 
 `default_nettype none
 `timescale 1ns / 1ps
-`include "defines.v"
+`include "defines_trace.v"
 
 module reg_trace #(
    parameter pADDR_WIDTH = 21,
