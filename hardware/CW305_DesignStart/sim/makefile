@@ -1,11 +1,14 @@
 LOGFILE=make.log
 WAVEFORMAT=fst
 SEED=1
+RULES=8
+EVENTS=3
+DUMP=0
 
 all: testcase compile run
 
 testcase:
-	python3 gen_trace_data.py --seed $(SEED)
+	python3 gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS)
 
 compile:
 	iverilog -ccmdfile \
@@ -14,6 +17,7 @@ compile:
 	-Wselect-range \
 	-I../hdl \
 	-I../../phywhisperer/software/phywhisperer/firmware \
+	-P tb.pDUMP=$(DUMP) \
 
 nofifo:
 	iverilog -ccmdfile_nofifo \

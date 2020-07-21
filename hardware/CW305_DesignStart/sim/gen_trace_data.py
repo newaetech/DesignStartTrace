@@ -29,13 +29,18 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int, default=1)
+parser.add_argument("--events", type=int, default=1)
+parser.add_argument("--rules", type=int, default=1)
 args = parser.parse_args()
 
 random.seed(args.seed)
 
 # initial value to make things line up:
 time = 2
+
 last_event_time = 0
+
+rules = [0]*8
 
 
 def sync_frame(n=1):
@@ -56,48 +61,52 @@ def sw_trig():
 def random_frame(n=1, minlen=2, maxlen=16):
     total_nibbles = 0
     for i in range(n):
-        nibbles = random.randrange(minlen, maxlen, 2)
+        nibbles = random.randrange(minlen, maxlen+1, 2)
         total_nibbles += nibbles
         mem.write('// random %d-nibble frame:\n' % nibbles)
         for j in range(nibbles):
-            mem.write('%01x ' % (random.randrange(0,15)))
+            mem.write('%01x ' % (random.randrange(0,16)))
         mem.write('\n\n')
+        sync_frame(random.randrange(0,4))
     inc_time(total_nibbles)
 
-""" Hmm, no point in generating actual iaddr packets? TODO-remove?
-def iaddr_match_frame(addr, traceidr=2):
-    # documentation:
-    # Trace formatter frame: ARM Coresight Architecture Specification v3.0 (ARM IHI 0029E)
-    # I-sync packet: Embedded Trace Macrocell Architecture Specification, ETMv1.0 to ETMv3.5 (ARM IHI 0014Q)
-    mem.write('// I-sync packet for address %s:\n' % addr)
-    frame = []
-    frame.append(1 + (traceidr << 1) # ID
-    frame.append(8) # header
-    # no context ID
-    frame.append(0x20) # information byte
-"""
 
-def match_frame(payload, rule=0):
+def gen_rule(rule=0, length=8):
     """
-    payload: list of bytes
     rule: int, rule number to program to DUT
+    length: int, number of bytes in rule (must be even)
+    """
+    assert length % 2 == 0
+    global rules
+    pattern = []
+    for i in range(length):
+        pattern.append(random.randrange(0,0x100))
+    rules[rule] = pattern
+    hexpattern = '0x'
+    for x in pattern:
+        hexpattern += '%02x' % x
+    regs.write("write_match_rule(%d, 'h%s, %d);\n" % (rule, hexpattern[2:], length))
+
+
+def match_frame(rule=0):
+    """
+    rule: int, rule number to use
     """
     global last_event_time
-    inc_time(len(payload)*2)
+    global rules
+    inc_time(len(rules[rule])*2)
     # generate the trace data:
-    hexpayload = '0x'
-    for x in payload:
-        hexpayload += '%02x' % x
-    mem.write('// matching payload: %s (%s)\n' % (payload, hexpayload))
-    for x in payload:
+    hexpattern = '0x'
+    pattern = rules[rule]
+    for x in pattern:
+        hexpattern += '%02x' % x
+    mem.write('// matching pattern, rule %d: %s (%s)\n' % (rule, pattern, hexpattern))
+    for x in pattern:
         mem.write('%01x %01x ' % (x & 0xf, (x>>4) & 0xf))
     mem.write('\n\n')
-    # generate the register setup data:
-    regs.write("write_match_rule(%d, 'h%s, %d);\n" % (rule, hexpayload[2:], len(payload)))
     # log the expected match time:
     rule = 2**rule;
     matchtimes.write('%016x\n' % ((rule << 56) + time-last_event_time))
-    print("Time=%d, last_event_time=%d, file gets: %0d\n" % (time, last_event_time, time-last_event_time))
     last_event_time = time + 1 # adjust for delays in the RTL
 
 
@@ -112,28 +121,23 @@ regs = open('registers.v', 'w+')
 matchtimes = open('matchtimes.mem', 'w+')
 trig = open('swtrigtime.mem', 'w+')
 
-# create trace data:
+# generate match rules:
+for i in range(args.rules):
+    gen_rule(rule=i, length=random.randrange(4,9,2))
 
+# create trace data:
 # lots of sync frames initially to allow all setup register writes to be done:
 sync_frame(200)
 
-# first match:
+# trigger + stuff:
 sw_trig()
-random_frame(2)
-sync_frame(2)
-match_frame([0xab,0x12,0x34,0x56], rule=1)
+random_frame(random.randrange(0,20))
+sync_frame(random.randrange(0,20))
 
-# second match:
-random_frame(3)
-sync_frame(10)
-match_frame([0xff, 0xee, 0xdd, 0xcc], rule=2)
-
-# third match:
-sync_frame(10)
-random_frame(2)
-sync_frame(1)
-match_frame([0x01, 0x20, 0x03, 0x40, 0x05, 0x60, 0x07, 0x80], rule=3)
-
+for i in range(args.events):
+    rule = random.randrange(0, args.rules)
+    match_frame(rule)
+    random_frame(random.randrange(0,20))
 
 sync_frame(10)
 

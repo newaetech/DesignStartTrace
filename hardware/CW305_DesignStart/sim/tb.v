@@ -39,8 +39,9 @@ module tb();
     parameter pPLL_CLOCK_PERIOD = 6;
     parameter pTRIGGER_CLOCK_PERIOD = 2;
     parameter pSEED = 1;
-    parameter pTIMEOUT = 5000;
+    parameter pTIMEOUT = 10000;
     parameter pVERBOSE = 0;
+    parameter pDUMP = 0;
 
     reg usb_clk;
     wire [7:0] usb_data;
@@ -80,6 +81,7 @@ module tb();
 
    reg [63:0] matchdata[0:255];
    int cycle;
+   int total_time;
 
    reg [31:0] read_data;
    reg [1:0] command;
@@ -103,9 +105,10 @@ module tb();
       errors = 0;
       match_index = 0;
       $display("Running with pSEED=%0d", pSEED);
-      //$urandom(seed);
-      $dumpfile("results/tb.fst");
-      $dumpvars(0, tb);
+      if (pDUMP) begin
+         $dumpfile("results/tb.fst");
+         $dumpvars(0, tb);
+      end
       usb_clk = 1'b1;
       pll_clk1 = 1'b1;
 
@@ -180,17 +183,33 @@ module tb();
       #10 wait(setup_done);
       match_index = 0;
       while (matchdata[match_index] != 64'hFFFF_FFFF_FFFF_FFFF) begin
+         total_time = 0;
          wait_fifo_not_empty();
          read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
+
+         while (command == `FE_FIFO_CMD_TIME) begin
+            total_time = read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN];
+            wait_fifo_not_empty();
+            read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
+         end
+
+         total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_SHORTTIME_LEN];
+
+         while (command == `FE_FIFO_CMD_TIME) begin
+            wait_fifo_not_empty();
+            read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
+         end
          expected_rule = matchdata[match_index][63:56];
          expected_time = matchdata[match_index][55:0];
          if (fifo_match_rule != expected_rule) begin
             errors += 1;
             $display("ERROR on match event %0d: expected match rule %0d, got %0d", match_index, expected_rule, fifo_match_rule);
          end
-         if (fifo_timestamp != expected_time) begin
+         else
+            $display("Correct rule on match event %0d", match_index);
+         if (total_time != expected_time) begin
             errors += 1;
-            $display("ERROR on match event %0d: expected timestamp %0d, got %0d", match_index, expected_time, fifo_timestamp);
+            $display("ERROR on match event %0d: expected timestamp %0d, got %0d", match_index, expected_time, total_time);
          end
          match_index += 1;
       end
@@ -326,7 +345,6 @@ module tb();
       fifo_stat_overflow_blocked= read_data[18+`FIFO_STAT_OVERFLOW_BLOCKED];
       fifo_stat_synchronized =    read_data[18+`FIFO_STAT_SYNC_FLAG];
       fifo_match_rule =           read_data[15:8];
-      fifo_timestamp  =           read_data[7:0];
    endtask
 
 
