@@ -51,6 +51,7 @@ always @(posedge clk) begin
       i <= i + 1;
       TRACEDATA <= tracedata[i];
       if (i == trigtime[0])
+      //if ( (i == 'h643) || (i == 'h7d8) ) // TODO-temp-debug
          trig_out <= 1'b1;
       else
          trig_out <= 1'b0;

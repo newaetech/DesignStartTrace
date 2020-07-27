@@ -66,6 +66,8 @@ module CW305_designstart_top #(
 
   // CW trigger:
   output wire trig_out,
+  output wire trig_out_dbg,
+  output wire m3_trig_out,
 
   // CW305 USB:
   input wire          USB_clk,
@@ -95,9 +97,11 @@ module CW305_designstart_top #(
   wire TRACECLK;
 
   wire trace_trig_out;
-  wire m3_trig_out;
 
   wire reset = !resetn;
+
+  wire arm;
+  wire capturing;
 
   assign swdio = SWDOEN ? SWDO : 1'bz;
   assign SWDI = swdio;
@@ -112,11 +116,11 @@ module CW305_designstart_top #(
   end
 
   assign led1 = count[22];              // clock alive
-  //assign led2 = ~m3_reset_out;          // LED off when reset is inactive
-  assign led2 = trace_trig_out;         // TODO: temporary?
-  assign led3 = uart_rxd ^ uart_txd;    // UART activity
+  assign led2 = arm;
+  assign led3 = capturing;
 
   assign trig_out = trace_trig_out;
+  assign trig_out_dbg = trace_trig_out;
 
   // controls where program is fetched from:
   wire [1:0] cfg = 2'b01;
@@ -284,7 +288,10 @@ module CW305_designstart_top #(
       .USB_Addr         (USB_Addr ),
       .USB_nRD          (USB_nRD  ),
       .USB_nWE          (USB_nWE  ),
-      .USB_nCS          (USB_nCS  )
+      .USB_nCS          (USB_nCS  ),
+
+      .arm              (arm),
+      .capturing        (capturing)
    );
 
 

@@ -68,11 +68,18 @@ module fe_capture_trace #(
     input  wire [pBUFFER_SIZE-1:0] I_mask5,
     input  wire [pBUFFER_SIZE-1:0] I_mask6,
     input  wire [pBUFFER_SIZE-1:0] I_mask7,
+    output reg  [7:0] O_trace_count0,
+    output reg  [7:0] O_trace_count1,
+    output reg  [7:0] O_trace_count2,
+    output reg  [7:0] O_trace_count3,
+    output reg  [7:0] O_trace_count4,
+    output reg  [7:0] O_trace_count5,
+    output reg  [7:0] O_trace_count6,
+    output reg  [7:0] O_trace_count7,
 
     /* FIFO CONNECTIONS */
     output reg [17:0] O_fifo_data,
     output reg  O_fifo_wr,
-    input  wire I_fifo_write_allowed,
 
     /* TRIGGER CONNECTIONS */
     output wire O_trigger_match,
@@ -250,7 +257,7 @@ module fe_capture_trace #(
          // don't overflow the FIFO:
          // Because back-to-back writes are possible, checking sniff_fifo_full may not prevent overflow,
          // and so the last few FIFO entries are wasted :-(
-         if (I_fifo_wr & I_fifo_write_allowed) begin
+         if (I_fifo_wr) begin
             O_fifo_wr <= 1'b1;
             O_fifo_data[`FE_FIFO_CMD_START +: `FE_FIFO_CMD_BIT_LEN] <= I_fifo_command;
             case (I_fifo_command)
@@ -272,6 +279,48 @@ module fe_capture_trace #(
             O_fifo_wr <= 1'b0;
       end
    end
+
+   // count rule matches:
+   always @(posedge trace_clk) begin
+      if (reset) begin
+         O_trace_count0 <= 0;
+         O_trace_count1 <= 0;
+         O_trace_count2 <= 0;
+         O_trace_count3 <= 0;
+         O_trace_count4 <= 0;
+         O_trace_count5 <= 0;
+         O_trace_count6 <= 0;
+         O_trace_count7 <= 0;
+      end
+      else begin
+         if (match_bits[0]) O_trace_count0 = O_trace_count0 + 1;
+         if (match_bits[1]) O_trace_count1 = O_trace_count1 + 1;
+         if (match_bits[2]) O_trace_count2 = O_trace_count2 + 1;
+         if (match_bits[3]) O_trace_count3 = O_trace_count3 + 1;
+         if (match_bits[4]) O_trace_count4 = O_trace_count4 + 1;
+         if (match_bits[5]) O_trace_count5 = O_trace_count5 + 1;
+         if (match_bits[6]) O_trace_count6 = O_trace_count6 + 1;
+         if (match_bits[7]) O_trace_count7 = O_trace_count7 + 1;
+      end
+   end
+
+
+   `ifdef ILA_TRACE
+       ila_trace1 I_trace_ila (
+          .clk          (trace_clk),            // input wire clk
+          .probe0       (recording),            // input wire [0:0]  probe0  
+          .probe1       (O_event),              // input wire [0:0]  probe1 
+          .probe2       (trace_data),           // input wire [3:0]  probe2 
+          .probe3       (I_trace_width),        // input wire [2:0]  probe3 
+          .probe4       (synchronized),         // input wire [0:0]  probe4 
+          .probe5       (valid_buffer),         // input wire [0:0]  probe5 
+          .probe6       (O_trigger_match),      // input wire [0:0]  probe6 
+          .probe7       (match_bits      ),     // input wire [7:0]  probe7 
+          .probe8       (revbuffer      ),      // input wire [63:0] probe8 
+          .probe9       (O_fifo_data),          // input wire [17:0] probe9 
+          .probe10      (O_fifo_wr)             // input wire [0:0]  probe10 
+       );
+   `endif
 
 
 endmodule

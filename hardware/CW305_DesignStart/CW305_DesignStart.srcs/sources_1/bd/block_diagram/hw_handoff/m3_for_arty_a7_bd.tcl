@@ -325,7 +325,7 @@ proc create_root_design { parentCell } {
  ] $reset
   set sys_clock [ create_bd_port -dir I -type clk sys_clock ]
   set_property -dict [ list \
-   CONFIG.FREQ_HZ {100000000} \
+   CONFIG.FREQ_HZ {20000000} \
    CONFIG.PHASE {0.000} \
  ] $sys_clock
 

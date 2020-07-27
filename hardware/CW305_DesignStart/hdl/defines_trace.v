@@ -33,8 +33,6 @@
 `define REG_SOFT_TRIG_ENABLE    5'h08
 `define REG_CAPTURE_MODE        5'h09
 
-`define REG_MATCHING_PATTERN    5'h0a
-`define REG_MATCHING_BUFFER     5'h0b
 `define REG_SYNCHRONIZED        5'h0c
 
 `define REG_TRACE_PATTERN0      5'h0d
@@ -87,6 +85,7 @@
 `define FE_FIFO_STRM_EMPTY 8'h0
 
 // FIFO status register bits:
+// TODO: aren't these repeated from the other defines file?
 `define FIFO_STAT_EMPTY 0
 `define FIFO_STAT_UNDERFLOW 1
 `define FIFO_STAT_EMPTY_THRESHOLD 2

@@ -45,7 +45,7 @@ module cw305_usb_reg_fe #(
    output wire [pBYTECNT_SIZE-1:0]  reg_bytecnt,  // Current byte count
    output wire [7:0]   reg_datao,    // Data to write
    input  wire [7:0]   reg_datai,    // Data to read
-   output wire         reg_read,     // Read flag. One clock cycle AFTER this flag is high
+   output reg          reg_read,     // Read flag. One clock cycle AFTER this flag is high
                                      // valid data must be present on the reg_datai bus
    output wire         reg_write,    // Write flag. When high on rising edge valid data is
                                      // present on reg_datao
@@ -75,9 +75,14 @@ module cw305_usb_reg_fe #(
    // reg_bytecnt selects the byte within the register:
    assign reg_bytecnt = usb_addr_r[pBYTECNT_SIZE-1:0];
 
-   assign reg_read = ~usb_cen_r & ~usb_rdn_r;
    assign reg_write = ~usb_cen_r & ~usb_wrn_r;
 
+   always @(posedge usb_clk) begin
+      if (~usb_cen & ~usb_rdn)
+         reg_read <= 1'b1;
+      else if (usb_rdn)
+         reg_read <= 1'b0;
+   end
 
    // drive output data bus:
    always @(posedge usb_clk) begin

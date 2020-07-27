@@ -58,7 +58,11 @@ module trace_top #(
   input wire [pADDR_WIDTH-1:0] USB_Addr,
   input wire          USB_nRD,
   input wire          USB_nWE,
-  input wire          USB_nCS
+  input wire          USB_nCS,
+
+  // Status LEDs:
+  output wire arm,
+  output wire capturing
 
 );
 
@@ -106,8 +110,6 @@ module trace_top #(
 
 
    wire [4:0] clksettings; // TODO-later
-   wire [pMATCH_RULES-1:0] matching_pattern;
-   wire [pBUFFER_SIZE-1:0] matching_buffer;
    wire synchronized;
 
    wire [pMATCH_RULES-1:0] pattern_enable;
@@ -145,23 +147,16 @@ module trace_top #(
    wire [7:0] trace_count7;
 
 
-   wire [pBUFFER_SIZE-1:0] revbuffer;
-   wire valid_buffer;
-   wire [2:0] blurb_count;
-   wire blurb_ready;
-
    wire [17:0] fifo_in_data;
    wire [17:0] fifo_out_data;
    wire fifo_wr;
    wire fifo_read;
    wire fifo_flush;
-   wire fifo_write_allowed;
    wire fifo_overflow_blocked;
    wire fifo_full;
    wire fifo_empty;
    wire capture_done;
    wire [5:0] fifo_status;
-   wire arm;
    wire reg_arm;
 
    wire [`FE_SELECT_WIDTH-1:0] fe_select;
@@ -179,7 +174,7 @@ module trace_top #(
    wire psincdec;
    wire psdone;
    wire trigger_clk_locked;
-   wire trigger_clk;    // TODO: add trigger_clk to .xdc file
+   wire trigger_clk;
 
    wire [pCAPTURE_LEN_WIDTH-1:0] capture_len;
    wire count_writes;
@@ -193,8 +188,10 @@ module trace_top #(
    wire [1:0] fe_command;
    wire fe_fifo_wr;
 
-   wire capturing;
    wire capture_enable;
+
+   reg  reg_arm_feclk;
+   (* ASYNC_REG = "TRUE" *) reg  [1:0] reg_arm_pipe;
 
 
    reg_trace #(
@@ -215,8 +212,6 @@ module trace_top #(
 
       .O_clksettings            (clksettings),
 
-      .I_matching_pattern       (matching_pattern),
-      .I_matching_buffer        (matching_buffer ),
       .I_synchronized           (synchronized    ),
 
       .O_pattern_enable         (pattern_enable  ),
@@ -305,7 +300,7 @@ module trace_top #(
    );
 
    assign read_data = reg_main_selected? read_data_main :
-                      reg_trace_selected?  read_data_trace : 0;
+                      reg_trace_selected?  read_data_trace : 8'h00;
 
 
    `ifndef NOFIFO // for clean compilation
@@ -321,70 +316,27 @@ module trace_top #(
 
       .I_fifo_read              (fifo_read),
       .I_fifo_flush             (fifo_flush),
-      .I_clear_read_flags       (1'b0), // TODO
-      .I_clear_write_flags      (1'b0), // TODO
+      .I_clear_read_flags       (reg_arm),
+      .I_clear_write_flags      (reg_arm_feclk),
 
       .O_data                   (fifo_out_data),
       .O_fifo_status            (fifo_status),
-      .O_fifo_write_allowed     (fifo_write_allowed),
       .O_fifo_empty             (fifo_empty),
 
-      .I_custom_fifo_stat_flag  (1'b0)      // TODO
+      .I_custom_fifo_stat_flag  (synchronized)      
    );
    `endif
 
-
-   /*
-   trace_trigger #(
-      .pBUFFER_SIZE             (pBUFFER_SIZE),
-      .pMATCH_RULES             (pMATCH_RULES)
-   ) U_trace_trigger (
-      .TRACECLK                 (trace_clk),
-      .TRACEDATA                (TRACEDATA),
-      .TRCENA                   (TRCENA),
-      .reset                    (reset),
-      .I_pattern_enable         (pattern_enable  ),
-      .I_toggle                 (trig_toggle     ),
-      .I_reset_sync             (trace_reset_sync),
-      .I_trace_width            (trace_width     ),
-      .I_pattern0               (trace_pattern0  ),
-      .I_pattern1               (trace_pattern1  ),
-      .I_pattern2               (trace_pattern2  ),
-      .I_pattern3               (trace_pattern3  ),
-      .I_pattern4               (trace_pattern4  ),
-      .I_pattern5               (trace_pattern5  ),
-      .I_pattern6               (trace_pattern6  ),
-      .I_pattern7               (trace_pattern7  ),
-      .I_mask0                  (trace_mask0     ),
-      .I_mask1                  (trace_mask1     ),
-      .I_mask2                  (trace_mask2     ),
-      .I_mask3                  (trace_mask3     ),
-      .I_mask4                  (trace_mask4     ),
-      .I_mask5                  (trace_mask5     ),
-      .I_mask6                  (trace_mask6     ),
-      .I_mask7                  (trace_mask7     ),
-      .O_trace_count0           (trace_count0    ),
-      .O_trace_count1           (trace_count1    ),
-      .O_trace_count2           (trace_count2    ),
-      .O_trace_count3           (trace_count3    ),
-      .O_trace_count4           (trace_count4    ),
-      .O_trace_count5           (trace_count5    ),
-      .O_trace_count6           (trace_count6    ),
-      .O_trace_count7           (trace_count7    ),
-      .O_matching_pattern       (matching_pattern),
-      .O_matching_buffer        (matching_buffer ),
-      .O_last_blurb             (),     // TODO-remove?
-      .O_trace_trig_out         (O_trace_trig_out),
-
-     // debug only ports:
-      .O_buffer                 (),
-      .O_revbuffer              (revbuffer),
-      .O_valid_buffer           (valid_buffer),
-      .O_synchronized           (synchronized),
-      .O_blurb_count            (blurb_count),
-      .O_blurb_ready            (blurb_ready)
-   );
-   */
+   // CDC on reg_arm for fifo:
+   always @(posedge trace_clk) begin
+      if (reset) begin
+         reg_arm_feclk <= 0;
+         reg_arm_pipe <= 0;
+      end
+      else begin
+         {reg_arm_feclk, reg_arm_pipe} <= {reg_arm_pipe, reg_arm};
+      end
+   end
 
 
    fe_capture_main #(
@@ -467,11 +419,19 @@ module trace_top #(
       .I_mask5                  (trace_mask5),
       .I_mask6                  (trace_mask6),
       .I_mask7                  (trace_mask7),
+      .O_trace_count0           (trace_count0),
+      .O_trace_count1           (trace_count1),
+      .O_trace_count2           (trace_count2),
+      .O_trace_count3           (trace_count3),
+      .O_trace_count4           (trace_count4),
+      .O_trace_count5           (trace_count5),
+      .O_trace_count6           (trace_count6),
+      .O_trace_count7           (trace_count7),
+
 
    /* FIFO CONNECTIONS */
       .O_fifo_data              (fifo_in_data),
       .O_fifo_wr                (fifo_wr),
-      .I_fifo_write_allowed     (fifo_write_allowed),
 
    /* TRIGGER  CONNECTIONS */
       .O_trigger_match          (trigger_match),
@@ -484,13 +444,12 @@ module trace_top #(
 );
 
    `ifndef __ICARUS__
-   // TODO: generate this in Vivado:
        clk_wiz_0 U_trigger_clock (
          .reset        (reset),
          .clk_in1      (trace_clk),
          .clk_out1     (trigger_clk),
          // Dynamic phase shift ports
-         .psclk        (clk_usb_buf),
+         .psclk        (usb_clk),
          .psen         (psen),
          .psincdec     (psincdec),
          .psdone       (psdone),
@@ -502,6 +461,11 @@ module trace_top #(
       assign psdone = 1'b1;
       assign trigger_clk = I_trigger_clk;
    `endif
+   /* TODO: temp-debug
+   assign trigger_clk_locked = 1'b1;
+   assign psdone = 1'b1;
+   assign trigger_clk = trace_clk;
+   */
 
 
    pw_trigger #(
@@ -529,8 +493,6 @@ module trace_top #(
    );
 
 
-
-   // TODO: update ILAs
    `ifdef ILA_REG
        ila_reg I_reg_ila (
           .clk          (usb_clk),              // input wire clk
@@ -539,36 +501,21 @@ module trace_top #(
           .probe2       (USB_nRD),              // input wire [0:0]  probe2 
           .probe3       (USB_nWE),              // input wire [0:0]  probe3 
           .probe4       (USB_nCS),              // input wire [0:0]  probe4 
-          .probe5       (1'b0),                 // input wire [0:0]  probe5 
-          .probe6       (reg_address),          // input wire [5:0]  probe6 
+          .probe5       (isout),                // input wire [0:0]  probe5 
+          .probe6       (reg_address[7:0]),     // input wire [7:0]  probe6 
           .probe7       (reg_bytecnt),          // input wire [6:0]  probe7 
           .probe8       (write_data),           // input wire [7:0]  probe8 
           .probe9       (read_data),            // input wire [15:0] probe9 
           .probe10      (reg_read),             // input wire [0:0]  probe10 
           .probe11      (reg_write),            // input wire [0:0]  probe11 
           .probe12      (reg_addrvalid),        // input wire [0:0]  probe12 
-          .probe13      (32'b0)                 // input wire [31:0] probe13 
+          .probe13      (trace_pattern0[31:0]), // input wire [31:0] probe13 
+          .probe14      (reg_main_selected),    // input wire [0:0]  probe14 
+          .probe15      (read_data_main),       // input wire [7:0]  probe15 
+          .probe16      (reg_trace_selected),   // input wire [0:0]  probe16 
+          .probe17      (read_data_trace)       // input wire [7:0]  probe17 
        );
    `endif
-
-   `ifdef ILA_TRACE
-       ila_trace1 I_trace_ila (
-          .clk          (trace_clk),            // input wire clk
-          .probe0       (TRCENA),               // input wire [0:0]  probe0  
-          .probe1       (TRACECLK),             // input wire [0:0]  probe1 
-          .probe2       (TRACEDATA),            // input wire [3:0]  probe2 
-          .probe3       (trace_width),          // input wire [2:0]  probe3 
-          .probe4       (blurb_count),          // input wire [2:0]  probe4 
-          .probe5       (blurb_ready),          // input wire [0:0]  probe5 
-          .probe6       (valid_buffer),         // input wire [0:0]  probe6 
-          .probe7       (matching_pattern),     // input wire [7:0]  probe7 
-          .probe8       (matching_buffer),      // input wire [63:0] probe8 
-          .probe9       (64'b0),                // input wire [63:0] probe9 
-          .probe10      (revbuffer),            // input wire [63:0] probe10 
-          .probe11      (synchronized)          // input wire [0:0]  probe11 
-       );
-   `endif
-
 
 endmodule
 `default_nettype wire

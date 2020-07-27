@@ -47,15 +47,13 @@ module reg_trace #(
    output reg  [4:0]                            O_clksettings,
 
 // Interface to trace_trigger:
-   input  wire [pMATCH_RULES-1:0]               I_matching_pattern,
-   input  wire [pBUFFER_SIZE-1:0]               I_matching_buffer,
    input  wire                                  I_synchronized,
 
    output reg  [pMATCH_RULES-1:0]               O_pattern_enable,
    output reg  [pMATCH_RULES-1:0]               O_pattern_trig_enable,
    output reg                                   O_trace_reset_sync,
    output reg  [2:0]                            O_trace_width,
-   output reg                                   O_trig_toggle,
+   output reg                                   O_trig_toggle, // TODO: delete?
    output reg                                   O_soft_trig_enable,
    output reg                                   O_capture_rules_mode,
 
@@ -100,6 +98,7 @@ module reg_trace #(
    wire [4:0] address = reg_address[4:0];
 
 
+/*
    //////////////////////////////////
    // read logic:
    //////////////////////////////////
@@ -118,8 +117,6 @@ module reg_trace #(
             `REG_SOFT_TRIG_ENABLE:      reg_read_data[0] <= O_soft_trig_enable;
             `REG_CAPTURE_MODE:          reg_read_data[0] <= O_capture_rules_mode;
 
-            `REG_MATCHING_PATTERN:      reg_read_data[pMATCH_RULES-1:0] <= I_matching_pattern;
-            `REG_MATCHING_BUFFER:       reg_read_data <= I_matching_buffer[reg_bytecnt*8 +: 8];
             `REG_SYNCHRONIZED:          reg_read_data[0] <= I_synchronized;
 
             `REG_TRACE_PATTERN0:        reg_read_data <= O_trace_pattern0[reg_bytecnt*8 +: 8];
@@ -144,9 +141,54 @@ module reg_trace #(
 
          endcase
       end
-      else
-         reg_read_data <= 8'b0;
    end
+*/
+
+   always @(*) begin
+      if (selected && reg_read) begin
+         case (address)
+            `REG_NAME:                  reg_read_data = name[reg_bytecnt*8 +: 8];
+            `REG_REV:                   reg_read_data = rev;
+            `REG_CLKSETTINGS:           reg_read_data = O_clksettings;
+
+            `REG_PATTERN_ENABLE:        reg_read_data = O_pattern_enable;
+            `REG_PATTERN_TRIG_ENABLE:   reg_read_data = O_pattern_trig_enable;
+            `REG_TRACE_RESET_SYNC:      reg_read_data = O_trace_reset_sync;
+            `REG_TRACE_WIDTH:           reg_read_data = O_trace_width;
+            `REG_TRIG_TOGGLE:           reg_read_data = O_trig_toggle;
+            `REG_SOFT_TRIG_ENABLE:      reg_read_data = O_soft_trig_enable;
+            `REG_CAPTURE_MODE:          reg_read_data = O_capture_rules_mode;
+
+            `REG_SYNCHRONIZED:          reg_read_data = I_synchronized;
+
+            `REG_TRACE_PATTERN0:        reg_read_data = O_trace_pattern0[reg_bytecnt*8 +: 8];
+            `REG_TRACE_PATTERN1:        reg_read_data = O_trace_pattern1[reg_bytecnt*8 +: 8];
+            `REG_TRACE_PATTERN2:        reg_read_data = O_trace_pattern2[reg_bytecnt*8 +: 8];
+            `REG_TRACE_PATTERN3:        reg_read_data = O_trace_pattern3[reg_bytecnt*8 +: 8];
+            `REG_TRACE_PATTERN4:        reg_read_data = O_trace_pattern4[reg_bytecnt*8 +: 8];
+            `REG_TRACE_PATTERN5:        reg_read_data = O_trace_pattern5[reg_bytecnt*8 +: 8];
+            `REG_TRACE_PATTERN6:        reg_read_data = O_trace_pattern6[reg_bytecnt*8 +: 8];
+            `REG_TRACE_PATTERN7:        reg_read_data = O_trace_pattern7[reg_bytecnt*8 +: 8];
+
+            `REG_TRACE_MASK0:           reg_read_data = O_trace_mask0[reg_bytecnt*8 +: 8];
+            `REG_TRACE_MASK1:           reg_read_data = O_trace_mask1[reg_bytecnt*8 +: 8];
+            `REG_TRACE_MASK2:           reg_read_data = O_trace_mask2[reg_bytecnt*8 +: 8];
+            `REG_TRACE_MASK3:           reg_read_data = O_trace_mask3[reg_bytecnt*8 +: 8];
+            `REG_TRACE_MASK4:           reg_read_data = O_trace_mask4[reg_bytecnt*8 +: 8];
+            `REG_TRACE_MASK5:           reg_read_data = O_trace_mask5[reg_bytecnt*8 +: 8];
+            `REG_TRACE_MASK6:           reg_read_data = O_trace_mask6[reg_bytecnt*8 +: 8];
+            `REG_TRACE_MASK7:           reg_read_data = O_trace_mask7[reg_bytecnt*8 +: 8];
+
+            `REG_TRACE_COUNT:           reg_read_data = trace_count[reg_bytecnt*8 +: 8];
+
+            default:                    reg_read_data = 0;
+
+         endcase
+      end
+      else
+         reg_read_data = 0;
+   end
+
 
    assign read_data = reg_read_data;
 
@@ -233,6 +275,26 @@ module reg_trace #(
                `REG_LAST_BLURB:         I_last_blurb[reg_bytecnt*8 +: 8] <= write_data;
                 */
 
+
+
+   `ifdef ILA_REG_TRACE
+
+       ila_2 U_reg_ila (
+	.clk            (usb_clk),                      // input wire clk
+	.probe0         (reg_address[7:0]),             // input wire [7:0]  probe0  
+	.probe1         (reg_bytecnt),                  // input wire [6:0]  probe1 
+	.probe2         (read_data),                    // input wire [7:0]  probe2 
+	.probe3         (write_data),                   // input wire [7:0]  probe3 
+	.probe4         (reg_read),                     // input wire [0:0]  probe4 
+	.probe5         (reg_write),                    // input wire [0:0]  probe5 
+	.probe6         (reg_addrvalid),                // input wire [0:0]  probe6 
+	.probe7         (reg_read_data),                // input wire [7:0]  probe7 
+	.probe8         (selected),                     // input wire [0:0]  probe8 
+	.probe9         (O_pattern_enable)              // input wire [7:0]  probe9
+       );
+
+
+   `endif
 
 endmodule
 

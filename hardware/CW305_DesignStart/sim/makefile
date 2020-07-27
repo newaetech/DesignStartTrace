@@ -28,6 +28,14 @@ nofifo:
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
 
+traceonly:
+	iverilog -ccmdfile_traceonly \
+	-g2005-sv \
+	-Wportbind \
+	-Wselect-range \
+	-I../hdl \
+	-I../../phywhisperer/software/phywhisperer/firmware \
+
 run:
 	vvp -l$(LOGFILE) a.out -$(WAVEFORMAT)
 

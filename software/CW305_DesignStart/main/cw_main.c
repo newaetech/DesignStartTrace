@@ -104,7 +104,7 @@ uint8_t getreg(uint8_t* x)
 	return 0x00;
 }
 
-void enable_itm()
+void enable_trace()
 {
     // Configure TPI
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // Enable access to registers
@@ -260,7 +260,7 @@ int main(void)
 	simpleserial_addcmd('s', 5, setreg);
 	simpleserial_addcmd('g', 5, getreg);
 
-        enable_itm();
+        enable_trace();
 
 	while(1) {
           simpleserial_get();

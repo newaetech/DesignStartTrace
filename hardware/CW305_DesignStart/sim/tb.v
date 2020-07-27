@@ -133,6 +133,15 @@ module tb();
 
       $readmemh("matchtimes.mem", matchdata);
 
+      // TODO: temporary while debugging read timing
+      write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'haa);
+      read_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, read_data);
+      $display("DBG: got %h", read_data);
+
+      write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'hff);
+      read_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, read_data);
+      $display("DBG: got %h", read_data);
+
       // enable all patterns:
       write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'hff);
 
@@ -147,6 +156,8 @@ module tb();
 
       write_byte(`MAIN_REG_SELECT, `REG_COUNTER_QUICK_START, 0, 8'h1);
 
+      write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h1);
+
       $display("Writing match rules...");
       `include "registers.v"
       $display("done!");
@@ -154,6 +165,8 @@ module tb();
       write_byte(`TRACE_REG_SELECT, `REG_CAPTURE_MODE, 0, 8'h1);
 
       write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
+
+      //write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd800);
 
       setup_done = 1;
 
@@ -262,6 +275,7 @@ module tb();
       #1 data = usb_data;
       repeat(2) @(posedge usb_clk);
       usb_rdn = 1;
+      repeat(2) @(posedge usb_clk);
    endtask
 
 
@@ -336,6 +350,7 @@ module tb();
 
    task read_fifo;
       read_word(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, read_data);
+      read_data = {8'b0, read_data[31:8]};
       command = read_data[`FE_FIFO_CMD_START +: `FE_FIFO_CMD_BIT_LEN];
 
       fifo_stat_empty =           read_data[18+`FIFO_STAT_EMPTY];
@@ -353,6 +368,9 @@ module tb();
    always #(pPLL_CLOCK_PERIOD/2) pll_clk1 = !pll_clk1;
    always #(pTRIGGER_CLOCK_PERIOD/2) trigger_clk = !trigger_clk;
 
+   wire #1 usb_rdn_out = usb_rdn;
+   wire #1 usb_wrn_out = usb_wrn;
+   wire #1 usb_cen_out = usb_cen;
 
    CW305_designstart_top #(
        .pADDR_WIDTH        (pADDR_WIDTH),
@@ -362,9 +380,9 @@ module tb();
        .USB_clk            (usb_clk    ),
        .USB_Data           (usb_data   ),
        .USB_Addr           (usb_addr   ),
-       .USB_nRD            (usb_rdn    ),
-       .USB_nWE            (usb_wrn    ),
-       .USB_nCS            (usb_cen    ),
+       .USB_nRD            (usb_rdn_out),
+       .USB_nWE            (usb_wrn_out),
+       .USB_nCS            (usb_cen_out),
 
        // Buttons/LEDs on Board
        .j16_sel            (j16_sel   ),

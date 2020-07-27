@@ -6,6 +6,21 @@ create_clock -period 20.000 -name tio_clkin -waveform {0.000 10.000} [get_nets t
 create_clock -period 20.000 -name swclk -waveform {0.000 10.000} [get_nets swclk]
 create_clock -period 10.000 -name usb_clk -waveform {0.000 5.000} [get_nets USB_clk]
 
+create_generated_clock -name trigger_clk [get_pins U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
+
+
+set_clock_groups -asynchronous \
+                 -group [get_clocks usb_clk] \
+                 -group [get_clocks trigger_clk]
+
+set_clock_groups -asynchronous \
+                 -group [get_clocks usb_clk] \
+                 -group [get_clocks pll_clk1]
+
+set_clock_groups -asynchronous \
+                 -group [get_clocks trigger_clk] \
+                 -group [get_clocks pll_clk1]
+
 
 # DUT input clock from PLL_CLK1:
 set_property PACKAGE_PIN N13 [get_ports pll_clk1]
@@ -65,7 +80,8 @@ set_property PACKAGE_PIN K15 [get_ports k15_sel]
 # Debug on JP3:
 # --------------------------------------------------
 set_property PACKAGE_PIN B16 [get_ports swv]
-#set_property PACKAGE_PIN C13 [get_ports ]
+set_property PACKAGE_PIN C13 [get_ports trig_out_dbg]
+set_property PACKAGE_PIN D13 [get_ports m3_trig_out]
 
 set_property PACKAGE_PIN C11 [get_ports SWOTDO]
 set_property PACKAGE_PIN B12 [get_ports TDI]
@@ -120,6 +136,13 @@ set_property PACKAGE_PIN C2 [get_ports USB_nWE]
 set_property PACKAGE_PIN A3 [get_ports USB_nCS]
 #set_property PACKAGE_PIN A2 [get_ports USB_nALE]
 
+set_input_delay -clock usb_clk 2.0 [get_ports USB_nCS]
+set_input_delay -clock usb_clk 2.0 [get_ports USB_nRD]
+set_input_delay -clock usb_clk 2.0 [get_ports USB_nWE]
+set_input_delay -clock usb_clk 2.0 [get_ports USB_Data]
+set_input_delay -clock usb_clk 2.0 [get_ports USB_Addr]
+
+set_output_delay -clock usb_clk 1.0 [get_ports USB_Data]
 
 # TODO: sort out later, may lead to SWD debugging issues?
 # (required because otherwise P+R fails with "Poor placement for routing between an IO pin and BUFG")
@@ -157,8 +180,8 @@ set_output_delay -clock [get_clocks slow_out_clk] -add_delay 0.500 [get_ports tr
 
 
 
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets USB_nRD]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets USB_nWE]
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets USB_nRD]
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets USB_nWE]
 
 set_property BITSTREAM.CONFIG.USR_ACCESS TIMESTAMP [current_design]
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
