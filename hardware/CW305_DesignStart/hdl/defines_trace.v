@@ -29,7 +29,7 @@
 `define REG_PATTERN_TRIG_ENABLE 5'h04
 `define REG_TRACE_RESET_SYNC    5'h05
 `define REG_TRACE_WIDTH         5'h06
-`define REG_TRIG_TOGGLE         5'h07
+`define REG_SOFT_TRIG_PASSTHRU  5'h07
 `define REG_SOFT_TRIG_ENABLE    5'h08
 `define REG_CAPTURE_MODE        5'h09
 

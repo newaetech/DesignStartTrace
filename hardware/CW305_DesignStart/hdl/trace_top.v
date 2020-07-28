@@ -52,6 +52,7 @@ module trace_top #(
   input  wire [3:0] TRACEDATA,
   output wire O_trace_trig_out,
   input  wire m3_trig,
+  output wire O_soft_trig_passthru,
 
   // USB:
   inout wire [7:0]    USB_Data,
@@ -117,7 +118,6 @@ module trace_top #(
    wire trace_reset_sync;
    wire [2:0] trace_width;
    wire capture_rules_mode;
-   wire trig_toggle;
 
    wire [pBUFFER_SIZE-1:0] trace_pattern0;
    wire [pBUFFER_SIZE-1:0] trace_pattern1;
@@ -165,6 +165,7 @@ module trace_top #(
 
    wire trigger_enable;
    wire soft_trig_enable;
+   wire soft_trig_passthru;
    wire [pNUM_TRIGGER_WIDTH-1:0] num_triggers;
    wire [pALL_TRIGGER_DELAY_WIDTHS-1:0] trigger_delay;
    wire [pALL_TRIGGER_WIDTH_WIDTHS-1:0] trigger_width;
@@ -218,7 +219,7 @@ module trace_top #(
       .O_pattern_trig_enable    (pattern_trig_enable),
       .O_trace_reset_sync       (trace_reset_sync),
       .O_trace_width            (trace_width     ),
-      .O_trig_toggle            (trig_toggle     ),
+      .O_soft_trig_passthru     (O_soft_trig_passthru),
       .O_soft_trig_enable       (soft_trig_enable),
       .O_capture_rules_mode     (capture_rules_mode),
 

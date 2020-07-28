@@ -97,6 +97,7 @@ module CW305_designstart_top #(
   wire TRACECLK;
 
   wire trace_trig_out;
+  wire soft_trig_passthru;
 
   wire reset = !resetn;
 
@@ -119,8 +120,8 @@ module CW305_designstart_top #(
   assign led2 = arm;
   assign led3 = capturing;
 
-  assign trig_out = trace_trig_out;
-  assign trig_out_dbg = trace_trig_out;
+  assign trig_out = soft_trig_passthru? m3_trig_out : trace_trig_out;
+  assign trig_out_dbg = soft_trig_passthru? m3_trig_out : trace_trig_out;
 
   // controls where program is fetched from:
   wire [1:0] cfg = 2'b01;
@@ -279,6 +280,7 @@ module CW305_designstart_top #(
       .TRACEDATA        (TRACEDATA),
       .O_trace_trig_out (trace_trig_out),
       .m3_trig          (m3_trig_out),
+      .O_soft_trig_passthru (soft_trig_passthru),
 
       `ifdef __ICARUS__
       .I_trigger_clk    (I_trigger_clk),

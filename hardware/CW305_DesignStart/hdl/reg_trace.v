@@ -53,7 +53,7 @@ module reg_trace #(
    output reg  [pMATCH_RULES-1:0]               O_pattern_trig_enable,
    output reg                                   O_trace_reset_sync,
    output reg  [2:0]                            O_trace_width,
-   output reg                                   O_trig_toggle, // TODO: delete?
+   output reg                                   O_soft_trig_passthru,
    output reg                                   O_soft_trig_enable,
    output reg                                   O_capture_rules_mode,
 
@@ -113,7 +113,7 @@ module reg_trace #(
             `REG_PATTERN_TRIG_ENABLE:   reg_read_data[pMATCH_RULES-1:0] <= O_pattern_trig_enable;
             `REG_TRACE_RESET_SYNC:      reg_read_data[0] <= O_trace_reset_sync;
             `REG_TRACE_WIDTH:           reg_read_data[2:0] <= O_trace_width;
-            `REG_TRIG_TOGGLE:           reg_read_data[0] <= O_trig_toggle;
+            `REG_SOFT_TRIG_PASSTHRU:    reg_read_data[0] <= O_soft_trig_passthru;
             `REG_SOFT_TRIG_ENABLE:      reg_read_data[0] <= O_soft_trig_enable;
             `REG_CAPTURE_MODE:          reg_read_data[0] <= O_capture_rules_mode;
 
@@ -155,7 +155,7 @@ module reg_trace #(
             `REG_PATTERN_TRIG_ENABLE:   reg_read_data = O_pattern_trig_enable;
             `REG_TRACE_RESET_SYNC:      reg_read_data = O_trace_reset_sync;
             `REG_TRACE_WIDTH:           reg_read_data = O_trace_width;
-            `REG_TRIG_TOGGLE:           reg_read_data = O_trig_toggle;
+            `REG_SOFT_TRIG_PASSTHRU:    reg_read_data = O_soft_trig_passthru;
             `REG_SOFT_TRIG_ENABLE:      reg_read_data = O_soft_trig_enable;
             `REG_CAPTURE_MODE:          reg_read_data = O_capture_rules_mode;
 
@@ -212,7 +212,7 @@ module reg_trace #(
          O_pattern_trig_enable <= 0;
          O_trace_reset_sync <= 0;
          O_trace_width <= 4;    // default to 4-lane operation, matching default FW setting
-         O_trig_toggle <= 1;
+         O_soft_trig_passthru <= 1;
          O_soft_trig_enable <= 0;
          O_capture_rules_mode <= 0;
          O_trace_pattern0 <= 0;
@@ -242,7 +242,7 @@ module reg_trace #(
                `REG_PATTERN_TRIG_ENABLE:O_pattern_trig_enable <= write_data[pMATCH_RULES-1:0];
                `REG_TRACE_RESET_SYNC:   O_trace_reset_sync <= write_data[0];
                `REG_TRACE_WIDTH:        O_trace_width <= write_data[2:0];
-               `REG_TRIG_TOGGLE:        O_trig_toggle <= write_data[0];
+               `REG_SOFT_TRIG_PASSTHRU: O_soft_trig_passthru <= write_data[0];
                `REG_SOFT_TRIG_ENABLE:   O_soft_trig_enable <= write_data[0];
                `REG_CAPTURE_MODE:       O_capture_rules_mode <= write_data[0];
 

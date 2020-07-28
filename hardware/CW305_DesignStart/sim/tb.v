@@ -148,15 +148,15 @@ module tb();
       // only first match rule generates a trigger:
       write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h02);
 
-      // set trigger to pulse:
-      write_byte(`TRACE_REG_SELECT, `REG_TRIG_TOGGLE, 0, 8'h0);
+      // set m3 trigger as output trigger
+      write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_PASSTHRU, 0, 8'h1);
 
       // enable soft trigger from target processor:
       write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_ENABLE, 0, 8'h1);
 
       write_byte(`MAIN_REG_SELECT, `REG_COUNTER_QUICK_START, 0, 8'h1);
 
-      write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h1);
+      write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h0);
 
       $display("Writing match rules...");
       `include "registers.v"
@@ -166,7 +166,7 @@ module tb();
 
       write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
 
-      //write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd800);
+      write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd800);
 
       setup_done = 1;
 
