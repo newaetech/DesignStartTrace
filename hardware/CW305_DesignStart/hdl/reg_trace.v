@@ -55,7 +55,7 @@ module reg_trace #(
    output reg  [2:0]                            O_trace_width,
    output reg                                   O_soft_trig_passthru,
    output reg                                   O_soft_trig_enable,
-   output reg                                   O_capture_rules_mode,
+   output reg                                   O_capture_raw,
 
    output reg  [pBUFFER_SIZE-1:0]               O_trace_pattern0,
    output reg  [pBUFFER_SIZE-1:0]               O_trace_pattern1,
@@ -115,7 +115,7 @@ module reg_trace #(
             `REG_TRACE_WIDTH:           reg_read_data[2:0] <= O_trace_width;
             `REG_SOFT_TRIG_PASSTHRU:    reg_read_data[0] <= O_soft_trig_passthru;
             `REG_SOFT_TRIG_ENABLE:      reg_read_data[0] <= O_soft_trig_enable;
-            `REG_CAPTURE_MODE:          reg_read_data[0] <= O_capture_rules_mode;
+            `REG_CAPTURE_RAW:           reg_read_data[0] <= O_capture_raw;
 
             `REG_SYNCHRONIZED:          reg_read_data[0] <= I_synchronized;
 
@@ -157,7 +157,7 @@ module reg_trace #(
             `REG_TRACE_WIDTH:           reg_read_data = O_trace_width;
             `REG_SOFT_TRIG_PASSTHRU:    reg_read_data = O_soft_trig_passthru;
             `REG_SOFT_TRIG_ENABLE:      reg_read_data = O_soft_trig_enable;
-            `REG_CAPTURE_MODE:          reg_read_data = O_capture_rules_mode;
+            `REG_CAPTURE_RAW:           reg_read_data = O_capture_raw;
 
             `REG_SYNCHRONIZED:          reg_read_data = I_synchronized;
 
@@ -214,7 +214,7 @@ module reg_trace #(
          O_trace_width <= 4;    // default to 4-lane operation, matching default FW setting
          O_soft_trig_passthru <= 1;
          O_soft_trig_enable <= 0;
-         O_capture_rules_mode <= 0;
+         O_capture_raw <= 0;
          O_trace_pattern0 <= 0;
          O_trace_pattern1 <= 0;
          O_trace_pattern2 <= 0;
@@ -244,7 +244,7 @@ module reg_trace #(
                `REG_TRACE_WIDTH:        O_trace_width <= write_data[2:0];
                `REG_SOFT_TRIG_PASSTHRU: O_soft_trig_passthru <= write_data[0];
                `REG_SOFT_TRIG_ENABLE:   O_soft_trig_enable <= write_data[0];
-               `REG_CAPTURE_MODE:       O_capture_rules_mode <= write_data[0];
+               `REG_CAPTURE_RAW:        O_capture_raw <= write_data[0];
 
                `REG_TRACE_PATTERN0:     O_trace_pattern0[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_PATTERN1:     O_trace_pattern1[reg_bytecnt*8 +: 8] <= write_data;

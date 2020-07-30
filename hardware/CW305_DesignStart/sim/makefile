@@ -3,12 +3,15 @@ WAVEFORMAT=fst
 SEED=1
 RULES=8
 EVENTS=3
+CAPTURE_RAW=0
+TIMEOUT=50000
 DUMP=0
 
 all: testcase compile run
 
 testcase:
-	python3 gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS)
+	python3 gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
+	--raw $(CAPTURE_RAW)
 
 compile:
 	iverilog -ccmdfile \
@@ -18,6 +21,9 @@ compile:
 	-I../hdl \
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-P tb.pDUMP=$(DUMP) \
+	-P tb.pSEED=$(SEED) \
+	-P tb.pCAPTURE_RAW=$(CAPTURE_RAW) \
+	-P tb.pTIMEOUT=$(TIMEOUT) \
 
 nofifo:
 	iverilog -ccmdfile_nofifo \

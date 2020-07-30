@@ -22,15 +22,32 @@ random.seed()
 tests = []
 tests.append(dict(name  = 'fewrules',
              frequency = 1,
-             description = 'Few rules, lots of events.',
+             description = 'Few rules, lots of events, capture rules.',
+             CAPTURE_RAW = 0,
              RULES = 2,
              EVENTS = 30))
 
 tests.append(dict(name  = 'manyrules',
              frequency = 1,
-             description = 'Many rules, lots of events.',
+             description = 'Many rules, lots of events, capture rules.',
+             CAPTURE_RAW = 0,
              RULES = 8,
              EVENTS = 30))
+
+tests.append(dict(name  = 'fewrules_raw',
+             frequency = 1,
+             description = 'Few rules, lots of events, capture rules.',
+             CAPTURE_RAW = 1,
+             RULES = 2,
+             EVENTS = 30))
+
+tests.append(dict(name  = 'manyrules_raw',
+             frequency = 1,
+             description = 'Many rules, lots of events, capture rules.',
+             CAPTURE_RAW = 1,
+             RULES = 8,
+             EVENTS = 30))
+
 
 
 def print_tests():

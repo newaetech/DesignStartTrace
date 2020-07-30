@@ -47,7 +47,7 @@ module fe_capture_trace #(
     output wire O_fifo_fe_status,
     input  wire [2:0] I_trace_width, // supported values: 1/2/4
     input  wire I_reset_sync,
-    input  wire I_capture_rules_mode,
+    input  wire I_capture_raw,
     input  wire [pMATCH_RULES-1:0] I_pattern_enable,
     input  wire [pMATCH_RULES-1:0] I_pattern_trig_enable,
     input  wire I_soft_trig_enable,
@@ -98,6 +98,8 @@ module fe_capture_trace #(
    reg  word_count;
    reg  [2:0] trace_width_r;
    wire valid_buffer;   
+   wire revbuffer_all_syncframes;
+   wire revbuffer_stop_syncframes;
    reg recording;
 
    wire match;
@@ -128,8 +130,8 @@ module fe_capture_trace #(
 
 
    assign O_fifo_fe_status = synchronized;
-   assign O_event = I_capture_rules_mode? match : recording & valid_buffer;
-   assign O_data_cmd = I_capture_rules_mode? `FE_FIFO_CMD_DATA : `FE_FIFO_CMD_STAT;
+   assign O_event = I_capture_raw? recording & valid_buffer : match;
+   assign O_data_cmd = I_capture_raw? `FE_FIFO_CMD_STAT : `FE_FIFO_CMD_DATA;
    assign O_max_short_timestamp = 2**`FE_FIFO_SHORTTIME_LEN-1;
 
    assign O_trigger_match = (m3_trig & !m3_trig_r & I_soft_trig_enable) ||
@@ -177,7 +179,7 @@ module fe_capture_trace #(
          else if (~synchronized && 
                   (revbuffer[pBUFFER_SIZE-1-:16] == 16'h7fff) && 
                   (revbuffer[7:0] == 8'hff) // shorthand to ensure that buffer is full of sync frames
-                 ) begin
+                 ) begin        // TODO: hmm, above seems dangerously incomplete...
             synchronized <= 1'b1;
             valid_count <= 4'd1;
          end
@@ -193,6 +195,64 @@ module fe_capture_trace #(
                                            (I_trace_width == 2)? (valid_count % 4 == 0) :
                                            (I_trace_width == 4)? (valid_count % 2 == 0) : 1'b0);
 
+   /* NOTE-TODO: These below are to accomodate any mix of short and long sync frames, which leads to
+   a VERY large number of combinations; these lists are likely not exhaustive. Decided instead 
+   // thanks to short/long sync frames there are lots of permutations! :-/
+   // Note this list doesn't need to be exhaustive; if we're missing combinations,
+   // it just means that extra sync data will get recorded (possibly in ways that are hard
+   // to parse, i.e. partial sync frames)
+   assign revbuffer_all_syncframes =  (revbuffer == 64'h7fff_7fff_7fff_7fff) ||
+                                      (revbuffer == 64'hff7f_ff7f_ff7f_ff7f) ||
+                                      (revbuffer == 64'h7fff_ffff_7fff_ffff) ||
+                                      (revbuffer == 64'hff7f_ffff_ff7f_ffff) ||
+                                      (revbuffer == 64'hffff_7fff_ffff_7fff) ||
+                                      (revbuffer == 64'hffff_ff7f_ffff_ff7f) ||
+
+                                      (revbuffer == 64'h7fff_7fff_ffff_7fff) ||
+                                      (revbuffer == 64'hff7f_ff7f_ffff_ff7f) ||
+                                      (revbuffer == 64'h7fff_7fff_7fff_ffff) ||
+                                      (revbuffer == 64'hffff_7fff_7fff_ffff) ||
+                                      (revbuffer == 64'h7fff_ffff_7fff_7fff) ||
+                                      (revbuffer == 64'hff7f_ff7f_ff7f_ffff) ||
+                                      (revbuffer == 64'hffff_7fff_7fff_7fff) ||
+                                      (revbuffer == 64'hffff_ff7f_ff7f_ff7f) ||
+                                      (revbuffer == 64'hffff_ff7f_ff7f_ffff);
+
+   // thankfully there are fewer permutations for the stopping condition, because we must stop at
+   // a specific time in order to not truncate when we stop recording:
+   assign revbuffer_stop_syncframes = (revbuffer == 64'hff7f_ff7f_ff7f_ff7f) ||
+                                      (revbuffer == 64'hff7f_ffff_ff7f_ffff) ||
+                                      (revbuffer == 64'hff7f_ff7f_ffff_7fff) ||
+                                      (revbuffer == 64'hff7f_ffff_ff7f_ff7f) ||
+                                      (revbuffer == 64'hffff_ff7f_ff7f_ffff) ||
+                                      (revbuffer == 64'hffff_ff7f_ffff_ff7f) ||
+                                      (revbuffer == 64'hffff_ff7f_ff7f_ff7f) ||
+                                      (revbuffer == 64'hff7f_ff7f_ff7f_ffff);
+   */
+
+   assign revbuffer_all_syncframes =  (revbuffer == 64'h7fff7fff7fff7fff) ||
+                                      (revbuffer == 64'hff7fff7fff7fff7f) ||
+                                      (revbuffer == 64'h7fffffff7fffffff) ||
+                                      (revbuffer == 64'hff7fffffff7fffff) ||
+                                      (revbuffer == 64'hffff7fffffff7fff) ||
+                                      (revbuffer == 64'hffffff7fffffff7f) ||
+
+                                      (revbuffer == 64'h7fff7fff7fffffff) ||
+                                      (revbuffer == 64'hff7fff7fff7fffff) ||
+                                      (revbuffer == 64'hffff7fff7fff7fff) ||
+                                      (revbuffer == 64'hffffff7fff7fff7f) ||
+                                      (revbuffer == 64'h7fffffff7fff7fff) ||
+                                      (revbuffer == 64'hff7fffffff7fff7f) ||
+                                      (revbuffer == 64'hffff7fffffff7fff) ||
+                                      (revbuffer == 64'hffffff7fffffff7f) ||
+                                      (revbuffer == 64'h7fff7fffffff7fff) ||
+                                      (revbuffer == 64'hff7fff7fffffff7f);
+
+
+   assign revbuffer_stop_syncframes = (revbuffer == 64'hff7f_ff7f_ff7f_ff7f) ||
+                                      (revbuffer == 64'hff7f_ffff_ff7f_ffff);
+
+
    // Filter out *most* sync frames. When buffer isn't full of sync frames, start pushing out
    // data for capture, and stop once the buffer is full of sync frames again.
    // NOTE: if pBUFFER_SIZE changes, this needs to change too. Can't think of a
@@ -200,21 +260,30 @@ module fe_capture_trace #(
    always @(posedge trace_clk) begin
       if (reset) begin
          recording <= 1'b0;
+         //prepare_to_stop <= 1'b0;
       end
 
       else if (valid_buffer) begin
-         // start when we *don't* see only sync frames:
-         if ( (revbuffer == 64'h7fff_7fff_7fff_7fff) ||
-              (revbuffer == 64'hff7f_ff7f_ff7f_ff7f) ||
-              (revbuffer == 64'h7fff_ffff_7fff_ffff) ||
-              (revbuffer == 64'hff7f_ffff_ff7f_ffff) ||
-              (revbuffer == 64'hffff_7fff_ffff_7fff) ||
-              (revbuffer == 64'hffff_ff7f_ffff_ff7f) ) begin
+         // Stop recording when we see only sync frames. This is a bit convoluted,
+         // by necessity in order to avoid stopping recording in a way that misses the last byte
+         // of a sync frame and leads to output that may be hard/impossible to parse:
+         if (revbuffer_stop_syncframes)
+            recording <= 1'b0;
+         else if (!revbuffer_all_syncframes)
+            recording <= 1'b1;
+         /* TODO: alternative mechanism, clean up later:
+         if (prepare_to_stop && revbuffer_syncframes) begin
+            prepare_to_stop <= 1'b0;
             recording <= 1'b0;
          end
+         else if (!prepare_to_stop && revbuffer_syncframes) begin
+            prepare_to_stop <= 1'b1;
+         end
          else begin
+            prepare_to_stop <= 1'b0;
             recording <= 1'b1;
          end
+         */
       end
 
    end
@@ -236,6 +305,7 @@ module fe_capture_trace #(
        if (reset) begin
           match_bits_r <= 0;
           m3_trig_r <= 0;
+          match_rule <= 0;
        end
        else begin
           m3_trig_r <= m3_trig;
@@ -254,9 +324,6 @@ module fe_capture_trace #(
          O_fifo_data <= 0;
       end
       else begin
-         // don't overflow the FIFO:
-         // Because back-to-back writes are possible, checking sniff_fifo_full may not prevent overflow,
-         // and so the last few FIFO entries are wasted :-(
          if (I_fifo_wr) begin
             O_fifo_wr <= 1'b1;
             O_fifo_data[`FE_FIFO_CMD_START +: `FE_FIFO_CMD_BIT_LEN] <= I_fifo_command;

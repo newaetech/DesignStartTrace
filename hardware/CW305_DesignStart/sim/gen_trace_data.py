@@ -31,7 +31,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int, default=1)
 parser.add_argument("--events", type=int, default=1)
 parser.add_argument("--rules", type=int, default=1)
+parser.add_argument("--raw", type=int, default=0)
 args = parser.parse_args()
+
+rawmode = args.raw
 
 random.seed(args.seed)
 
@@ -43,13 +46,22 @@ last_event_time = 0
 rules = [0]*8
 
 
-def sync_frame(n=1):
-    inc_time(8*n)
+def sync_frame(n=1, synctype='rand'):
+    if synctype == 'rand':
+        synctime = random.randrange(0,2)
+    elif synctype == 'short':
+        synctime = 0
+    elif synctype == 'long':
+        synctime = 1
     for i in range(n):
-        mem.write('// sync frame:\n')
-        # TODO: check whether sync frames start or finish with 7; also, allow for short frames
-        #mem.write('7 f f f f f f f\n\n')
-        mem.write('f f f f f f f 7\n\n')
+        if synctime:
+            mem.write('// long sync frame:\n')
+            mem.write('f f f f f f f 7\n\n')
+            inc_time(8)
+        else:
+            mem.write('// short sync frame:\n')
+            mem.write('f f f 7\n\n')
+            inc_time(4)
 
 
 def sw_trig():
@@ -65,9 +77,21 @@ def random_frame(n=1, minlen=2, maxlen=16):
         total_nibbles += nibbles
         mem.write('// random %d-nibble frame:\n' % nibbles)
         for j in range(nibbles):
-            mem.write('%01x ' % (random.randrange(0,16)))
+            # since the testbench isn't that smart, avoid starting with 0xff or 0x7f since that 
+            # could be confused to be part of a sync frame:
+            if j == 1:
+                top = 7
+            else:
+                top = 16
+            nibble = random.randrange(0,top)
+            mem.write('%01x ' % nibble)
+            #rawlog.write('%01x' % nibble)
+            if rawmode:
+                if j % 2:
+                    matchtimes.write('%016x\n' % (((nibble << 4) + lastnib) << 56)) # TODO: timestamps
+                else:
+                    lastnib = nibble
         mem.write('\n\n')
-        sync_frame(random.randrange(0,4))
     inc_time(total_nibbles)
 
 
@@ -80,7 +104,13 @@ def gen_rule(rule=0, length=8):
     global rules
     pattern = []
     for i in range(length):
-        pattern.append(random.randrange(0,0x100))
+        # since the testbench isn't that smart, avoid starting with 0xff or 0x7f since that 
+        # could be confused to be part of a sync frame:
+        if i == 0:
+            top = 0x7f
+        else:
+            top = 0x100
+        pattern.append(random.randrange(0,top))
     rules[rule] = pattern
     hexpattern = '0x'
     for x in pattern:
@@ -103,10 +133,14 @@ def match_frame(rule=0):
     mem.write('// matching pattern, rule %d: %s (%s)\n' % (rule, pattern, hexpattern))
     for x in pattern:
         mem.write('%01x %01x ' % (x & 0xf, (x>>4) & 0xf))
+        #rawlog.write('%01x%01x\n' % (x & 0xf, (x>>4) & 0xf))
+        if rawmode:
+            matchtimes.write('%016x\n' % (x << 56)) # TODO: timestamps
     mem.write('\n\n')
     # log the expected match time:
     rule = 2**rule;
-    matchtimes.write('%016x\n' % ((rule << 56) + time-last_event_time))
+    if not rawmode:
+        matchtimes.write('%016x\n' % ((rule << 56) + time-last_event_time))
     last_event_time = time + 1 # adjust for delays in the RTL
 
 
@@ -120,6 +154,7 @@ mem = open('tracedata.mem', 'w+')
 regs = open('registers.v', 'w+')
 matchtimes = open('matchtimes.mem', 'w+')
 trig = open('swtrigtime.mem', 'w+')
+#rawlog = open('rawlog.mem', 'w+')
 
 # generate match rules:
 for i in range(args.rules):
@@ -127,7 +162,7 @@ for i in range(args.rules):
 
 # create trace data:
 # lots of sync frames initially to allow all setup register writes to be done:
-sync_frame(200)
+sync_frame(400)
 
 # trigger + stuff:
 sw_trig()
@@ -137,7 +172,9 @@ sync_frame(random.randrange(0,20))
 for i in range(args.events):
     rule = random.randrange(0, args.rules)
     match_frame(rule)
+    sync_frame(random.randrange(0,10))
     random_frame(random.randrange(0,20))
+    sync_frame(random.randrange(0,4))
 
 sync_frame(10)
 

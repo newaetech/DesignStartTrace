@@ -38,8 +38,9 @@ module tb();
     parameter pUSB_CLOCK_PERIOD = 10;
     parameter pPLL_CLOCK_PERIOD = 6;
     parameter pTRIGGER_CLOCK_PERIOD = 2;
+    parameter pCAPTURE_RAW = 0;
     parameter pSEED = 1;
-    parameter pTIMEOUT = 10000;
+    parameter pTIMEOUT = 30000;
     parameter pVERBOSE = 0;
     parameter pDUMP = 0;
 
@@ -73,6 +74,7 @@ module tb();
     int errors;
     int i;
     int match_index;
+    int raw_index;
 
     
     reg [31:0] write_data;
@@ -91,12 +93,23 @@ module tb();
    reg fifo_stat_full;
    reg fifo_stat_overflow_blocked;
    reg fifo_stat_synchronized;
-   reg [7:0] fifo_match_rule;
+   reg [7:0] fifo_data;
    reg [7:0] fifo_timestamp;
    reg [7:0] expected_rule;
    reg [31:0] expected_time;
+   reg [7:0] expected_byte;
 
    bit setup_done;
+   bit in_sync;
+   int sync_counter;
+   reg [63:0] sync_data;
+
+   always @(*) begin
+      if (trig_out & !setup_done) begin
+         errors += 1;
+         $display("TESTBENCH ERROR: trigger seen before setup was complete! Increase number of initial sync frames.");
+      end
+   end
 
 
    initial begin
@@ -104,7 +117,8 @@ module tb();
       setup_done = 0;
       errors = 0;
       match_index = 0;
-      $display("Running with pSEED=%0d", pSEED);
+      $display("Running with seed=%0d", seed);
+      $urandom(seed);
       if (pDUMP) begin
          $dumpfile("results/tb.fst");
          $dumpvars(0, tb);
@@ -133,15 +147,6 @@ module tb();
 
       $readmemh("matchtimes.mem", matchdata);
 
-      // TODO: temporary while debugging read timing
-      write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'haa);
-      read_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, read_data);
-      $display("DBG: got %h", read_data);
-
-      write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'hff);
-      read_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, read_data);
-      $display("DBG: got %h", read_data);
-
       // enable all patterns:
       write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'hff);
 
@@ -156,17 +161,17 @@ module tb();
 
       write_byte(`MAIN_REG_SELECT, `REG_COUNTER_QUICK_START, 0, 8'h1);
 
-      write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h0);
-
       $display("Writing match rules...");
       `include "registers.v"
       $display("done!");
 
-      write_byte(`TRACE_REG_SELECT, `REG_CAPTURE_MODE, 0, 8'h1);
+      write_byte(`TRACE_REG_SELECT, `REG_CAPTURE_RAW, 0, pCAPTURE_RAW);
 
       write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
 
+      // TODO: set these intelligently
       write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd800);
+      write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h1);
 
       setup_done = 1;
 
@@ -191,7 +196,7 @@ module tb();
    end
 
 
-   // FIFO read thread (match rules version):
+   // FIFO read thread:
    initial begin
       #10 wait(setup_done);
       match_index = 0;
@@ -212,19 +217,102 @@ module tb();
             wait_fifo_not_empty();
             read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
          end
-         expected_rule = matchdata[match_index][63:56];
-         expected_time = matchdata[match_index][55:0];
-         if (fifo_match_rule != expected_rule) begin
-            errors += 1;
-            $display("ERROR on match event %0d: expected match rule %0d, got %0d", match_index, expected_rule, fifo_match_rule);
+
+         if (pCAPTURE_RAW == 0) begin // rules mode
+            expected_rule = matchdata[match_index][63:56];
+            expected_time = matchdata[match_index][55:0];
+            if (command != `FE_FIFO_CMD_DATA) begin
+               errors += 1;
+               $display("ERROR at time %t: expected data command (%2b), got %2b", $time, `FE_FIFO_CMD_DATA, command);
+            end
+            if (fifo_data != expected_rule) begin
+               errors += 1;
+               $display("ERROR on match event %0d: expected match rule %0d, got %0d", match_index, expected_rule, fifo_data);
+            end
+            else
+               $display("Correct rule on match event %0d", match_index);
+            if (total_time != expected_time) begin
+               errors += 1;
+               $display("ERROR on match event %0d: expected timestamp %0d, got %0d", match_index, expected_time, total_time);
+            end
+            match_index += 1;
          end
-         else
-            $display("Correct rule on match event %0d", match_index);
-         if (total_time != expected_time) begin
-            errors += 1;
-            $display("ERROR on match event %0d: expected timestamp %0d, got %0d", match_index, expected_time, total_time);
+
+         else begin // raw mode 
+            if (command != `FE_FIFO_CMD_STAT) begin
+               errors += 1;
+               $display("ERROR at time %t: expected data command (%2b), got %2b", $time, `FE_FIFO_CMD_STAT, command);
+            end
+            expected_byte = matchdata[match_index][63:56];
+            $display("Expected: %2h Got: %2h", expected_byte, fifo_data);
+
+            // TODO: currently not checking time
+            if (fifo_data != expected_byte) begin
+               // Ignore sync frames, which may be present. For now we assume these bytes are part
+               // of sync frames, and we'll actually verify that later.
+               if ( (fifo_data == 8'hff) || (fifo_data == 8'h7f) ) begin
+                  if (in_sync == 0) begin
+                     sync_counter = 1;
+                     sync_data = {56'h0, fifo_data};
+                     in_sync = 1;
+                  end
+                  else begin
+                     sync_counter += 1;
+                     case (sync_counter)
+                        2: sync_data[15:8]  = fifo_data;
+                        3: sync_data[23:16] = fifo_data;
+                        4: sync_data[31:24] = fifo_data;
+                        5: sync_data[39:32] = fifo_data;
+                        6: sync_data[47:40] = fifo_data;
+                        7: sync_data[55:48] = fifo_data;
+                        8: sync_data[63:56] = fifo_data;
+                     endcase
+                  end
+               end
+               else begin
+                  $display("ERROR at time %t: expected raw byte %h, got %h", $time, expected_byte, fifo_data);
+                  match_index += 1;
+               end
+            end
+
+            else begin
+               if (in_sync == 1) begin
+                  if (sync_counter % 2 != 0) begin
+                     errors += 1;
+                     $display("ERROR at time %t: observed unexpected number of sync bytes (%0d)", $time, sync_counter);
+                  end
+                  else begin
+                  // verify that non-matching data are actually sync frames:
+                     //$display("Sync data seen: counter = %d, contents = %8h", sync_counter, sync_data);
+                     if (sync_counter > 10) begin
+                        errors += 1;
+                        $display("ERROR at time %t: too much sync data seen! counter = %d, contents = %8h", $time, sync_counter, sync_data);
+                     end
+                     else if ( (sync_data != 64'h0000_0000_7fff_7fff) &&
+                               (sync_data != 64'h7fff_7fff_7fff_7fff) &&
+                               (sync_data != 64'h7fff_ffff_7fff_ffff) &&
+                               (sync_data != 64'h7fff_ffff_7fff_7fff) &&
+                               (sync_data != 64'h7fff_7fff_7fff_ffff) &&
+                               (sync_data != 64'hffff_7fff_7fff_ffff) &&
+                               (sync_data != 64'h0000_0000_7fff_ffff) &&
+                               (sync_data != 64'h0000_7fff_7fff_7fff) &&
+                               (sync_data != 64'h0000_7fff_7fff_ffff) &&
+                               (sync_data != 64'h0000_7fff_ffff_7fff) &&
+                               (sync_data != 64'h0000_0000_0000_7fff) &&
+                               (sync_data != 64'hffff_7fff_7fff_7fff) &&
+                               (sync_data != 64'hffff_7fff_ffff_7fff) &&
+                               (sync_data != 64'h7fff_7fff_ffff_7fff) ) begin
+                        errors += 1;
+                        $display("ERROR: non-sync data seen! counter = %d, contents = %8h", sync_counter, sync_data);
+                     end
+                  end
+               end
+               in_sync = 0;
+               match_index += 1;
+            end
+
          end
-         match_index += 1;
+
       end
 
       #(pUSB_CLOCK_PERIOD*10);
@@ -342,7 +430,7 @@ module tb();
       bit fifo_empty = 1;
       read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_STAT, 0, fifo_empty);
       while (fifo_empty == 1) begin
-         // TODO: currently assuming no long timestamps
+         // TODO: currently assuming no long timestamps(?)
          read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_STAT, 0, fifo_empty);
       end
    endtask
@@ -359,7 +447,7 @@ module tb();
       fifo_stat_full =            read_data[18+`FIFO_STAT_FULL];
       fifo_stat_overflow_blocked= read_data[18+`FIFO_STAT_OVERFLOW_BLOCKED];
       fifo_stat_synchronized =    read_data[18+`FIFO_STAT_SYNC_FLAG];
-      fifo_match_rule =           read_data[15:8];
+      fifo_data =                 read_data[15:8];
    endtask
 
 

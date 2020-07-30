@@ -31,7 +31,7 @@
 `define REG_TRACE_WIDTH         5'h06
 `define REG_SOFT_TRIG_PASSTHRU  5'h07
 `define REG_SOFT_TRIG_ENABLE    5'h08
-`define REG_CAPTURE_MODE        5'h09
+`define REG_CAPTURE_RAW         5'h09
 
 `define REG_SYNCHRONIZED        5'h0c
 

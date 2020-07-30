@@ -26,6 +26,7 @@
 import logging
 import time
 import re
+import math
 from .CW305 import CW305, CW305_USB
 from chipwhisperer.common.utils import util
 
@@ -66,12 +67,19 @@ class CW305_DesignStart(CW305):
             'ITM_TCR':      '0b'
            }
 
+    rule_length = [0]*8
+
+    longsync = [255, 255, 255, 127]
+    shortsync = [255, 127]
 
     def __init__(self):
         super().__init__()
         # should be sufficient; TODO-check:
         self._clksleeptime = 200
         self.slurp_defines()
+        #self.fpga_write(self.REG_SOFT_TRIG_ENABLE, [1])
+        #self.fpga_write(self.REG_COUNTER_QUICK_START, [1])
+        #self.fpga_write(self.REG_CAPTURE_MODE, [1])
 
 
     def set_ss(self, ss):
@@ -85,34 +93,44 @@ class CW305_DesignStart(CW305):
         self.verilog_define_matches = 0
         # TODO-later: move defines file to package:
         # defines_file = pkg_resources.resource_filename('phywhisperer', 'firmware/defines.v')
-        defines_file = '../hardware/CW305_DesignStart/hdl/defines.v'
-        defines = open(defines_file, 'r')
-        define_regex_base  =   re.compile(r'`define')
-        define_regex_radix =   re.compile(r'`define\s+?(\w+).+?\'([bdh])([0-9a-fA-F]+)')
-        define_regex_noradix = re.compile(r'`define\s+?(\w+?)\s+?(\d+?)')
-        for define in defines:
-            if define_regex_base.search(define):
-                match = define_regex_radix.search(define)
-                if match:
-                    self.verilog_define_matches += 1
-                    if match.group(2) == 'b':
-                        radix = 2
-                    elif match.group(2) == 'h':
-                        radix = 16
+        defines_files = ['../hardware/CW305_DesignStart/hdl/defines_trace.v',
+                         '../hardware/phywhisperer/software/phywhisperer/firmware/defines_pw.v']
+        for i,defines_file in enumerate(defines_files):
+            defines = open(defines_file, 'r')
+            define_regex_base  =   re.compile(r'`define')
+            define_regex_reg   =   re.compile(r'`define\s+?REG_')
+            define_regex_radix =   re.compile(r'`define\s+?(\w+).+?\'([bdh])([0-9a-fA-F]+)')
+            define_regex_noradix = re.compile(r'`define\s+?(\w+?)\s+?(\d+?)')
+            for define in defines:
+                if define_regex_base.search(define):
+                    reg = define_regex_reg.search(define)
+                    match = define_regex_radix.search(define)
+                    if reg:
+                        if i == 0:
+                            block_offset = self.TRACE_REG_SELECT << 5
+                        else:
+                            block_offset = self.MAIN_REG_SELECT << 5
                     else:
-                        radix = 10
-                    setattr(self, match.group(1), int(match.group(3),radix))
-                else:
-                    match = define_regex_noradix.search(define)
+                        block_offset = 0
                     if match:
                         self.verilog_define_matches += 1
-                        setattr(self, match.group(1), int(match.group(2),10))
+                        if match.group(2) == 'b':
+                            radix = 2
+                        elif match.group(2) == 'h':
+                            radix = 16
+                        else:
+                            radix = 10
+                        setattr(self, match.group(1), int(match.group(3),radix) + block_offset)
                     else:
-                        logging.warning("Couldn't parse line: %s", define)
+                        match = define_regex_noradix.search(define)
+                        if match:
+                            self.verilog_define_matches += 1
+                            setattr(self, match.group(1), int(match.group(2),10) + block_offset)
+                        else:
+                            logging.warning("Couldn't parse line: %s", define)
+            defines.close()
         # make sure everything is cool:
-        assert self.verilog_define_matches == 36, "Trouble parsing Verilog defines file (%s): didn't find the right number of defines." % defines_file
-        defines.close()
-
+        assert self.verilog_define_matches == 91, "Trouble parsing Verilog defines file (%s): didn't find the right number of defines; expected 91, got %d" % (defines_file, self.verilog_define_matches)
 
 
     def simpleserial_write(self, cmd, data, printresult=False):
@@ -165,6 +183,18 @@ class CW305_DesignStart(CW305):
         """
         self.fpga_write(self.REG_TRACE_PATTERN0+index, pattern)
         self.fpga_write(self.REG_TRACE_MASK0+index, mask)
+        # count trailing zeros in the mask, as these determine how much time elapses from
+        # the start of receiving a trace packet, until the match is determined -- so that the
+        # recorded timestamp can be rolled back to when the trace packet began
+        trailing_zeros = 0
+        for m in mask[::-1]:
+            if not m:
+                trailing_zeros += 1
+        self.rule_length[index] = 8-trailing_zeros
+
+
+    def arm_trace(self):
+        self.fpga_write(self.REG_ARM, [1])
 
 
     def synced(self):
@@ -237,11 +267,33 @@ class CW305_DesignStart(CW305):
         return data
 
 
+    def check_fifo_errors(self, underflow=0, overflow=0):
+        """Check whether an underflow or overflow occured on the capture FIFO.
+        
+        Args:
+            underflow (int, optional): expected status, 0 or 1
+            overflow (int, optional): expected status, 0 or 1
+        """
+        status = self.fpga_read(self.REG_SNIFF_FIFO_STAT, 1)[0]
+        fifo_underflow = (status & 2) >> 1
+        fifo_overflow = (status & 16) >> 4
+        assert fifo_underflow == underflow
+        assert fifo_overflow == overflow
+
+
+    def fifo_empty(self):
+        """Returns True if the capture FIFO is empty, False otherwise.
+        """
+        if self.fpga_read(self.REG_SNIFF_FIFO_STAT, 1)[0] & 1:
+            return True
+        else:
+            return False
+
+
     def get_fpga_buildtime(self):
         """Returns date and time when FPGA bitfile was generated.
         """
-        # TODO: slurp
-        raw = self.fpga_read(addr=0x0, readlen=4)
+        raw = self.fpga_read(addr=self.REG_BUILDTIME, readlen=4)
         # definitions: Xilinx XAPP1232
         day = raw[3] >> 3
         month = ((raw[3] & 0x7) << 1) + (raw[2] >> 7)
@@ -262,7 +314,7 @@ class CW305_DesignStart(CW305):
     def get_target_name(self):
         """Returns project-specific 'name' embedded in target bitfile
         """
-        nameb = self.fpga_read(0x1, 8)
+        nameb = self.fpga_read(self.REG_NAME, 8)
         names = ''
         for i in nameb:
             names += hex(i)[2:]
@@ -278,5 +330,144 @@ class CW305_DesignStart(CW305):
     def go(self):
         pass
 
+
+    def read_capture_data(self, verbose=False, timeout=2):
+        """Read from capture memory.
+        
+        Args:
+            timeout (int, optional): timeout in seconds (ignored if 0, defaults to 2)
+            verbose (bool, optional): Print extra debug info.
+        
+        Returns: List of captured entries. Each list element is itself a 3-element list,
+        containing the 3 bytes that make up a capture entry. Can be parsed by get_rule_match_times()
+        or get_raw_trace_packets(). See defines_trace.v for definition of the FIFO
+        data fields.
+
+        """
+        data = []
+        starttime = time.time()
+
+        # first check for FIFO to not be empty:
+        assert self.fifo_empty() == False
+
+        while not self.fifo_empty():
+            data.append(self.fpga_read(self.REG_SNIFF_FIFO_RD, 4)[1:4])
+
+        if len(data): # maybe we only got empty reads
+            if data[-1][2] & 2**self.FE_FIFO_STAT_UNDERFLOW:
+                logging.warning("Capture FIFO underflowed!")
+
+        return data
+
+
+    def print_raw_data(self, rawdata):
+        for e in rawdata:
+            entry = 0
+            entry += (e[2] & 0x3) << 16
+            entry += e[1] << 8
+            entry += e[0]
+            print('%05x' % entry)
+
+
+    def get_rule_match_times(self, rawdata, rawtimes=False, verbose=False):
+        """Split raw capture data into data events and times, stat events and times.
+
+        Args:
+            rawdata: raw capture data, list of lists, e.g. obtained from read_capture_data()
+            rawtimes:
+                True: return reported times. 
+                False: roll back times to when matching trace packets started coming out
+            verbose: print timestamped rules
+        Returns:
+            list of [time, rule index] tuples
+        """
+
+        times = []
+        timecounter = 0
+        lasttime = 0
+        lastadjust = 0
+        for raw in rawdata:
+            command = raw[2] & 0x3
+            if command == self.FE_FIFO_CMD_DATA:
+                #hardware reports the number of cycles between events, so to
+                #obtain elapsed time we add one:
+                timecounter += raw[0] + 1
+                data = raw[1]
+                rule = int(math.log2(data))
+                if rawtimes:
+                    adjust = 0
+                else:
+                    adjust = self.rule_length[rule]*2   # TODO: assuming trace width = 4
+                timecounter = timecounter - adjust + lastadjust
+                delta = timecounter - lasttime
+                lasttime = timecounter
+                lastadjust = adjust
+                if verbose:
+                    print("%8d rule # %d, delta = %d, adjust = %d" % (timecounter, rule, delta, adjust))
+                times.append([timecounter, rule])
+            elif command == self.FE_FIFO_CMD_TIME:
+                timecounter += raw[0] + (raw[1] << 8)
+            elif command == self.FE_FIFO_CMD_STAT:
+                raise ValueError("Unexpected STAT command, not supported by this method; maybe try get_raw_trace_packets() instead?")
+            elif command == self.FE_FIFO_CMD_STRM:
+                pass
+        return times
+
+
+    def get_raw_trace_packets(self, rawdata, verbose=False):
+        """Split raw capture data into pseudo-frames, suppressing sync frames (and using those
+        sync frames as marker which is separating pseudo-frames). It's the best we can do
+        without actually parsing the trace packets, which is best left to other tools!
+
+        Args:
+            rawdata: raw capture data, list of lists, e.g. obtained from read_capture_data()
+            verbose: print timestamped rules
+        Returns:
+            list of pseudo-frames
+        TODO: add time stamps
+        """
+
+        pseudoframes = []
+        pseudoframe = []
+        timecounter = 0
+        lasttime = 0
+        for raw in rawdata:
+            command = raw[2] & 0x3
+            if command == self.FE_FIFO_CMD_STAT:
+                #hardware reports the number of cycles between events, so to
+                #obtain elapsed time we add one:
+                timecounter += raw[0] + 1
+                data = raw[1]
+                pseudoframe.append(data)
+
+                if pseudoframe[-len(self.longsync):] == self.longsync:
+                    pseudoframe = pseudoframe[:-len(self.longsync)]
+                    sync_removed = True
+                    #print('Removed long')
+                elif pseudoframe[-len(self.shortsync):] == self.shortsync:
+                    pseudoframe = pseudoframe[:-len(self.shortsync)]
+                    sync_removed = True
+                    #print('Removed short')
+                else:
+                    sync_removed = False
+
+                if sync_removed and len(pseudoframe):
+                    pseudoframes.append(pseudoframe)
+                    if verbose:
+                        print("Pseudoframe: ", end='')
+                        for b in pseudoframe:
+                            print('%02x ' % b, end='')
+                        print();
+                    pseudoframe = []
+
+                delta = timecounter - lasttime
+                lasttime = timecounter
+            elif command == self.FE_FIFO_CMD_TIME:
+                timecounter += raw[0] + (raw[1] << 8)
+            elif command == self.FE_FIFO_CMD_DATA:
+                raise ValueError("Unexpected DATA command, not supported by this method; maybe try get_rule_match_times() instead?")
+            elif command == self.FE_FIFO_CMD_STRM:
+                pass
+        return pseudoframes
 
 

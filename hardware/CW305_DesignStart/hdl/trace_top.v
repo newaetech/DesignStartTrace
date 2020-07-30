@@ -117,7 +117,7 @@ module trace_top #(
    wire [pMATCH_RULES-1:0] pattern_trig_enable;
    wire trace_reset_sync;
    wire [2:0] trace_width;
-   wire capture_rules_mode;
+   wire capture_raw;
 
    wire [pBUFFER_SIZE-1:0] trace_pattern0;
    wire [pBUFFER_SIZE-1:0] trace_pattern1;
@@ -221,7 +221,7 @@ module trace_top #(
       .O_trace_width            (trace_width     ),
       .O_soft_trig_passthru     (O_soft_trig_passthru),
       .O_soft_trig_enable       (soft_trig_enable),
-      .O_capture_rules_mode     (capture_rules_mode),
+      .O_capture_raw            (capture_raw),
 
       .O_trace_pattern0         (trace_pattern0  ),
       .O_trace_pattern1         (trace_pattern1  ),
@@ -399,7 +399,7 @@ module trace_top #(
       .O_fifo_fe_status         (synchronized),
       .I_trace_width            (trace_width),
       .I_reset_sync             (trace_reset_sync),
-      .I_capture_rules_mode     (capture_rules_mode),
+      .I_capture_raw            (capture_raw),
       .I_pattern_enable         (pattern_enable  ),
       .I_pattern_trig_enable    (pattern_trig_enable),
       .I_soft_trig_enable       (soft_trig_enable),
