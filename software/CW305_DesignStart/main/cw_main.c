@@ -16,6 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "uECC.c"       // yes this is weird but a bunch of needed defines are there
+#include "uECC_vli.h"
 
 #include <stdio.h>
 #include <ctype.h>
@@ -45,6 +47,11 @@
 // uartlite example:
 #include "xstatus.h"
 #include "xuartlite.h"
+
+// Use globals for pmul input (P) and output (Q) points because
+// they're too big to transmit all in one simpleserial transfer:
+uECC_word_t P[uECC_MAX_WORDS * 2];
+uECC_word_t Q[uECC_MAX_WORDS * 2];
 
 
 uint8_t setreg(uint8_t* x)
@@ -219,6 +226,73 @@ uint8_t get_pt(uint8_t* pt)
 	return 0x00;
 }
 
+void uECC_point_mult(uECC_word_t *result,
+                     const uECC_word_t *point,
+                     const uECC_word_t *scalar,
+                     uECC_Curve curve) {
+    uECC_word_t tmp1[uECC_MAX_WORDS];
+    uECC_word_t tmp2[uECC_MAX_WORDS];
+    uECC_word_t *p2[2] = {tmp1, tmp2};
+    uECC_word_t carry = regularize_k(scalar, tmp1, tmp2, curve);
+
+    EccPoint_mult(result, point, p2[!carry], 0, curve->num_n_bits + 1, curve);
+}
+
+
+uint8_t run_pmul_fixed(uint8_t* k)
+{
+    const struct uECC_Curve_t * curve;
+    //uECC_word_t kwords[uECC_MAX_WORDS] = {k[0],0,0,0,0,0,0,0}; // TODO
+    uECC_word_t kwords[uECC_MAX_WORDS];
+    curve = uECC_secp256r1();
+
+    int i, j;
+    for (i = 0; i < 8; i++) {
+       kwords[7-i] = 0;
+       for (j = 0; j < 4; j++) {
+          kwords[7-i] |= k[i*4+j] << ((3-j)*8);
+       }
+    }
+
+    trigger_high();
+    uECC_point_mult(Q, curve->G, kwords, curve);
+    trigger_low();
+    // we don't return the result because it's too long, but let's return
+    // something to indicate that the command ran:
+    simpleserial_put('r', 1, k);
+    return 0x00;
+}
+
+
+
+// return x coordinate of pmul result:
+uint8_t get_qx(uint8_t* x)
+{
+    int i, j;
+    for (i = 0; i < 8; i++) {
+       for (j = 0; j < 4; j++) {
+          x[i*4+j] = (int)((Q[i] >> (3-j)*8) & 255);
+       }
+    }
+    simpleserial_put('r', 32, x);
+    return 0x00;
+}
+
+
+// return y coordinate of pmul result:
+uint8_t get_qy(uint8_t* y)
+{
+    int i, j;
+    for (i = 0; i < 8; i++) {
+       for (j = 0; j < 4; j++) {
+          y[i*4+j] = (int)((Q[i+8] >> (3-j)*8) & 255);
+       }
+    }
+    simpleserial_put('r', 32, y);
+    return 0x00;
+}
+
+
 uint8_t reset(uint8_t* x)
 {
 	// Reset key here if needed
@@ -259,6 +333,9 @@ int main(void)
 	simpleserial_addcmd('t', 0, test_itm);
 	simpleserial_addcmd('s', 5, setreg);
 	simpleserial_addcmd('g', 5, getreg);
+        simpleserial_addcmd('f', 32, run_pmul_fixed);
+        simpleserial_addcmd('q', 32, get_qx);
+        simpleserial_addcmd('r', 32, get_qy);
 
         enable_trace();
 
