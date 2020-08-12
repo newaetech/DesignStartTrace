@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xBB25657049BF4177",
+      "boundary_crc": "0xD1DB64DB37D9C9FA",
       "device": "xc7a100tftg256-2",
       "name": "m3_for_arty_a7",
       "synth_flow_mode": "None",
@@ -10,11 +10,11 @@
     },
     "design_tree": {
       "Clocks_and_Resets": {
-        "clk_wiz_0": "",
         "i_inv_dbgresetn": "",
         "i_inv_sysresetn1": "",
         "proc_sys_reset_base": "",
-        "xlconstant_8": ""
+        "xlconstant_8": "",
+        "xlconstant_9": ""
       },
       "Cortex_M3_0": "",
       "axi_bram_ctrl_0": "",
@@ -68,15 +68,15 @@
             "value_src": "const_prop"
           },
           "CLK_DOMAIN": {
-            "value": "/Clocks_and_Resets/clk_wiz_0_clk_out1",
-            "value_src": "ip_prop"
+            "value": "m3_for_arty_a7_sys_clock",
+            "value_src": "default_prop"
           },
           "DATA_WIDTH": {
             "value": "32"
           },
           "FREQ_HZ": {
-            "value": "100000000",
-            "value_src": "ip_prop"
+            "value": "20000000",
+            "value_src": "user_prop"
           },
           "HAS_BRESP": {
             "value": "1",
@@ -141,8 +141,8 @@
             "value_src": "default"
           },
           "PHASE": {
-            "value": "0.0",
-            "value_src": "ip_prop"
+            "value": "0.000",
+            "value_src": "user_prop"
           },
           "PROTOCOL": {
             "value": "AXI3"
@@ -309,20 +309,20 @@
             "value": "CM3_CODE_AXI3"
           },
           "CLK_DOMAIN": {
-            "value": "/Clocks_and_Resets/clk_wiz_0_clk_out1",
-            "value_src": "ip_prop"
+            "value": "m3_for_arty_a7_sys_clock",
+            "value_src": "default_prop"
           },
           "FREQ_HZ": {
-            "value": "100000000",
-            "value_src": "ip_prop"
+            "value": "20000000",
+            "value_src": "user_prop"
           },
           "INSERT_VIP": {
             "value": "0",
             "value_src": "default"
           },
           "PHASE": {
-            "value": "0.0",
-            "value_src": "ip_prop"
+            "value": "0.000",
+            "value_src": "user_prop"
           }
         }
       },
@@ -330,9 +330,6 @@
         "direction": "O",
         "left": "0",
         "right": "0"
-      },
-      "locked": {
-        "direction": "O"
       },
       "TDO": {
         "direction": "O"
@@ -413,114 +410,9 @@
           "sys_reset_n": {
             "type": "rst",
             "direction": "I"
-          },
-          "locked": {
-            "direction": "O"
           }
         },
         "components": {
-          "clk_wiz_0": {
-            "vlnv": "xilinx.com:ip:clk_wiz:6.0",
-            "xci_name": "m3_for_arty_a7_clk_wiz_0_0",
-            "parameters": {
-              "CLKIN1_JITTER_PS": {
-                "value": "833.33"
-              },
-              "CLKIN2_JITTER_PS": {
-                "value": "833.33"
-              },
-              "CLKOUT1_DRIVES": {
-                "value": "BUFGCE"
-              },
-              "CLKOUT1_JITTER": {
-                "value": "130.958"
-              },
-              "CLKOUT1_PHASE_ERROR": {
-                "value": "98.575"
-              },
-              "CLKOUT1_REQUESTED_OUT_FREQ": {
-                "value": "100"
-              },
-              "CLKOUT2_DRIVES": {
-                "value": "BUFGCE"
-              },
-              "CLKOUT2_JITTER": {
-                "value": "151.636"
-              },
-              "CLKOUT2_PHASE_ERROR": {
-                "value": "98.575"
-              },
-              "CLKOUT2_REQUESTED_OUT_FREQ": {
-                "value": "100.000"
-              },
-              "CLKOUT2_USED": {
-                "value": "false"
-              },
-              "CLKOUT3_DRIVES": {
-                "value": "BUFGCE"
-              },
-              "CLKOUT4_DRIVES": {
-                "value": "BUFGCE"
-              },
-              "CLKOUT5_DRIVES": {
-                "value": "BUFGCE"
-              },
-              "CLKOUT6_DRIVES": {
-                "value": "BUFGCE"
-              },
-              "CLKOUT7_DRIVES": {
-                "value": "BUFGCE"
-              },
-              "CLK_IN1_BOARD_INTERFACE": {
-                "value": "sys_clock"
-              },
-              "CLK_IN2_BOARD_INTERFACE": {
-                "value": "Custom"
-              },
-              "FEEDBACK_SOURCE": {
-                "value": "FDBK_AUTO"
-              },
-              "MMCM_CLKFBOUT_MULT_F": {
-                "value": "10.000"
-              },
-              "MMCM_CLKIN1_PERIOD": {
-                "value": "10.000"
-              },
-              "MMCM_CLKIN2_PERIOD": {
-                "value": "10.000"
-              },
-              "MMCM_CLKOUT0_DIVIDE_F": {
-                "value": "10.000"
-              },
-              "MMCM_CLKOUT1_DIVIDE": {
-                "value": "1"
-              },
-              "MMCM_DIVCLK_DIVIDE": {
-                "value": "1"
-              },
-              "NUM_OUT_CLKS": {
-                "value": "1"
-              },
-              "RESET_BOARD_INTERFACE": {
-                "value": "Custom"
-              },
-              "SECONDARY_SOURCE": {
-                "value": "Single_ended_clock_capable_pin"
-              },
-              "USE_BOARD_FLOW": {
-                "value": "true"
-              },
-              "USE_INCLK_SWITCHOVER": {
-                "value": "false"
-              },
-              "USE_RESET": {
-                "value": "false"
-              },
-              "USE_SAFE_CLOCK_STARTUP": {
-                "value": "true"
-              }
-            }
-          },
           "i_inv_dbgresetn": {
             "vlnv": "xilinx.com:ip:util_vector_logic:2.0",
             "xci_name": "m3_for_arty_a7_i_inv_dbgresetn_0",
@@ -560,27 +452,18 @@
           "xlconstant_8": {
             "vlnv": "xilinx.com:ip:xlconstant:1.1",
             "xci_name": "m3_for_arty_a7_xlconstant_1_8"
+          },
+          "xlconstant_9": {
+            "vlnv": "xilinx.com:ip:xlconstant:1.1",
+            "xci_name": "m3_for_arty_a7_xlconstant_8_0"
           }
         },
         "nets": {
-          "dcm_locked_1": {
-            "ports": [
-              "clk_wiz_0/locked",
-              "proc_sys_reset_base/dcm_locked",
-              "locked"
-            ]
-          },
           "clk_wiz_0_clk_out1": {
             "ports": [
-              "clk_wiz_0/clk_out1",
+              "sys_clock",
               "clk_cpu",
               "proc_sys_reset_base/slowest_sync_clk"
-            ]
-          },
-          "sys_clock_1": {
-            "ports": [
-              "sys_clock",
-              "clk_wiz_0/clk_in1"
             ]
           },
           "proc_sys_reset_base_mb_reset": {
@@ -630,6 +513,12 @@
             "ports": [
               "proc_sys_reset_base/peripheral_aresetn",
               "peripheral_aresetn"
+            ]
+          },
+          "xlconstant_9_dout": {
+            "ports": [
+              "xlconstant_9/dout",
+              "proc_sys_reset_base/dcm_locked"
             ]
           }
         }
@@ -1118,34 +1007,10 @@
           }
         },
         "interface_nets": {
-          "xbar_to_m01_couplers": {
-            "interface_ports": [
-              "xbar/M01_AXI",
-              "m01_couplers/S_AXI"
-            ]
-          },
           "m02_couplers_to_axi_interconnect_0": {
             "interface_ports": [
               "M02_AXI",
               "m02_couplers/M_AXI"
-            ]
-          },
-          "xbar_to_m02_couplers": {
-            "interface_ports": [
-              "xbar/M02_AXI",
-              "m02_couplers/S_AXI"
-            ]
-          },
-          "xbar_to_m00_couplers": {
-            "interface_ports": [
-              "xbar/M00_AXI",
-              "m00_couplers/S_AXI"
-            ]
-          },
-          "m01_couplers_to_axi_interconnect_0": {
-            "interface_ports": [
-              "M01_AXI",
-              "m01_couplers/M_AXI"
             ]
           },
           "axi_interconnect_0_to_s00_couplers": {
@@ -1164,6 +1029,30 @@
             "interface_ports": [
               "M00_AXI",
               "m00_couplers/M_AXI"
+            ]
+          },
+          "m01_couplers_to_axi_interconnect_0": {
+            "interface_ports": [
+              "M01_AXI",
+              "m01_couplers/M_AXI"
+            ]
+          },
+          "xbar_to_m00_couplers": {
+            "interface_ports": [
+              "xbar/M00_AXI",
+              "m00_couplers/S_AXI"
+            ]
+          },
+          "xbar_to_m01_couplers": {
+            "interface_ports": [
+              "xbar/M01_AXI",
+              "m01_couplers/S_AXI"
+            ]
+          },
+          "xbar_to_m02_couplers": {
+            "interface_ports": [
+              "xbar/M02_AXI",
+              "m02_couplers/S_AXI"
             ]
           }
         },
@@ -1326,12 +1215,6 @@
       }
     },
     "interface_nets": {
-      "axi_gpio_0_GPIO": {
-        "interface_ports": [
-          "gpio_rtl_0",
-          "axi_gpio_0/GPIO"
-        ]
-      },
       "axi_interconnect_0_M01_AXI": {
         "interface_ports": [
           "axi_gpio_0/S_AXI",
@@ -1344,10 +1227,10 @@
           "axi_uartlite_0/UART"
         ]
       },
-      "axi_interconnect_0_M02_AXI": {
+      "axi_gpio_0_GPIO": {
         "interface_ports": [
-          "axi_bram_ctrl_0/S_AXI",
-          "axi_interconnect_0/M02_AXI"
+          "gpio_rtl_0",
+          "axi_gpio_0/GPIO"
         ]
       },
       "axi_interconnect_0_M00_AXI": {
@@ -1356,22 +1239,28 @@
           "axi_interconnect_0/M00_AXI"
         ]
       },
+      "axi_interconnect_0_M02_AXI": {
+        "interface_ports": [
+          "axi_bram_ctrl_0/S_AXI",
+          "axi_interconnect_0/M02_AXI"
+        ]
+      },
       "Cortex_M3_0_CM3_CODE_AXI3": {
         "interface_ports": [
           "CM3_CODE_AXI3",
           "Cortex_M3_0/CM3_CODE_AXI3"
         ]
       },
-      "axi_bram_ctrl_0_BRAM_PORTA": {
-        "interface_ports": [
-          "axi_bram_ctrl_0/BRAM_PORTA",
-          "blk_mem_gen_0/BRAM_PORTA"
-        ]
-      },
       "Cortex_M3_0_CM3_SYS_AXI3": {
         "interface_ports": [
           "Cortex_M3_0/CM3_SYS_AXI3",
           "axi_interconnect_0/S00_AXI"
+        ]
+      },
+      "axi_bram_ctrl_0_BRAM_PORTA": {
+        "interface_ports": [
+          "axi_bram_ctrl_0/BRAM_PORTA",
+          "blk_mem_gen_0/BRAM_PORTA"
         ]
       }
     },
@@ -1546,12 +1435,6 @@
         "ports": [
           "CFGITCMEN",
           "Cortex_M3_0/CFGITCMEN"
-        ]
-      },
-      "Clocks_and_Resets_locked": {
-        "ports": [
-          "Clocks_and_Resets/locked",
-          "locked"
         ]
       },
       "Cortex_M3_0_TDO": {

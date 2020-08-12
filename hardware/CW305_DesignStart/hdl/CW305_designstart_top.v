@@ -147,7 +147,6 @@ module CW305_designstart_top #(
         .usb_uart_txd           (uart_txd),
         .CFGITCMEN              (cfg),
         .M3_RESET_OUT           (m3_reset_out),
-        .locked                 (),
         .TRCENA                 (TRCENA),
         .TRACECLK               (TRACECLK),
         .TRACEDATA              (TRACEDATA),

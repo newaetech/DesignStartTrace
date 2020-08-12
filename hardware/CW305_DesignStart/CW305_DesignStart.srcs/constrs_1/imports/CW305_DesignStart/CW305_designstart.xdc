@@ -1,9 +1,9 @@
 set_property IOSTANDARD LVCMOS33 [get_ports *]
 
 # CW305 clock and reset
-create_clock -period 20.000 -name pll_clk1 -waveform {0.000 10.000} [get_nets pll_clk1]
-create_clock -period 20.000 -name tio_clkin -waveform {0.000 10.000} [get_nets tio_clkin]
-create_clock -period 20.000 -name swclk -waveform {0.000 10.000} [get_nets swclk]
+create_clock -period 50.000 -name pll_clk1 -waveform {0.000 20.000} [get_nets pll_clk1]
+create_clock -period 50.000 -name tio_clkin -waveform {0.000 20.000} [get_nets tio_clkin]
+create_clock -period 50.000 -name swclk -waveform {0.000 20.000} [get_nets swclk]
 create_clock -period 10.000 -name usb_clk -waveform {0.000 5.000} [get_nets USB_clk]
 
 create_generated_clock -name trigger_clk [get_pins U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]

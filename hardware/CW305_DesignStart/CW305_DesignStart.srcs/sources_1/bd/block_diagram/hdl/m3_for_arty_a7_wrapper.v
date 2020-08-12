@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-//Date        : Wed Jul 22 15:01:40 2020
+//Date        : Tue Aug 11 15:22:09 2020
 //Host        : qed running 64-bit major release  (build 9200)
 //Command     : generate_target m3_for_arty_a7_wrapper.bd
 //Design      : m3_for_arty_a7_wrapper
@@ -59,7 +59,6 @@ module m3_for_arty_a7_wrapper
     TRCENA,
     ext_clock,
     gpio_rtl_0_tri_o,
-    locked,
     nTDOEN,
     nTRST,
     reset,
@@ -115,7 +114,6 @@ module m3_for_arty_a7_wrapper
   output TRCENA;
   output ext_clock;
   output [0:0]gpio_rtl_0_tri_o;
-  output locked;
   output nTDOEN;
   input nTRST;
   input reset;
@@ -172,7 +170,6 @@ module m3_for_arty_a7_wrapper
   wire TRCENA;
   wire ext_clock;
   wire [0:0]gpio_rtl_0_tri_o;
-  wire locked;
   wire nTDOEN;
   wire nTRST;
   wire reset;
@@ -230,7 +227,6 @@ module m3_for_arty_a7_wrapper
         .TRCENA(TRCENA),
         .ext_clock(ext_clock),
         .gpio_rtl_0_tri_o(gpio_rtl_0_tri_o),
-        .locked(locked),
         .nTDOEN(nTDOEN),
         .nTRST(nTRST),
         .reset(reset),

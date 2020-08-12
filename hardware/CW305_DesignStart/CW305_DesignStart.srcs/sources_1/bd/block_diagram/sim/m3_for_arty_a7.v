@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-//Date        : Wed Jul 22 15:01:39 2020
+//Date        : Tue Aug 11 15:22:09 2020
 //Host        : qed running 64-bit major release  (build 9200)
 //Command     : generate_target m3_for_arty_a7.bd
 //Design      : m3_for_arty_a7
@@ -13,7 +13,6 @@ module Clocks_and_Resets_imp_1WLR2TP
    (clk_cpu,
     dbgresetn,
     interconnect_aresetn,
-    locked,
     peripheral_aresetn,
     sys_clock,
     sys_reset_n,
@@ -22,7 +21,6 @@ module Clocks_and_Resets_imp_1WLR2TP
   output clk_cpu;
   output [0:0]dbgresetn;
   output [0:0]interconnect_aresetn;
-  output locked;
   output [0:0]peripheral_aresetn;
   input sys_clock;
   input sys_reset_n;
@@ -30,29 +28,23 @@ module Clocks_and_Resets_imp_1WLR2TP
   input sysresetreq;
 
   wire clk_wiz_0_clk_out1;
-  wire dcm_locked_1;
   wire [0:0]i_inv_dbgresetn_Res;
   wire [0:0]i_inv_sysresetn1_Res;
   wire [0:0]proc_sys_reset_base_interconnect_aresetn;
   wire proc_sys_reset_base_mb_reset;
   wire [0:0]proc_sys_reset_base_peripheral_aresetn;
-  wire sys_clock_1;
   wire sys_reset_n;
   wire sysresetreq_1;
   wire [0:0]xlconstant_8_dout;
+  wire [0:0]xlconstant_9_dout;
 
   assign clk_cpu = clk_wiz_0_clk_out1;
+  assign clk_wiz_0_clk_out1 = sys_clock;
   assign dbgresetn[0] = i_inv_dbgresetn_Res;
   assign interconnect_aresetn[0] = proc_sys_reset_base_interconnect_aresetn;
-  assign locked = dcm_locked_1;
   assign peripheral_aresetn[0] = proc_sys_reset_base_peripheral_aresetn;
-  assign sys_clock_1 = sys_clock;
   assign sysresetn[0] = i_inv_sysresetn1_Res;
   assign sysresetreq_1 = sysresetreq;
-  m3_for_arty_a7_clk_wiz_0_0 clk_wiz_0
-       (.clk_in1(sys_clock_1),
-        .clk_out1(clk_wiz_0_clk_out1),
-        .locked(dcm_locked_1));
   m3_for_arty_a7_i_inv_dbgresetn_0 i_inv_dbgresetn
        (.Op1(proc_sys_reset_base_mb_reset),
         .Res(i_inv_dbgresetn_Res));
@@ -61,7 +53,7 @@ module Clocks_and_Resets_imp_1WLR2TP
         .Res(i_inv_sysresetn1_Res));
   m3_for_arty_a7_proc_sys_reset_base_0 proc_sys_reset_base
        (.aux_reset_in(xlconstant_8_dout),
-        .dcm_locked(dcm_locked_1),
+        .dcm_locked(xlconstant_9_dout),
         .ext_reset_in(sys_reset_n),
         .interconnect_aresetn(proc_sys_reset_base_interconnect_aresetn),
         .mb_debug_sys_rst(sysresetreq_1),
@@ -70,6 +62,8 @@ module Clocks_and_Resets_imp_1WLR2TP
         .slowest_sync_clk(clk_wiz_0_clk_out1));
   m3_for_arty_a7_xlconstant_1_8 xlconstant_8
        (.dout(xlconstant_8_dout));
+  m3_for_arty_a7_xlconstant_8_0 xlconstant_9
+       (.dout(xlconstant_9_dout));
 endmodule
 
 module m00_couplers_imp_JNWG9E
@@ -533,7 +527,6 @@ module m3_for_arty_a7
     TRCENA,
     ext_clock,
     gpio_rtl_0_tri_o,
-    locked,
     nTDOEN,
     nTRST,
     reset,
@@ -541,7 +534,7 @@ module m3_for_arty_a7
     usb_uart_rxd,
     usb_uart_txd);
   (* X_INTERFACE_INFO = "xilinx.com:signal:data:1.0 DATA.CFGITCMEN DATA" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME DATA.CFGITCMEN, LAYERED_METADATA undef" *) input [1:0]CFGITCMEN;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 CM3_CODE_AXI3 ARADDR" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CM3_CODE_AXI3, ADDR_WIDTH 32, ARUSER_WIDTH 1, AWUSER_WIDTH 1, BUSER_WIDTH 0, CLK_DOMAIN /Clocks_and_Resets/clk_wiz_0_clk_out1, DATA_WIDTH 32, FREQ_HZ 100000000, HAS_BRESP 1, HAS_BURST 1, HAS_CACHE 1, HAS_LOCK 1, HAS_PROT 1, HAS_QOS 0, HAS_REGION 0, HAS_RRESP 1, HAS_WSTRB 1, ID_WIDTH 0, INSERT_VIP 0, MAX_BURST_LENGTH 16, NUM_READ_OUTSTANDING 1, NUM_READ_THREADS 1, NUM_WRITE_OUTSTANDING 1, NUM_WRITE_THREADS 1, PHASE 0.0, PROTOCOL AXI3, READ_WRITE_MODE READ_WRITE, RUSER_BITS_PER_BYTE 0, RUSER_WIDTH 0, SUPPORTS_NARROW_BURST 1, WUSER_BITS_PER_BYTE 0, WUSER_WIDTH 0" *) output [31:0]CM3_CODE_AXI3_araddr;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 CM3_CODE_AXI3 ARADDR" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CM3_CODE_AXI3, ADDR_WIDTH 32, ARUSER_WIDTH 1, AWUSER_WIDTH 1, BUSER_WIDTH 0, CLK_DOMAIN m3_for_arty_a7_sys_clock, DATA_WIDTH 32, FREQ_HZ 20000000, HAS_BRESP 1, HAS_BURST 1, HAS_CACHE 1, HAS_LOCK 1, HAS_PROT 1, HAS_QOS 0, HAS_REGION 0, HAS_RRESP 1, HAS_WSTRB 1, ID_WIDTH 0, INSERT_VIP 0, MAX_BURST_LENGTH 16, NUM_READ_OUTSTANDING 1, NUM_READ_THREADS 1, NUM_WRITE_OUTSTANDING 1, NUM_WRITE_THREADS 1, PHASE 0.000, PROTOCOL AXI3, READ_WRITE_MODE READ_WRITE, RUSER_BITS_PER_BYTE 0, RUSER_WIDTH 0, SUPPORTS_NARROW_BURST 1, WUSER_BITS_PER_BYTE 0, WUSER_WIDTH 0" *) output [31:0]CM3_CODE_AXI3_araddr;
   (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 CM3_CODE_AXI3 ARBURST" *) output [1:0]CM3_CODE_AXI3_arburst;
   (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 CM3_CODE_AXI3 ARCACHE" *) output [3:0]CM3_CODE_AXI3_arcache;
   (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 CM3_CODE_AXI3 ARLEN" *) output [3:0]CM3_CODE_AXI3_arlen;
@@ -587,9 +580,8 @@ module m3_for_arty_a7
   (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.TRACECLK CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.TRACECLK, CLK_DOMAIN m3_for_arty_a7_Cortex_M3_0_0_TRACECLK, FREQ_HZ 100000000, INSERT_VIP 0, PHASE 0.000" *) output TRACECLK;
   output [3:0]TRACEDATA;
   output TRCENA;
-  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.EXT_CLOCK CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.EXT_CLOCK, ASSOCIATED_BUSIF CM3_CODE_AXI3, CLK_DOMAIN /Clocks_and_Resets/clk_wiz_0_clk_out1, FREQ_HZ 100000000, INSERT_VIP 0, PHASE 0.0" *) output ext_clock;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK.EXT_CLOCK CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK.EXT_CLOCK, ASSOCIATED_BUSIF CM3_CODE_AXI3, CLK_DOMAIN m3_for_arty_a7_sys_clock, FREQ_HZ 20000000, INSERT_VIP 0, PHASE 0.000" *) output ext_clock;
   (* X_INTERFACE_INFO = "xilinx.com:interface:gpio:1.0 gpio_rtl_0 TRI_O" *) output [0:0]gpio_rtl_0_tri_o;
-  output locked;
   output nTDOEN;
   input nTRST;
   (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RST.RESET RST" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RST.RESET, INSERT_VIP 0, POLARITY ACTIVE_LOW" *) input reset;
@@ -599,7 +591,6 @@ module m3_for_arty_a7
 
   wire [1:0]CFGITCMEN_1;
   wire [0:0]Clocks_and_Resets_dbgresetn;
-  wire Clocks_and_Resets_locked;
   wire [0:0]Clocks_and_Resets_sysresetn;
   wire [31:0]Cortex_M3_0_CM3_CODE_AXI3_ARADDR;
   wire [1:0]Cortex_M3_0_CM3_CODE_AXI3_ARBURST;
@@ -808,7 +799,6 @@ module m3_for_arty_a7
   assign axi_uartlite_0_UART_RxD = usb_uart_rxd;
   assign ext_clock = clk_wiz_0_clk_out1;
   assign gpio_rtl_0_tri_o[0] = axi_gpio_0_GPIO_TRI_O;
-  assign locked = Clocks_and_Resets_locked;
   assign nTDOEN = Cortex_M3_0_nTDOEN;
   assign nTRST_1 = nTRST;
   assign reset_1 = reset;
@@ -818,7 +808,6 @@ module m3_for_arty_a7
        (.clk_cpu(clk_wiz_0_clk_out1),
         .dbgresetn(Clocks_and_Resets_dbgresetn),
         .interconnect_aresetn(proc_sys_reset_1_peripheral_aresetn),
-        .locked(Clocks_and_Resets_locked),
         .peripheral_aresetn(proc_sys_reset_1_interconnect_aresetn),
         .sys_clock(sys_clock_1),
         .sys_reset_n(reset_1),

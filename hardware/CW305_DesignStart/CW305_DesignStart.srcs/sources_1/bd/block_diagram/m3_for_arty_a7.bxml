@@ -2,10 +2,10 @@
 <Root MajorVersion="0" MinorVersion="37">
   <CompositeFile CompositeFileTopName="m3_for_arty_a7" CanBeSetAsTop="true" CanDisplayChildGraph="true">
     <Description>Composite Fileset</Description>
-    <Generation Name="SYNTHESIS" State="GENERATED" Timestamp="1595444501"/>
-    <Generation Name="IMPLEMENTATION" State="GENERATED" Timestamp="1595444501"/>
-    <Generation Name="SIMULATION" State="GENERATED" Timestamp="1595444501"/>
-    <Generation Name="HW_HANDOFF" State="GENERATED" Timestamp="1595444501"/>
+    <Generation Name="SYNTHESIS" State="GENERATED" Timestamp="1597173730"/>
+    <Generation Name="IMPLEMENTATION" State="GENERATED" Timestamp="1597173730"/>
+    <Generation Name="SIMULATION" State="GENERATED" Timestamp="1597173730"/>
+    <Generation Name="HW_HANDOFF" State="GENERATED" Timestamp="1597173730"/>
     <FileCollection Name="SOURCES" Type="SOURCES">
       <File Name="ip\m3_for_arty_a7_axi_gpio_0_2\m3_for_arty_a7_axi_gpio_0_2.xci" Type="IP">
         <Instance HierarchyPath="axi_gpio_0"/>
@@ -90,14 +90,6 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\m3_for_arty_a7_clk_wiz_0_0_1\m3_for_arty_a7_clk_wiz_0_0.xci" Type="IP">
-        <Instance HierarchyPath="Clocks_and_Resets/clk_wiz_0"/>
-        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
-        <Library Name="xil_defaultlib"/>
-        <UsedIn Val="SYNTHESIS"/>
-        <UsedIn Val="IMPLEMENTATION"/>
-        <UsedIn Val="SIMULATION"/>
-      </File>
       <File Name="ip\m3_for_arty_a7_i_inv_dbgresetn_0_1\m3_for_arty_a7_i_inv_dbgresetn_0.xci" Type="IP">
         <Instance HierarchyPath="Clocks_and_Resets/i_inv_dbgresetn"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
@@ -172,6 +164,14 @@
       </File>
       <File Name="ip\m3_for_arty_a7_xlconstant_1_9_1\m3_for_arty_a7_xlconstant_1_9.xci" Type="IP">
         <Instance HierarchyPath="xlconstant_1"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip\m3_for_arty_a7_xlconstant_8_0\m3_for_arty_a7_xlconstant_8_0.xci" Type="IP">
+        <Instance HierarchyPath="Clocks_and_Resets/xlconstant_9"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
         <UsedIn Val="SYNTHESIS"/>

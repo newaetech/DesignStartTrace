@@ -161,49 +161,11 @@ proc create_hier_cell_Clocks_and_Resets { parentCell nameHier } {
   create_bd_pin -dir O -type clk clk_cpu
   create_bd_pin -dir O -from 0 -to 0 dbgresetn
   create_bd_pin -dir O -from 0 -to 0 -type rst interconnect_aresetn
-  create_bd_pin -dir O locked
   create_bd_pin -dir O -from 0 -to 0 -type rst peripheral_aresetn
   create_bd_pin -dir I -type clk sys_clock
   create_bd_pin -dir I -type rst sys_reset_n
   create_bd_pin -dir O -from 0 -to 0 sysresetn
   create_bd_pin -dir I sysresetreq
-
-  # Create instance: clk_wiz_0, and set properties
-  set clk_wiz_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_0 ]
-  set_property -dict [ list \
-   CONFIG.CLKIN1_JITTER_PS {833.33} \
-   CONFIG.CLKIN2_JITTER_PS {833.33} \
-   CONFIG.CLKOUT1_DRIVES {BUFGCE} \
-   CONFIG.CLKOUT1_JITTER {130.958} \
-   CONFIG.CLKOUT1_PHASE_ERROR {98.575} \
-   CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {100} \
-   CONFIG.CLKOUT2_DRIVES {BUFGCE} \
-   CONFIG.CLKOUT2_JITTER {151.636} \
-   CONFIG.CLKOUT2_PHASE_ERROR {98.575} \
-   CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {100.000} \
-   CONFIG.CLKOUT2_USED {false} \
-   CONFIG.CLKOUT3_DRIVES {BUFGCE} \
-   CONFIG.CLKOUT4_DRIVES {BUFGCE} \
-   CONFIG.CLKOUT5_DRIVES {BUFGCE} \
-   CONFIG.CLKOUT6_DRIVES {BUFGCE} \
-   CONFIG.CLKOUT7_DRIVES {BUFGCE} \
-   CONFIG.CLK_IN1_BOARD_INTERFACE {sys_clock} \
-   CONFIG.CLK_IN2_BOARD_INTERFACE {Custom} \
-   CONFIG.FEEDBACK_SOURCE {FDBK_AUTO} \
-   CONFIG.MMCM_CLKFBOUT_MULT_F {10.000} \
-   CONFIG.MMCM_CLKIN1_PERIOD {10.000} \
-   CONFIG.MMCM_CLKIN2_PERIOD {10.000} \
-   CONFIG.MMCM_CLKOUT0_DIVIDE_F {10.000} \
-   CONFIG.MMCM_CLKOUT1_DIVIDE {1} \
-   CONFIG.MMCM_DIVCLK_DIVIDE {1} \
-   CONFIG.NUM_OUT_CLKS {1} \
-   CONFIG.RESET_BOARD_INTERFACE {Custom} \
-   CONFIG.SECONDARY_SOURCE {Single_ended_clock_capable_pin} \
-   CONFIG.USE_BOARD_FLOW {true} \
-   CONFIG.USE_INCLK_SWITCHOVER {false} \
-   CONFIG.USE_RESET {false} \
-   CONFIG.USE_SAFE_CLOCK_STARTUP {true} \
- ] $clk_wiz_0
 
   # Create instance: i_inv_dbgresetn, and set properties
   set i_inv_dbgresetn [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 i_inv_dbgresetn ]
@@ -229,18 +191,20 @@ proc create_hier_cell_Clocks_and_Resets { parentCell nameHier } {
   # Create instance: xlconstant_8, and set properties
   set xlconstant_8 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_8 ]
 
+  # Create instance: xlconstant_9, and set properties
+  set xlconstant_9 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_9 ]
+
   # Create port connections
-  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins clk_cpu] [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins proc_sys_reset_base/slowest_sync_clk]
-  connect_bd_net -net dcm_locked_1 [get_bd_pins locked] [get_bd_pins clk_wiz_0/locked] [get_bd_pins proc_sys_reset_base/dcm_locked]
+  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins clk_cpu] [get_bd_pins sys_clock] [get_bd_pins proc_sys_reset_base/slowest_sync_clk]
   connect_bd_net -net i_inv_dbgresetn_Res [get_bd_pins dbgresetn] [get_bd_pins i_inv_dbgresetn/Res]
   connect_bd_net -net i_inv_sysresetn1_Res [get_bd_pins sysresetn] [get_bd_pins i_inv_sysresetn1/Res]
   connect_bd_net -net proc_sys_reset_base_interconnect_aresetn [get_bd_pins interconnect_aresetn] [get_bd_pins proc_sys_reset_base/interconnect_aresetn]
   connect_bd_net -net proc_sys_reset_base_mb_reset [get_bd_pins i_inv_dbgresetn/Op1] [get_bd_pins i_inv_sysresetn1/Op1] [get_bd_pins proc_sys_reset_base/mb_reset]
   connect_bd_net -net proc_sys_reset_base_peripheral_aresetn [get_bd_pins peripheral_aresetn] [get_bd_pins proc_sys_reset_base/peripheral_aresetn]
-  connect_bd_net -net sys_clock_1 [get_bd_pins sys_clock] [get_bd_pins clk_wiz_0/clk_in1]
   connect_bd_net -net sys_reset_n [get_bd_pins sys_reset_n] [get_bd_pins proc_sys_reset_base/ext_reset_in]
   connect_bd_net -net sysresetreq_1 [get_bd_pins sysresetreq] [get_bd_pins proc_sys_reset_base/mb_debug_sys_rst]
   connect_bd_net -net xlconstant_8_dout [get_bd_pins proc_sys_reset_base/aux_reset_in] [get_bd_pins xlconstant_8/dout]
+  connect_bd_net -net xlconstant_9_dout [get_bd_pins proc_sys_reset_base/dcm_locked] [get_bd_pins xlconstant_9/dout]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -316,7 +280,6 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {CM3_CODE_AXI3} \
  ] $ext_clock
-  set locked [ create_bd_port -dir O locked ]
   set nTDOEN [ create_bd_port -dir O nTDOEN ]
   set nTRST [ create_bd_port -dir I nTRST ]
   set reset [ create_bd_port -dir I -type rst reset ]
@@ -464,7 +427,6 @@ proc create_root_design { parentCell } {
   # Create port connections
   connect_bd_net -net CFGITCMEN_1 [get_bd_ports CFGITCMEN] [get_bd_pins Cortex_M3_0/CFGITCMEN]
   connect_bd_net -net Clocks_and_Resets_dbgresetn [get_bd_pins Clocks_and_Resets/dbgresetn] [get_bd_pins Cortex_M3_0/DBGRESETn]
-  connect_bd_net -net Clocks_and_Resets_locked [get_bd_ports locked] [get_bd_pins Clocks_and_Resets/locked]
   connect_bd_net -net Clocks_and_Resets_sysresetn [get_bd_ports M3_RESET_OUT] [get_bd_pins Clocks_and_Resets/sysresetn] [get_bd_pins Cortex_M3_0/SYSRESETn]
   connect_bd_net -net Cortex_M3_0_JTAGNSW [get_bd_ports JTAGNSW] [get_bd_pins Cortex_M3_0/JTAGNSW]
   connect_bd_net -net Cortex_M3_0_JTAGTOP [get_bd_ports JTAGTOP] [get_bd_pins Cortex_M3_0/JTAGTOP]
