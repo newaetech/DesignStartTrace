@@ -41,6 +41,7 @@ module fe_capture_trace #(
     input  wire [pTIMESTAMP_FULL_WIDTH-1:0] I_fifo_time,
     input  wire [1:0] I_fifo_command,
     input  wire I_fifo_wr,
+    input  wire I_capturing,
     output wire [15:0] O_max_short_timestamp,
 
     /* REGISTER CONNECTIONS */
@@ -51,6 +52,7 @@ module fe_capture_trace #(
     input  wire [pMATCH_RULES-1:0] I_pattern_enable,
     input  wire [pMATCH_RULES-1:0] I_pattern_trig_enable,
     input  wire I_soft_trig_enable,
+    input  wire I_arm,
 
     input  wire [pBUFFER_SIZE-1:0] I_pattern0, 
     input  wire [pBUFFER_SIZE-1:0] I_pattern1,
@@ -109,6 +111,9 @@ module fe_capture_trace #(
    wire [pBUFFER_SIZE-1:0] pattern[pMATCH_RULES-1:0];
    wire [pBUFFER_SIZE-1:0] mask[pMATCH_RULES-1:0];
    reg  m3_trig_r;
+   reg  capturing_r;
+
+   (* ASYNC_REG = "TRUE" *) reg capture_raw;
 
    assign mask[0] = I_mask0;
    assign mask[1] = I_mask1;
@@ -130,12 +135,13 @@ module fe_capture_trace #(
 
 
    assign O_fifo_fe_status = synchronized;
-   assign O_event = I_capture_raw? recording & valid_buffer : match;
-   assign O_data_cmd = I_capture_raw? `FE_FIFO_CMD_STAT : `FE_FIFO_CMD_DATA;
+   assign O_event = capture_raw? recording & valid_buffer : match;
+   assign O_data_cmd = capture_raw? `FE_FIFO_CMD_STAT : `FE_FIFO_CMD_DATA;
    assign O_max_short_timestamp = 2**`FE_FIFO_SHORTTIME_LEN-1;
 
-   assign O_trigger_match = (m3_trig & !m3_trig_r & I_soft_trig_enable) ||
-                            ( |(match_bits & I_pattern_trig_enable)  & !(|(match_bits_r & I_pattern_trig_enable)) );
+   assign O_trigger_match = I_arm && 
+                         ( (m3_trig & !m3_trig_r & I_soft_trig_enable) ||
+                           (|(match_bits & I_pattern_trig_enable)  & !(|(match_bits_r & I_pattern_trig_enable)) ));
 
 
    // shift trace data into buffer:
@@ -292,7 +298,7 @@ module fe_capture_trace #(
    // look for match:
    generate 
       for (i = 0; i < pMATCH_RULES; i = i + 1) begin
-         assign match_bits[i] = ((revbuffer & mask[i]) == (pattern[i] & mask[i])) && I_pattern_enable[i] && valid_buffer;
+         assign match_bits[i] = ((revbuffer & mask[i]) == (pattern[i] & mask[i])) && I_pattern_enable[i] && valid_buffer && capturing_r;
       end
    endgenerate 
 
@@ -306,10 +312,12 @@ module fe_capture_trace #(
           match_bits_r <= 0;
           m3_trig_r <= 0;
           match_rule <= 0;
+          capturing_r <= 0;
        end
        else begin
           m3_trig_r <= m3_trig;
           match_bits_r <= match_bits;
+          capturing_r <= I_capturing;
           if (match)
              match_rule <= match_bits;
        end
@@ -322,8 +330,10 @@ module fe_capture_trace #(
       if (reset) begin
          O_fifo_wr <= 1'b0;
          O_fifo_data <= 0;
+         capture_raw <= 1'b0;
       end
       else begin
+         capture_raw <= I_capture_raw;
          if (I_fifo_wr) begin
             O_fifo_wr <= 1'b1;
             O_fifo_data[`FE_FIFO_CMD_START +: `FE_FIFO_CMD_BIT_LEN] <= I_fifo_command;

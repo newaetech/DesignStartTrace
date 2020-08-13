@@ -393,6 +393,7 @@ module trace_top #(
       .I_fifo_time              (fe_time),
       .I_fifo_command           (fe_command),
       .I_fifo_wr                (fe_fifo_wr),
+      .I_capturing              (capturing),
       .O_max_short_timestamp    (max_short_timestamp),
 
    /* REGISTER CONNECTIONS */
@@ -403,6 +404,7 @@ module trace_top #(
       .I_pattern_enable         (pattern_enable  ),
       .I_pattern_trig_enable    (pattern_trig_enable),
       .I_soft_trig_enable       (soft_trig_enable),
+      .I_arm                    (reg_arm_feclk),
 
       .I_pattern0               (trace_pattern0),
       .I_pattern1               (trace_pattern1),
