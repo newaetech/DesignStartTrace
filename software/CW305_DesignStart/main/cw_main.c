@@ -75,13 +75,14 @@ uint8_t setreg(uint8_t* x)
         else if  (x[0] == 2)    {DWT->COMP1 = val;}
         else if  (x[0] == 3)    {ETM_SetupMode(); ETM->CR = val; ETM_TraceMode();}
         else if  (x[0] == 4)    {ETM_SetupMode(); ETM->TESSEICR = val; ETM_TraceMode();}
-        else if  (x[0] == 5)    {ETM_SetupMode(); ETM->TEEVR   = val; ETM_TraceMode();}
-        else if  (x[0] == 6)    {ETM_SetupMode(); ETM->TECR1   = val; ETM_TraceMode();}
-        else if  (x[0] == 7)    {TPI->ACPR    = val;}
-        else if  (x[0] == 8)    {TPI->SPPR    = val;}
-        else if  (x[0] == 9)    {TPI->FFCR    = val;}
-        else if  (x[0] == 10)   {TPI->CSPSR   = val;}
-        else if  (x[0] == 11)   {ITM->TCR     = val;}
+        else if  (x[0] == 5)    {ETM_SetupMode(); ETM->TEEVR    = val; ETM_TraceMode();}
+        else if  (x[0] == 6)    {ETM_SetupMode(); ETM->TECR1    = val; ETM_TraceMode();}
+        else if  (x[0] == 7)    {ETM_SetupMode(); ETM->TRACEIDR = val; ETM_TraceMode();}
+        else if  (x[0] == 8)    {TPI->ACPR    = val;}
+        else if  (x[0] == 9)    {TPI->SPPR    = val;}
+        else if  (x[0] == 10)   {TPI->FFCR    = val;}
+        else if  (x[0] == 11)   {TPI->CSPSR   = val;}
+        else if  (x[0] == 12)   {ITM->TCR     = val;}
 
 	return 0x00;
 }
@@ -97,11 +98,12 @@ uint8_t getreg(uint8_t* x)
         else if  (x[0] == 4)    {val = ETM->TESSEICR;}
         else if  (x[0] == 5)    {val = ETM->TEEVR;}
         else if  (x[0] == 6)    {val = ETM->TECR1;}
-        else if  (x[0] == 7)    {val = TPI->ACPR;}
-        else if  (x[0] == 8)    {val = TPI->SPPR;}
-        else if  (x[0] == 9)    {val = TPI->FFCR;}
-        else if  (x[0] == 10)   {val = TPI->CSPSR;}
-        else if  (x[0] == 11)   {val = ITM->TCR;}
+        else if  (x[0] == 7)    {val = ETM->TRACEIDR;}
+        else if  (x[0] == 8)    {val = TPI->ACPR;}
+        else if  (x[0] == 9)    {val = TPI->SPPR;}
+        else if  (x[0] == 10)   {val = TPI->FFCR;}
+        else if  (x[0] == 11)   {val = TPI->CSPSR;}
+        else if  (x[0] == 12)   {val = ITM->TCR;}
 
         x[3] = val & 0xff;
         x[2] = (val >> 8) & 0xff;
@@ -185,6 +187,7 @@ void enable_trace()
 // Print a given string to ITM with 8-bit writes.
 void ITM_Print(int port, const char *p)
 {
+    trigger_high();
     if ((ITM->TCR & ITM_TCR_ITMENA_Msk) && (ITM->TER & (1UL << port)))
     {
         while (*p)
@@ -195,12 +198,13 @@ void ITM_Print(int port, const char *p)
         print("ITM alive!\n");
     }
     else {print("Couldn't print!\n");}
+    trigger_low();
 }
 
 
 uint8_t test_itm(uint8_t* x)
 {
-        ITM_Print(0, "ITM alive!");
+        ITM_Print(x[0], "ITM alive!");
 	return 0x00;
 }
 
@@ -299,6 +303,7 @@ uint8_t reset(uint8_t* x)
 	return 0x00;
 }
 
+
 uint8_t info(uint8_t* x)
 {
         print("DesignStart Cortex M3, compiled ");
@@ -306,6 +311,13 @@ uint8_t info(uint8_t* x)
         print(", ");
         print(__TIME__);
         print("\n");
+	return 0x00;
+}
+
+
+uint8_t reenable_trace(uint8_t* x)
+{
+        enable_trace();
 	return 0x00;
 }
 
@@ -329,8 +341,9 @@ int main(void)
 	simpleserial_addcmd('p', 16, get_pt);
 	simpleserial_addcmd('x', 0, reset);
 	simpleserial_addcmd('i', 0, info);
+	simpleserial_addcmd('e', 0, reenable_trace);
 	simpleserial_addcmd('m', 18, get_mask);
-	simpleserial_addcmd('t', 0, test_itm);
+	simpleserial_addcmd('t', 1, test_itm);
 	simpleserial_addcmd('s', 5, setreg);
 	simpleserial_addcmd('g', 5, getreg);
         simpleserial_addcmd('f', 32, run_pmul_fixed);
