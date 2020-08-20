@@ -56,6 +56,7 @@ module reg_trace #(
    output reg                                   O_soft_trig_passthru,
    output reg                                   O_soft_trig_enable,
    output reg                                   O_capture_raw,
+   output reg                                   O_record_syncs,
 
    output reg  [pBUFFER_SIZE-1:0]               O_trace_pattern0,
    output reg  [pBUFFER_SIZE-1:0]               O_trace_pattern1,
@@ -181,6 +182,8 @@ module reg_trace #(
 
             `REG_TRACE_COUNT:           reg_read_data = trace_count[reg_bytecnt*8 +: 8];
 
+            `REG_RECORD_SYNCS:          reg_read_data = O_record_syncs;
+
             default:                    reg_read_data = 0;
 
          endcase
@@ -245,6 +248,7 @@ module reg_trace #(
                `REG_SOFT_TRIG_PASSTHRU: O_soft_trig_passthru <= write_data[0];
                `REG_SOFT_TRIG_ENABLE:   O_soft_trig_enable <= write_data[0];
                `REG_CAPTURE_RAW:        O_capture_raw <= write_data[0];
+               `REG_RECORD_SYNCS:       O_record_syncs <= write_data[0];
 
                `REG_TRACE_PATTERN0:     O_trace_pattern0[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_PATTERN1:     O_trace_pattern1[reg_bytecnt*8 +: 8] <= write_data;

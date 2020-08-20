@@ -29,6 +29,7 @@ import re
 import math
 from .CW305 import CW305, CW305_USB
 from chipwhisperer.common.utils import util
+from chipwhisperer.common.traces import Trace
 
 class CW305_DesignStart(CW305):
 
@@ -60,11 +61,12 @@ class CW305_DesignStart(CW305):
             'ETM_TESSEICR': '04',
             'ETM_TEEVR':    '05',
             'ETM_TECR1':    '06',
-            'TPI_ACPR':     '07',
-            'TPI_SPPR':     '08',
-            'TPI_FFCR':     '09',
-            'TPI_CSPSR':    '0a',
-            'ITM_TCR':      '0b'
+            'ETM_TRACEIDR': '07',
+            'TPI_ACPR':     '08',
+            'TPI_SPPR':     '09',
+            'TPI_FFCR':     '0a',
+            'TPI_CSPSR':    '0b',
+            'ITM_TCR':      '0c'
            }
 
     rule_length = [0]*8
@@ -130,7 +132,7 @@ class CW305_DesignStart(CW305):
                             logging.warning("Couldn't parse line: %s", define)
             defines.close()
         # make sure everything is cool:
-        assert self.verilog_define_matches == 91, "Trouble parsing Verilog defines file (%s): didn't find the right number of defines; expected 91, got %d" % (defines_file, self.verilog_define_matches)
+        assert self.verilog_define_matches == 92, "Trouble parsing Verilog defines file (%s): didn't find the right number of defines; expected 92, got %d" % (defines_file, self.verilog_define_matches)
 
 
     def simpleserial_write(self, cmd, data, printresult=False):
@@ -138,7 +140,7 @@ class CW305_DesignStart(CW305):
         """
         self.ss.simpleserial_write(cmd, data)
         if printresult:
-            time.sleep(0.1)
+            time.sleep(0.6) # ECC is slow!
             print(self.ss.read().split('\n')[0])
 
 
@@ -207,6 +209,7 @@ class CW305_DesignStart(CW305):
 
     def get_trace_match_address(self):
         """Returns the address portion of a PC match.
+        TODO: obsolete
 
         """
         raw = self.fpga_read(self.REG_MATCHING_BUFFER, 7)
@@ -218,6 +221,7 @@ class CW305_DesignStart(CW305):
 
     def print_match(self):
         """Prints the last matching pattern.
+        TODO: obsolete
 
         """
         buf = 0
@@ -234,9 +238,8 @@ class CW305_DesignStart(CW305):
         logging.warning('Why are you calling simpleserial_read???')
 
 
-    # TODO or remove or pass to SS?
     def is_done(self):
-        return False
+        return self.ss.is_done()
 
 
     def fpga_write(self, addr, data):
@@ -320,6 +323,13 @@ class CW305_DesignStart(CW305):
             names += hex(i)[2:]
         return bytearray.fromhex(names).decode()
         
+
+    def test_itm(self, port):
+        """Returns date and time when target FW was compiled.
+        """
+        self.ss.simpleserial_write('t', bytearray([port]))
+        time.sleep(0.1)
+        print(self.ss.read().split('\n')[0])
 
 
     # TODO:
@@ -414,14 +424,14 @@ class CW305_DesignStart(CW305):
         return times
 
 
-    def get_raw_trace_packets(self, rawdata, verbose=False):
+    def get_raw_trace_packets(self, rawdata, removesyncs=True, verbose=False):
         """Split raw capture data into pseudo-frames, suppressing sync frames (and using those
         sync frames as marker which is separating pseudo-frames). It's the best we can do
         without actually parsing the trace packets, which is best left to other tools!
 
         Args:
             rawdata: raw capture data, list of lists, e.g. obtained from read_capture_data()
-            verbose: print timestamped rules
+            verbose: print timestamped packets
         Returns:
             list of pseudo-frames
         TODO: add time stamps
@@ -440,14 +450,17 @@ class CW305_DesignStart(CW305):
                 data = raw[1]
                 pseudoframe.append(data)
 
-                if pseudoframe[-len(self.longsync):] == self.longsync:
-                    pseudoframe = pseudoframe[:-len(self.longsync)]
-                    sync_removed = True
-                    #print('Removed long')
-                elif pseudoframe[-len(self.shortsync):] == self.shortsync:
-                    pseudoframe = pseudoframe[:-len(self.shortsync)]
-                    sync_removed = True
-                    #print('Removed short')
+                if removesyncs:
+                    if pseudoframe[-len(self.longsync):] == self.longsync:
+                        pseudoframe = pseudoframe[:-len(self.longsync)]
+                        sync_removed = True
+                        #print('Removed long')
+                    elif pseudoframe[-len(self.shortsync):] == self.shortsync:
+                        pseudoframe = pseudoframe[:-len(self.shortsync)]
+                        sync_removed = True
+                        #print('Removed short')
+                    else:
+                        sync_removed = False
                 else:
                     sync_removed = False
 
@@ -468,6 +481,61 @@ class CW305_DesignStart(CW305):
                 raise ValueError("Unexpected DATA command, not supported by this method; maybe try get_rule_match_times() instead?")
             elif command == self.FE_FIFO_CMD_STRM:
                 pass
+
+        if not removesyncs:
+            pseudoframes.append(pseudoframe)
+
         return pseudoframes
+
+
+    def capture_ecc_trace(self, scope, k, ack=True, verbose=False):
+        """Capture a trace, sending plaintext and key
+
+        Does all individual steps needed to capture a trace (arming the scope
+        sending the key/plaintext, getting the trace data back, etc.)
+
+        Args:
+            scope (ScopeTemplate): Scope object to use for capture.
+            k (bytearray): k to send to target. Should be unencoded
+                bytearray.
+            ack (bool, optional): Check for ack when reading response from target.
+                Defaults to True.
+
+        Returns:
+            :class:`Trace <chipwhisperer.common.traces.Trace>` or None if capture
+            timed out.
+
+        Raises:
+            Warning or OSError: Error during capture.
+
+        """
+        scope.arm()
+
+        self.simpleserial_write('f', k, printresult=verbose)
+        #self.ss.simpleserial_write('f', k)
+
+        ret = scope.capture()
+
+        i = 0
+        while not self.is_done():
+            i += 1
+            time.sleep(0.05)
+            if i > 100:
+                warnings.warn("Target did not finish operation")
+                return None
+
+        if ret:
+            warnings.warn("Timeout happened during capture")
+            return None
+
+        # TODO: get result and add to Trace
+        #response = target.simpleserial_read('r', 16, ack=ack)
+        response = None
+        wave = scope.get_last_trace()
+
+        if len(wave) >= 1:
+            return Trace(wave, None, response, k)
+        else:
+            return None
 
 

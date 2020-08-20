@@ -49,6 +49,7 @@ module fe_capture_trace #(
     input  wire [2:0] I_trace_width, // supported values: 1/2/4
     input  wire I_reset_sync,
     input  wire I_capture_raw,
+    input  wire I_record_syncs,
     input  wire [pMATCH_RULES-1:0] I_pattern_enable,
     input  wire [pMATCH_RULES-1:0] I_pattern_trig_enable,
     input  wire I_soft_trig_enable,
@@ -273,9 +274,9 @@ module fe_capture_trace #(
          // Stop recording when we see only sync frames. This is a bit convoluted,
          // by necessity in order to avoid stopping recording in a way that misses the last byte
          // of a sync frame and leads to output that may be hard/impossible to parse:
-         if (revbuffer_stop_syncframes)
+         if (revbuffer_stop_syncframes || !capturing_r)
             recording <= 1'b0;
-         else if (!revbuffer_all_syncframes)
+         else if (!revbuffer_all_syncframes || I_record_syncs)
             recording <= 1'b1;
          /* TODO: alternative mechanism, clean up later:
          if (prepare_to_stop && revbuffer_syncframes) begin

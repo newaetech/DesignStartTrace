@@ -40,13 +40,12 @@ set_property PULLDOWN true [get_ports TDI]
 # Master clock frequencies derived from clock wizard
 
 # Rename main clock for clarity:
-create_generated_clock -name cpu_clk [get_pins m3_for_arty_a7_i/Clocks_and_Resets/clk_wiz_0/inst/mmcm_adv_inst/CLKOUT0]
+create_clock -name cpu_clk -period 50 -waveform {0 25} [get_nets sys_clock]
+
 # virtual clock:
 create_clock -period 100.000 -name slow_out_clk
 
-create_generated_clock -name TRACECLK \ 
- -source [get_pins {m3_for_arty_a7_i/Clocks_and_Resets/clk_wiz_0/inst/mmcm_adv_inst/CLKOUT0}] \
- -divide_by 2 [get_pins {m1_for_arty_a7_i/Cortex_M3_0/inst/u_CORTEXM3INTEGRATION/u_cm3_tpiu/u_cm3_tpiu_trace_clk/trace_clk_reg/Q}]
+create_clock -period 100 -name TRACECLK -waveform {0 50} [get_pins m3_for_arty_a7_i/Cortex_M3_0/inst/u_CORTEXM3INTEGRATION/u_cm3_tpiu/u_cm3_tpiu_trace_clk/trace_clk_reg/Q]
 
 
 # UART has no timing requirements:
@@ -178,7 +177,11 @@ set_output_delay -clock [get_clocks slow_out_clk] -add_delay 0.500 [get_ports le
 set_output_delay -clock [get_clocks slow_out_clk] -add_delay 0.500 [get_ports swdio]
 set_output_delay -clock [get_clocks slow_out_clk] -add_delay 0.500 [get_ports trig_out]
 
-
+set_output_delay -clock [get_clocks TRACECLK] -add_delay 3.000 [get_ports {TRACEDATA[3]}]
+set_output_delay -clock [get_clocks TRACECLK] -add_delay 3.000 [get_ports {TRACEDATA[2]}]
+set_output_delay -clock [get_clocks TRACECLK] -add_delay 3.000 [get_ports {TRACEDATA[1]}]
+set_output_delay -clock [get_clocks TRACECLK] -add_delay 3.000 [get_ports {TRACEDATA[0]}]
+set_output_delay -clock [get_clocks TRACECLK] -add_delay 3.000 [get_ports TRACECLK_OUT]
 
 #set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets USB_nRD]
 #set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets USB_nWE]
