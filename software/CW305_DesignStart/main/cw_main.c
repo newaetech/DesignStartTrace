@@ -53,6 +53,7 @@
 uECC_word_t P[uECC_MAX_WORDS * 2];
 uECC_word_t Q[uECC_MAX_WORDS * 2];
 
+uint8_t pcsamp_enable;
 
 uint8_t setreg(uint8_t* x)
 {
@@ -65,11 +66,12 @@ uint8_t setreg(uint8_t* x)
 //4:  ETM->TESSEICR
 //5:  ETM->TEEVR
 //6:  ETM->TECR1
-//7:  TPI->ACPR
-//8:  TPI->SPPR
-//9:  TPI->FFCR
-//10: TPI->CSPSR
-//11: ITM->TCR
+//7:  ETM->TRACEIDR
+//8:  TPI->ACPR
+//9:  TPI->SPPR
+//10: TPI->FFCR
+//11: TPI->CSPSR
+//12: ITM->TCR
         if       (x[0] == 0)    {DWT->CTRL = val;}
         else if  (x[0] == 1)    {DWT->COMP0 = val;}
         else if  (x[0] == 2)    {DWT->COMP1 = val;}
@@ -142,10 +144,10 @@ void enable_trace()
     // Configure DWT:
     DWT->CTRL = (0xf << DWT_CTRL_POSTINIT_Pos);// countdown counter for PC sampling, must be written
                                                // before enabling PC sampling
-    DWT->CTRL = (1 << DWT_CTRL_CYCTAP_Pos)     // Prescaler for PC sampling: 0 = x32, 1 = x512
+    DWT->CTRL |=(1 << DWT_CTRL_CYCTAP_Pos)     // Prescaler for PC sampling: 0 = x32, 1 = x512
               | (8 << DWT_CTRL_POSTPRESET_Pos) // PC sampling postscaler
               | (0 << DWT_CTRL_PCSAMPLENA_Pos) // disable PC sampling
-              | (1 << DWT_CTRL_SYNCTAP_Pos)    // sync packets every 16M cycles
+              | (1 << DWT_CTRL_SYNCTAP_Pos)    // sync packets every 16M cycles TODO: find the best setting for this
               | (0 << DWT_CTRL_EXCTRCENA_Pos)  // disable exception trace
               | (1 << DWT_CTRL_CYCCNTENA_Pos); // enable cycle counter
 
@@ -204,9 +206,53 @@ void ITM_Print(int port, const char *p)
 
 uint8_t test_itm(uint8_t* x)
 {
-        ITM_Print(x[0], "ITM alive!");
+        ITM_Print(x[0], "ITM alive!\n");
 	return 0x00;
 }
+
+
+uint8_t set_pcsample_params(uint8_t* x)
+{
+    uint8_t postinit;
+    uint8_t postreset;
+    uint8_t cyctap;
+    pcsamp_enable = x[0] & 1;
+    cyctap = x[1] & 1;
+    postinit  = x[2] & 0xf;
+    postreset = x[3] & 0xf;
+
+    // must clear everything before updating postinit field:
+    DWT->CTRL = 0;
+    // then update postinit:
+    DWT->CTRL = (postinit << DWT_CTRL_POSTINIT_Pos);
+    // then update the reset, but don't turn on PC sampling yet;
+    // that will be handled in trigger_high_pcsamp
+    DWT->CTRL = (cyctap << DWT_CTRL_CYCTAP_Pos)
+              | (postreset << DWT_CTRL_POSTPRESET_Pos)
+              | (postinit << DWT_CTRL_POSTINIT_Pos)
+              | (1 << DWT_CTRL_SYNCTAP_Pos)
+              | (1 << DWT_CTRL_CYCCNTENA_Pos);
+    simpleserial_put('r', 4, x);
+    return 0x00;
+}
+
+
+void trigger_high_pcsamp()
+{
+    if (pcsamp_enable == 1)
+    {
+        DWT->CTRL |= (1 << DWT_CTRL_PCSAMPLENA_Pos);
+    }
+    trigger_high();
+}
+
+
+void trigger_low_pcsamp()
+{
+    trigger_low();
+    DWT->CTRL &= ~(1 << DWT_CTRL_PCSAMPLENA_Pos); // disable PC sampling
+}
+
 
 
 uint8_t get_mask (uint8_t* m)
@@ -223,13 +269,15 @@ uint8_t get_key(uint8_t* k)
 
 uint8_t get_pt(uint8_t* pt)
 {
-	trigger_high();
+	trigger_high_pcsamp();
         aes_indep_enc(pt);
-	trigger_low();
+	trigger_low_pcsamp();
 	simpleserial_put('r', 16, pt);
 	return 0x00;
 }
 
+
+/*
 void uECC_point_mult(uECC_word_t *result,
                      const uECC_word_t *point,
                      const uECC_word_t *scalar,
@@ -258,15 +306,15 @@ uint8_t run_pmul_fixed(uint8_t* k)
        }
     }
 
-    trigger_high();
+    trigger_high_pcsamp();
     uECC_point_mult(Q, curve->G, kwords, curve);
-    trigger_low();
+    trigger_low_pcsamp();
     // we don't return the result because it's too long, but let's return
     // something to indicate that the command ran:
     simpleserial_put('r', 1, k);
     return 0x00;
 }
-
+*/
 
 
 // return x coordinate of pmul result:
@@ -346,9 +394,10 @@ int main(void)
 	simpleserial_addcmd('t', 1, test_itm);
 	simpleserial_addcmd('s', 5, setreg);
 	simpleserial_addcmd('g', 5, getreg);
-        simpleserial_addcmd('f', 32, run_pmul_fixed);
+        //simpleserial_addcmd('f', 32, run_pmul_fixed);
         simpleserial_addcmd('q', 32, get_qx);
         simpleserial_addcmd('r', 32, get_qy);
+        simpleserial_addcmd('c', 4, set_pcsample_params);
 
         enable_trace();
 
