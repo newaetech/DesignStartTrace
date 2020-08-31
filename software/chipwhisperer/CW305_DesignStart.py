@@ -132,7 +132,7 @@ class CW305_DesignStart(CW305):
                             logging.warning("Couldn't parse line: %s", define)
             defines.close()
         # make sure everything is cool:
-        assert self.verilog_define_matches == 92, "Trouble parsing Verilog defines file (%s): didn't find the right number of defines; expected 92, got %d" % (defines_file, self.verilog_define_matches)
+        assert self.verilog_define_matches == 93, "Trouble parsing Verilog defines file (%s): didn't find the right number of defines; expected 93, got %d" % (defines_file, self.verilog_define_matches)
 
 
     def simpleserial_write(self, cmd, data, printresult=False):
@@ -448,6 +448,8 @@ class CW305_DesignStart(CW305):
                 #obtain elapsed time we add one:
                 timecounter += raw[0] + 1
                 data = raw[1]
+                if not len(pseudoframe):
+                    starttime = timecounter
                 pseudoframe.append(data)
 
                 if removesyncs:
@@ -465,7 +467,7 @@ class CW305_DesignStart(CW305):
                     sync_removed = False
 
                 if sync_removed and len(pseudoframe):
-                    pseudoframes.append(pseudoframe)
+                    pseudoframes.append([starttime, pseudoframe])
                     if verbose:
                         print("Pseudoframe: ", end='')
                         for b in pseudoframe:
@@ -475,6 +477,7 @@ class CW305_DesignStart(CW305):
 
                 delta = timecounter - lasttime
                 lasttime = timecounter
+
             elif command == self.FE_FIFO_CMD_TIME:
                 timecounter += raw[0] + (raw[1] << 8)
             elif command == self.FE_FIFO_CMD_DATA:
@@ -483,12 +486,12 @@ class CW305_DesignStart(CW305):
                 pass
 
         if not removesyncs:
-            pseudoframes.append(pseudoframe)
+            pseudoframes.append([starttime, pseudoframe])
 
         return pseudoframes
 
 
-    def capture_ecc_trace(self, scope, k, ack=True, verbose=False):
+    def capture_trace(self, scope, command, k, pcsamps=False, ack=True, verbose=False):
         """Capture a trace, sending plaintext and key
 
         Does all individual steps needed to capture a trace (arming the scope
@@ -496,8 +499,10 @@ class CW305_DesignStart(CW305):
 
         Args:
             scope (ScopeTemplate): Scope object to use for capture.
+            command (string): AES or ECC
             k (bytearray): k to send to target. Should be unencoded
                 bytearray.
+            pcsamps (bool, optional): enable PC sampling just prior to capture
             ack (bool, optional): Check for ack when reading response from target.
                 Defaults to True.
 
@@ -509,10 +514,18 @@ class CW305_DesignStart(CW305):
             Warning or OSError: Error during capture.
 
         """
+        if command == 'AES':
+            command = 'p'
+        else:
+            command = 'f'
         scope.arm()
+        time.sleep(0.1)
 
-        self.simpleserial_write('f', k, printresult=verbose)
-        #self.ss.simpleserial_write('f', k)
+        if pcsamps:
+            warnings.warn("Enabling PC sampling from Python means sampling will start BEFORE the trigger!")
+            self.simpleserial_write('c', bytearray([1]), printresult=verbose)
+
+        self.simpleserial_write(command, k, printresult=verbose)
 
         ret = scope.capture()
 
@@ -537,5 +550,14 @@ class CW305_DesignStart(CW305):
             return Trace(wave, None, response, k)
         else:
             return None
+
+
+    def write_raw_capture(self, raw, filename='raw.bin', presyncs=8):
+        binout = open(filename, "wb")
+        for i in range(presyncs):
+            binout.write(bytes(self.longsync))
+        for frame in raw:
+            binout.write(bytes(frame[1]))
+        binout.close()
 
 
