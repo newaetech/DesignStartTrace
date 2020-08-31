@@ -79,6 +79,7 @@ module fe_capture_trace #(
     output reg  [7:0] O_trace_count5,
     output reg  [7:0] O_trace_count6,
     output reg  [7:0] O_trace_count7,
+    output reg  [pBUFFER_SIZE-1:0] O_matched_data,
 
     /* FIFO CONNECTIONS */
     output reg [17:0] O_fifo_data,
@@ -299,7 +300,8 @@ module fe_capture_trace #(
    // look for match:
    generate 
       for (i = 0; i < pMATCH_RULES; i = i + 1) begin
-         assign match_bits[i] = ((revbuffer & mask[i]) == (pattern[i] & mask[i])) && I_pattern_enable[i] && valid_buffer && capturing_r;
+         // qualifying with capturing_r only would prevent using pattern match as a trigger event:
+         assign match_bits[i] = ((revbuffer & mask[i]) == (pattern[i] & mask[i])) && I_pattern_enable[i] && valid_buffer && (capturing_r || I_pattern_trig_enable[i]);
       end
    endgenerate 
 
@@ -314,13 +316,16 @@ module fe_capture_trace #(
           m3_trig_r <= 0;
           match_rule <= 0;
           capturing_r <= 0;
+          O_matched_data <= 0;
        end
        else begin
           m3_trig_r <= m3_trig;
           match_bits_r <= match_bits;
           capturing_r <= I_capturing;
-          if (match)
+          if (match) begin
              match_rule <= match_bits;
+             O_matched_data <= revbuffer;
+          end
        end
     end
 

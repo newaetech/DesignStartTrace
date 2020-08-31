@@ -21,33 +21,34 @@ random.seed()
 # Define testcases:
 tests = []
 tests.append(dict(name  = 'fewrules',
-             frequency = 1,
+             frequency = 2,
              description = 'Few rules, lots of events, capture rules.',
              CAPTURE_RAW = 0,
              RULES = 2,
              EVENTS = 30))
 
 tests.append(dict(name  = 'manyrules',
-             frequency = 1,
+             frequency = 2,
              description = 'Many rules, lots of events, capture rules.',
              CAPTURE_RAW = 0,
              RULES = 8,
              EVENTS = 30))
 
-tests.append(dict(name  = 'fewrules_raw',
+tests.append(dict(name  = 'swtrigger_raw',
              frequency = 1,
-             description = 'Few rules, lots of events, capture rules.',
+             description = 'Lots of events, capture raw traces, triggered by sofware.',
              CAPTURE_RAW = 1,
-             RULES = 2,
+             PATTERN_TRIG = 0,
+             RULES = 1,
              EVENTS = 30))
 
-tests.append(dict(name  = 'manyrules_raw',
+tests.append(dict(name  = 'patterntrigger_raw',
              frequency = 1,
-             description = 'Many rules, lots of events, capture rules.',
+             description = 'Lots of events, capture raw trace, triggered by pattern.',
              CAPTURE_RAW = 1,
-             RULES = 8,
+             PATTERN_TRIG = 1,
+             RULES = 4,
              EVENTS = 30))
-
 
 
 def print_tests():
@@ -73,8 +74,8 @@ if (args.test):
       print_tests()
 
 
-pass_regex = re.compile(r'^Simulation passed')
-fail_regex = re.compile(r'^SIMULATION FAILED \((\d+) errors\)')
+pass_regex = re.compile(r'^Simulation passed \((\d+) warnings')
+fail_regex = re.compile(r'^SIMULATION FAILED \((\d+) errors')
 seed_regex = re.compile(r'^Running with pSEED=(\d+)$')
 test_regex = re.compile(args.tests)
 
@@ -132,7 +133,7 @@ for test in tests:
             fail_matches = fail_regex.search(line)
             if pass_matches:
                passed += 1
-               print("pass")
+               print("pass (%0d warnings)" % (int(pass_matches.group(1))))
                break
             elif fail_matches:
                failed += 1

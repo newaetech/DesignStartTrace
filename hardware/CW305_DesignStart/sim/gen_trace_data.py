@@ -32,9 +32,11 @@ parser.add_argument("--seed", type=int, default=1)
 parser.add_argument("--events", type=int, default=1)
 parser.add_argument("--rules", type=int, default=1)
 parser.add_argument("--raw", type=int, default=0)
+parser.add_argument("--patterntrig", type=int, default=0)
 args = parser.parse_args()
 
 rawmode = args.raw
+patterntrig = args.patterntrig
 
 random.seed(args.seed)
 
@@ -70,7 +72,7 @@ def sw_trig():
     last_event_time = time + 2 # adjust for delays in the RTL
 
 
-def random_frame(n=1, minlen=2, maxlen=16):
+def random_frame(n=1, minlen=2, maxlen=16, record=True):
     total_nibbles = 0
     for i in range(n):
         nibbles = random.randrange(minlen, maxlen+1, 2)
@@ -86,7 +88,7 @@ def random_frame(n=1, minlen=2, maxlen=16):
             nibble = random.randrange(0,top)
             mem.write('%01x ' % nibble)
             #rawlog.write('%01x' % nibble)
-            if rawmode:
+            if rawmode and record:
                 if j % 2:
                     matchtimes.write('%016x\n' % (((nibble << 4) + lastnib) << 56)) # TODO: timestamps
                 else:
@@ -95,7 +97,7 @@ def random_frame(n=1, minlen=2, maxlen=16):
     inc_time(total_nibbles)
 
 
-def gen_rule(rule=0, length=8):
+def gen_rule(rule=0, length=8, patterntrig=0):
     """
     rule: int, rule number to program to DUT
     length: int, number of bytes in rule (must be even)
@@ -115,7 +117,7 @@ def gen_rule(rule=0, length=8):
     hexpattern = '0x'
     for x in pattern:
         hexpattern += '%02x' % x
-    regs.write("write_match_rule(%d, 'h%s, %d);\n" % (rule, hexpattern[2:], length))
+    regs.write("write_match_rule(%d, 'h%s, %d, %d);\n" % (rule, hexpattern[2:], length, patterntrig))
 
 
 def match_frame(rule=0):
@@ -157,26 +159,43 @@ trig = open('swtrigtime.mem', 'w+')
 #rawlog = open('rawlog.mem', 'w+')
 
 # generate match rules:
+if patterntrig:
+    trig_rule = random.randrange(0,args.rules)
 for i in range(args.rules):
-    gen_rule(rule=i, length=random.randrange(4,9,2))
+    if patterntrig and trig_rule == i:
+        gen_rule(rule=i, length=random.randrange(4,9,2), patterntrig=1)
+    else:
+        gen_rule(rule=i, length=random.randrange(4,9,2), patterntrig=0)
 
 # create trace data:
 # lots of sync frames initially to allow all setup register writes to be done:
+# (plus some non-sync frames that shouldn't be recorded)
 sync_frame(400)
+random_frame(random.randrange(2,10), record=False)
+sync_frame(random.randrange(8,16))
 
 # trigger + stuff:
-sw_trig()
-random_frame(random.randrange(0,20))
-sync_frame(random.randrange(0,20))
 
-for i in range(args.events):
-    rule = random.randrange(0, args.rules)
-    match_frame(rule)
-    sync_frame(random.randrange(0,10))
+if patterntrig:
+    match_frame(trig_rule)
+    for i in range(args.events):
+        sync_frame(random.randrange(0,10))
+        random_frame(random.randrange(0,20))
+        sync_frame(random.randrange(0,4))
+    sync_frame(10)
+
+else:
+    sw_trig()
+    sync_frame(random.randrange(2,4))
     random_frame(random.randrange(0,20))
-    sync_frame(random.randrange(0,4))
-
-sync_frame(10)
+    sync_frame(random.randrange(0,20))
+    for i in range(args.events):
+        rule = random.randrange(0, args.rules)
+        match_frame(rule)
+        sync_frame(random.randrange(0,10))
+        random_frame(random.randrange(0,20))
+        sync_frame(random.randrange(0,4))
+    sync_frame(10)
 
 # done:
 mem.close()

@@ -85,6 +85,8 @@ module reg_trace #(
    input  wire [7:0]                            I_trace_count6,
    input  wire [7:0]                            I_trace_count7,
 
+   input  wire [pBUFFER_SIZE-1:0]               I_matched_data,
+
    output wire                                  selected
 
 );
@@ -183,6 +185,7 @@ module reg_trace #(
             `REG_TRACE_COUNT:           reg_read_data = trace_count[reg_bytecnt*8 +: 8];
 
             `REG_RECORD_SYNCS:          reg_read_data = O_record_syncs;
+            `REG_MATCHED_DATA:          reg_read_data = I_matched_data[reg_bytecnt*8 +: 8];
 
             default:                    reg_read_data = 0;
 

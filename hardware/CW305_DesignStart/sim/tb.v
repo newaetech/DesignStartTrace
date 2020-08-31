@@ -39,6 +39,7 @@ module tb();
     parameter pPLL_CLOCK_PERIOD = 6;
     parameter pTRIGGER_CLOCK_PERIOD = 2;
     parameter pCAPTURE_RAW = 0;
+    parameter pPATTERN_TRIG = 0;
     parameter pSEED = 1;
     parameter pTIMEOUT = 30000;
     parameter pVERBOSE = 0;
@@ -72,6 +73,7 @@ module tb();
 
     int seed;
     int errors;
+    int warnings;
     int i;
     int match_index;
     int raw_index;
@@ -86,6 +88,11 @@ module tb();
    int total_time;
 
    reg [31:0] read_data;
+   reg [63:0] read_buffer_data;
+   reg [63:0] expected_pattern_data;
+   reg [63:0] expected_pattern_mask;
+   reg [7:0] pattern_rule_id;
+   reg [7:0] pattern_rule_bytes;
    reg [1:0] command;
    reg fifo_stat_empty;
    reg fifo_stat_underflow;
@@ -104,6 +111,7 @@ module tb();
    int sync_counter;
    reg [63:0] sync_data;
 
+   // TODO: verify trigger timing
    always @(*) begin
       if (trig_out & !setup_done) begin
          errors += 1;
@@ -116,6 +124,7 @@ module tb();
       seed = pSEED;
       setup_done = 0;
       errors = 0;
+      warnings = 0;
       match_index = 0;
       $display("Running with seed=%0d", seed);
       $urandom(seed);
@@ -150,20 +159,38 @@ module tb();
       // enable all patterns:
       write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'hff);
 
-      // only first match rule generates a trigger:
-      write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h02);
-
-      // set m3 trigger as output trigger
-      write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_PASSTHRU, 0, 8'h1);
-
-      // enable soft trigger from target processor:
-      write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_ENABLE, 0, 8'h1);
-
       write_byte(`MAIN_REG_SELECT, `REG_COUNTER_QUICK_START, 0, 8'h1);
+
+      write_byte(`TRACE_REG_SELECT, `REG_RECORD_SYNCS, 0, 8'h0);
 
       $display("Writing match rules...");
       `include "registers.v"
       $display("done!");
+
+      if (pPATTERN_TRIG) begin
+         // trigger from trace:
+         write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_ENABLE, 0, 8'h0);
+         write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_PASSTHRU, 0, 8'h0);
+         write_byte(`MAIN_REG_SELECT, `REG_TRIGGER_ENABLE, 0, 8'h1);
+         write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 1<<pattern_rule_id);
+         /*
+         case (pattern_rule_id)
+            0: write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h01);
+            1: write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h02);
+            2: write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h01);
+            3: write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h01);
+            4: write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h01);
+            5: write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h01);
+            6: write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h01);
+            7: write_byte(`TRACE_REG_SELECT, `REG_PATTERN_TRIG_ENABLE, 0, 8'h01);
+         endcase
+         */
+      end
+      else begin
+         // use m3 trigger:
+         write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_ENABLE, 0, 8'h1);
+         write_byte(`TRACE_REG_SELECT, `REG_SOFT_TRIG_PASSTHRU, 0, 8'h1);
+      end
 
       write_byte(`TRACE_REG_SELECT, `REG_CAPTURE_RAW, 0, pCAPTURE_RAW);
 
@@ -200,9 +227,29 @@ module tb();
    initial begin
       #10 wait(setup_done);
       match_index = 0;
+
+      if (pPATTERN_TRIG && pCAPTURE_RAW) begin
+         // in this case, the pattern bytes weren't written to a FIFO but we can retrieve them from a register:
+         wait_fifo_not_empty();
+         read_buffer(`TRACE_REG_SELECT, `REG_MATCHED_DATA, read_buffer_data);
+         // this is a bit wonky, but since the pattern was generated from Python, it's easiest to verify
+         // by reading it back:
+         read_buffer(`TRACE_REG_SELECT, `REG_TRACE_PATTERN0+pattern_rule_id, expected_pattern_data);
+         read_buffer(`TRACE_REG_SELECT, `REG_TRACE_MASK0+pattern_rule_id, expected_pattern_mask);
+         if (expected_pattern_data != (expected_pattern_mask & read_buffer_data)) begin
+            errors += 1;
+            $display("ERROR on pattern match bytes.");
+            $display("expected pattern: %h", expected_pattern_data);
+            $display("expected mask:    %h", expected_pattern_mask);
+            $display("read data:        %h", read_buffer_data);
+         end
+         match_index += pattern_rule_bytes;
+      end
+
       while (matchdata[match_index] != 64'hFFFF_FFFF_FFFF_FFFF) begin
          total_time = 0;
          wait_fifo_not_empty();
+
          read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
 
          while (command == `FE_FIFO_CMD_TIME) begin
@@ -271,6 +318,7 @@ module tb();
                end
                else begin
                   $display("ERROR at time %t: expected raw byte %h, got %h", $time, expected_byte, fifo_data);
+                  errors += 1;
                   match_index += 1;
                end
             end
@@ -284,24 +332,24 @@ module tb();
                   else begin
                   // verify that non-matching data are actually sync frames:
                      //$display("Sync data seen: counter = %d, contents = %8h", sync_counter, sync_data);
-                     if (sync_counter > 10) begin
-                        errors += 1;
-                        $display("ERROR at time %t: too much sync data seen! counter = %d, contents = %8h", $time, sync_counter, sync_data);
+                     if (sync_counter > 12) begin
+                        warnings += 1;
+                        $display("WARNING at time %t: too much sync data seen! counter = %d, contents = %8h", $time, sync_counter, sync_data);
                      end
-                     else if ( (sync_data != 64'h0000_0000_7fff_7fff) &&
-                               (sync_data != 64'h7fff_7fff_7fff_7fff) &&
-                               (sync_data != 64'h7fff_ffff_7fff_ffff) &&
-                               (sync_data != 64'h7fff_ffff_7fff_7fff) &&
-                               (sync_data != 64'h7fff_7fff_7fff_ffff) &&
-                               (sync_data != 64'hffff_7fff_7fff_ffff) &&
-                               (sync_data != 64'h0000_0000_7fff_ffff) &&
-                               (sync_data != 64'h0000_7fff_7fff_7fff) &&
-                               (sync_data != 64'h0000_7fff_7fff_ffff) &&
-                               (sync_data != 64'h0000_7fff_ffff_7fff) &&
-                               (sync_data != 64'h0000_0000_0000_7fff) &&
-                               (sync_data != 64'hffff_7fff_7fff_7fff) &&
-                               (sync_data != 64'hffff_7fff_ffff_7fff) &&
-                               (sync_data != 64'h7fff_7fff_ffff_7fff) ) begin
+                     if ( (sync_data != 64'h0000_0000_7fff_7fff) &&
+                          (sync_data != 64'h7fff_7fff_7fff_7fff) &&
+                          (sync_data != 64'h7fff_ffff_7fff_ffff) &&
+                          (sync_data != 64'h7fff_ffff_7fff_7fff) &&
+                          (sync_data != 64'h7fff_7fff_7fff_ffff) &&
+                          (sync_data != 64'hffff_7fff_7fff_ffff) &&
+                          (sync_data != 64'h0000_0000_7fff_ffff) &&
+                          (sync_data != 64'h0000_7fff_7fff_7fff) &&
+                          (sync_data != 64'h0000_7fff_7fff_ffff) &&
+                          (sync_data != 64'h0000_7fff_ffff_7fff) &&
+                          (sync_data != 64'h0000_0000_0000_7fff) &&
+                          (sync_data != 64'hffff_7fff_7fff_7fff) &&
+                          (sync_data != 64'hffff_7fff_ffff_7fff) &&
+                          (sync_data != 64'h7fff_7fff_ffff_7fff) ) begin
                         errors += 1;
                         $display("ERROR: non-sync data seen! counter = %d, contents = %8h", sync_counter, sync_data);
                      end
@@ -318,9 +366,9 @@ module tb();
       #(pUSB_CLOCK_PERIOD*10);
       $display("All expected events processed.");
       if (errors)
-         $display("SIMULATION FAILED (%0d errors).", errors);
+         $display("SIMULATION FAILED (%0d errors, %0d warnings).", errors, warnings);
       else
-         $display("Simulation passed");
+         $display("Simulation passed (%0d warnings).", warnings);
       $finish;
 
    end
@@ -391,15 +439,32 @@ module tb();
    endtask
 
 
+   task read_buffer;
+      input [2:0] block;
+      input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
+      output [63:0] data;
+      int subbyte;
+      for (subbyte = 0; subbyte < 8; subbyte = subbyte + 1)
+         read_byte(block, address, subbyte, data[subbyte*8 +: 8]);
+      if (pVERBOSE)
+         $display("Read %0h", data);
+   endtask
+
+
    task write_match_rule;
       input [7:0] rule;
       input [63:0] pattern;
       input [7:0] bytes;
+      input pattern_trigger_rule;
       int subbyte;
       reg [pADDR_WIDTH-pBYTECNT_SIZE-1:0] pattern_address, mask_address;
       reg [63:0] mask;
       pattern_address = `REG_TRACE_PATTERN0 + rule;
       mask_address = `REG_TRACE_MASK0 + rule;
+      if (pattern_trigger_rule) begin
+         pattern_rule_id = rule;
+         pattern_rule_bytes = bytes;
+      end
       // TODO: allow for other mask settings?
       case (bytes)
          1: mask = 64'h0000_0000_0000_00ff;
@@ -430,7 +495,6 @@ module tb();
       bit fifo_empty = 1;
       read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_STAT, 0, fifo_empty);
       while (fifo_empty == 1) begin
-         // TODO: currently assuming no long timestamps(?)
          read_byte(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_STAT, 0, fifo_empty);
       end
    endtask

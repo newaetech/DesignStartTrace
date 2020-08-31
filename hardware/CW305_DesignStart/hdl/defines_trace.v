@@ -54,6 +54,8 @@
 `define REG_TRACE_MASK7         5'h1c
 
 `define REG_TRACE_COUNT         5'h1d
+`define REG_RECORD_SYNCS        5'h1e
+`define REG_MATCHED_DATA        5'h1f
 
 // FIFO bitfields:
 //                   31 30 29 28 27 26 25 24   23 22 21 20 19 18 17 16   15 14 13 12 11 10  9  8   7  6  5  4  3  2  1  0

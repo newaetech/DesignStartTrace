@@ -147,6 +147,8 @@ module trace_top #(
    wire [7:0] trace_count6;
    wire [7:0] trace_count7;
 
+   wire [pBUFFER_SIZE-1:0] matched_data;
+
 
    wire [17:0] fifo_in_data;
    wire [17:0] fifo_out_data;
@@ -251,6 +253,7 @@ module trace_top #(
       .I_trace_count5           (trace_count5    ),
       .I_trace_count6           (trace_count6    ),
       .I_trace_count7           (trace_count7    ),
+      .I_matched_data           (matched_data    ),
 
       .selected                 (reg_trace_selected)
    );
@@ -433,7 +436,7 @@ module trace_top #(
       .O_trace_count5           (trace_count5),
       .O_trace_count6           (trace_count6),
       .O_trace_count7           (trace_count7),
-
+      .O_matched_data           (matched_data),
 
    /* FIFO CONNECTIONS */
       .O_fifo_data              (fifo_in_data),
