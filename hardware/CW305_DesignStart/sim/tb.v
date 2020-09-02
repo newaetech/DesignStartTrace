@@ -52,6 +52,7 @@ module tb();
     reg usb_rdn;
     reg usb_wrn;
     reg usb_cen;
+    reg usb_spare1;
 
     reg j16_sel;
     reg k16_sel;
@@ -140,6 +141,7 @@ module tb();
       usb_rdn = 1;
       usb_wrn = 1;
       usb_cen = 1;
+      usb_spare1 = 1;
 
       j16_sel = 0;
       k16_sel = 0;
@@ -155,6 +157,10 @@ module tb();
       #(pUSB_CLOCK_PERIOD*10);
 
       $readmemh("matchtimes.mem", matchdata);
+
+      write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'h12345678);
+      read_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, read_data);
+      $display("XXX: read %h", read_data);
 
       // enable all patterns:
       write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'hff);
@@ -231,11 +237,11 @@ module tb();
       if (pPATTERN_TRIG && pCAPTURE_RAW) begin
          // in this case, the pattern bytes weren't written to a FIFO but we can retrieve them from a register:
          wait_fifo_not_empty();
-         read_buffer(`TRACE_REG_SELECT, `REG_MATCHED_DATA, read_buffer_data);
+         read_word(`TRACE_REG_SELECT, `REG_MATCHED_DATA, read_buffer_data);
          // this is a bit wonky, but since the pattern was generated from Python, it's easiest to verify
          // by reading it back:
-         read_buffer(`TRACE_REG_SELECT, `REG_TRACE_PATTERN0+pattern_rule_id, expected_pattern_data);
-         read_buffer(`TRACE_REG_SELECT, `REG_TRACE_MASK0+pattern_rule_id, expected_pattern_mask);
+         read_word(`TRACE_REG_SELECT, `REG_TRACE_PATTERN0+pattern_rule_id, expected_pattern_data);
+         read_word(`TRACE_REG_SELECT, `REG_TRACE_MASK0+pattern_rule_id, expected_pattern_mask);
          if (expected_pattern_data != (expected_pattern_mask & read_buffer_data)) begin
             errors += 1;
             $display("ERROR on pattern match bytes.");
@@ -377,110 +383,14 @@ module tb();
    assign usb_data = usb_wrn? 8'bz : usb_wdata;
    assign tio_clkin = pll_clk1;
 
+   `ifdef CW305
+      `include "tb_cw305_reg_tasks.v"
 
-   task write_byte;
-      input [2:0] block;
-      input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
-      input [pBYTECNT_SIZE-1:0] subbyte;
-      input [7:0] data;
-      @(posedge usb_clk);
-      usb_addr = {block, address[4:0], subbyte};
-      usb_wdata = data;
-      usb_wrn = 0;
-      @(posedge usb_clk);
-      usb_cen = 0;
-      @(posedge usb_clk);
-      usb_cen = 1;
-      @(posedge usb_clk);
-      usb_wrn = 1;
-   endtask
+   `else
+      `include "tb_pw_reg_tasks.v"
 
+   `endif
 
-   task read_byte;
-      input [2:0] block;
-      input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
-      input [pBYTECNT_SIZE-1:0] subbyte;
-      output [7:0] data;
-      @(posedge usb_clk);
-      usb_addr = {block, address[4:0], subbyte};
-      @(posedge usb_clk);
-      usb_rdn = 0;
-      usb_cen = 0;
-      @(posedge usb_clk);
-      usb_cen = 1;
-      #1 data = usb_data;
-      repeat(2) @(posedge usb_clk);
-      usb_rdn = 1;
-      repeat(2) @(posedge usb_clk);
-   endtask
-
-
-   task write_word;
-      input [2:0] block;
-      input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
-      input [31:0] data;
-      int subbyte;
-      for (subbyte = 0; subbyte < 4; subbyte = subbyte + 1)
-         write_byte(block, address, subbyte, data[subbyte*8 +: 8]);
-      if (pVERBOSE)
-         $display("Write %0h", data);
-   endtask
-
-
-   task read_word;
-      input [2:0] block;
-      input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
-      output [31:0] data;
-      int subbyte;
-      for (subbyte = 0; subbyte < 4; subbyte = subbyte + 1)
-         read_byte(block, address, subbyte, data[subbyte*8 +: 8]);
-      if (pVERBOSE)
-         $display("Read %0h", data);
-   endtask
-
-
-   task read_buffer;
-      input [2:0] block;
-      input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
-      output [63:0] data;
-      int subbyte;
-      for (subbyte = 0; subbyte < 8; subbyte = subbyte + 1)
-         read_byte(block, address, subbyte, data[subbyte*8 +: 8]);
-      if (pVERBOSE)
-         $display("Read %0h", data);
-   endtask
-
-
-   task write_match_rule;
-      input [7:0] rule;
-      input [63:0] pattern;
-      input [7:0] bytes;
-      input pattern_trigger_rule;
-      int subbyte;
-      reg [pADDR_WIDTH-pBYTECNT_SIZE-1:0] pattern_address, mask_address;
-      reg [63:0] mask;
-      pattern_address = `REG_TRACE_PATTERN0 + rule;
-      mask_address = `REG_TRACE_MASK0 + rule;
-      if (pattern_trigger_rule) begin
-         pattern_rule_id = rule;
-         pattern_rule_bytes = bytes;
-      end
-      // TODO: allow for other mask settings?
-      case (bytes)
-         1: mask = 64'h0000_0000_0000_00ff;
-         2: mask = 64'h0000_0000_0000_ffff;
-         3: mask = 64'h0000_0000_00ff_ffff;
-         4: mask = 64'h0000_0000_ffff_ffff;
-         5: mask = 64'h0000_00ff_ffff_ffff;
-         6: mask = 64'h0000_ffff_ffff_ffff;
-         7: mask = 64'h00ff_ffff_ffff_ffff;
-         8: mask = 64'hffff_ffff_ffff_ffff;
-      endcase
-      for (subbyte = 0; subbyte < 8; subbyte = subbyte + 1) begin
-         write_byte(`TRACE_REG_SELECT, pattern_address, subbyte, pattern[(7-subbyte)*8 +: 8]);
-         write_byte(`TRACE_REG_SELECT, mask_address, subbyte, mask[(7-subbyte)*8 +: 8]);
-      end
-   endtask
 
 
    task wait_fifo_empty;
@@ -520,49 +430,99 @@ module tb();
    always #(pPLL_CLOCK_PERIOD/2) pll_clk1 = !pll_clk1;
    always #(pTRIGGER_CLOCK_PERIOD/2) trigger_clk = !trigger_clk;
 
-   wire #1 usb_rdn_out = usb_rdn;
-   wire #1 usb_wrn_out = usb_wrn;
-   wire #1 usb_cen_out = usb_cen;
+   // TODO: add pound delay (PW USB frontend doesn't like it)
+   wire usb_rdn_out = usb_rdn;
+   wire usb_wrn_out = usb_wrn;
+   wire usb_cen_out = usb_cen;
+   wire usb_spare1_out = usb_spare1;
 
-   CW305_designstart_top #(
-       .pADDR_WIDTH        (pADDR_WIDTH),
-       .pBYTECNT_SIZE      (pBYTECNT_SIZE)
-   ) U_dut (
-       // USB Interface
-       .USB_clk            (usb_clk    ),
-       .USB_Data           (usb_data   ),
-       .USB_Addr           (usb_addr   ),
-       .USB_nRD            (usb_rdn_out),
-       .USB_nWE            (usb_wrn_out),
-       .USB_nCS            (usb_cen_out),
+   `ifdef CW305
+      CW305_designstart_top #(
+          .pADDR_WIDTH        (pADDR_WIDTH),
+          .pBYTECNT_SIZE      (pBYTECNT_SIZE)
+      ) U_dut (
+          // USB Interface
+          .USB_clk            (usb_clk    ),
+          .USB_Data           (usb_data   ),
+          .USB_Addr           (usb_addr   ),
+          .USB_nRD            (usb_rdn_out),
+          .USB_nWE            (usb_wrn_out),
+          .USB_nCS            (usb_cen_out),
 
-       // Buttons/LEDs on Board
-       .j16_sel            (j16_sel   ),
-       .k16_sel            (k16_sel   ),
-       .k15_sel            (k15_sel   ),
-       .l14_sel            (l14_sel   ),
-       .resetn             (pushbutton),
-       .led1               (led1      ),
-       .led2               (led2      ),
-       .led3               (led3      ),
+          // Buttons/LEDs on Board
+          .j16_sel            (j16_sel   ),
+          .k16_sel            (k16_sel   ),
+          .k15_sel            (k15_sel   ),
+          .l14_sel            (l14_sel   ),
+          .resetn             (pushbutton),
+          .led1               (led1      ),
+          .led2               (led2      ),
+          .led3               (led3      ),
 
-       // PLL
-       .pll_clk1           (pll_clk1),
+          // PLL
+          .pll_clk1           (pll_clk1),
 
-       // 20-Pin Connector
-       //.tio_trigger        (tio_trigger),
-       //.tio_clkout         (tio_clkout ),
-       .tio_clkin          (tio_clkin  ),
-       .trig_out           (trig_out),
+          // 20-Pin Connector
+          //.tio_trigger        (tio_trigger),
+          //.tio_clkout         (tio_clkout ),
+          .tio_clkin          (tio_clkin  ),
+          .trig_out           (trig_out),
 
-       .I_trigger_clk      (trigger_clk),
+          .I_trigger_clk      (trigger_clk),
 
-       // unused here:
-       .swclk              (1'b0),
-       .TDI                (1'b0),
-       .nTRST              (1'b0),
-       .uart_rxd           (1'b0)
-   );
+          // unused here:
+          .swclk              (1'b0),
+          .TDI                (1'b0),
+          .nTRST              (1'b0),
+          .uart_rxd           (1'b0)
+      );
+
+   `else
+      wire [3:0] TRACEDATA;
+      wire m3_trig_out;
+
+      tracewhisperer_top #(
+          .pADDR_WIDTH        (8),
+          .pBYTECNT_SIZE      (pBYTECNT_SIZE)
+      ) U_dut (
+          .reset              (~pushbutton),
+
+          // USB Interface
+          .USB_clk            (usb_clk    ),
+          .USB_Data           (usb_data   ),
+          .USB_Addr           (usb_addr[7:0]),
+          .USB_nRD            (usb_rdn_out),
+          .USB_nWE            (usb_wrn_out),
+          .USB_nCS            (usb_cen_out),
+          .USB_SPARE1         (usb_spare1 ),
+
+          // LEDs on Board
+          .led1               (led1      ),
+          .led2               (led2      ),
+          .led3               (led3      ),
+
+          // trace
+          .TRCENA             (1'b1),
+          .I_trace_clk        (trace_clk),
+          .TRACEDATA          (TRACEDATA),
+          .TRACECLOCK         (1'b0),
+
+          // 20-Pin Connector
+          .trig_out           (trig_out),          // output to CW
+          .target_trig_in     (m3_trig_out),       // input from target
+
+          .I_trigger_clk      (trigger_clk)
+
+      );
+
+      tb_trace_generator U_tb_trace_generator
+           (.clk                    (trace_clk),
+            .reset                  (~pushbutton),
+            .TRACEDATA              (TRACEDATA),
+            .trig_out               (m3_trig_out)
+           );
+
+   `endif
 
 
 endmodule

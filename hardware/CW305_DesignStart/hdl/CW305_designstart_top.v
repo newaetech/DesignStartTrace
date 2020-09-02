@@ -271,7 +271,8 @@ module CW305_designstart_top #(
       .pBUFFER_SIZE     (64),
       .pMATCH_RULES     (8)
    ) U_trace_top (
-      .trace_clk        (ext_clock),
+      .trace_clk_in     (ext_clock),
+      .trace_clk_out    (),
       .usb_clk          (clk_usb_buf),
       .reset            (reset    ),
                                   
@@ -283,6 +284,7 @@ module CW305_designstart_top #(
 
       `ifdef __ICARUS__
       .I_trigger_clk    (I_trigger_clk),
+      .I_trace_clk      (1'b0),
       `endif
                                   
       .USB_Data         (USB_Data ),
@@ -290,6 +292,7 @@ module CW305_designstart_top #(
       .USB_nRD          (USB_nRD  ),
       .USB_nWE          (USB_nWE  ),
       .USB_nCS          (USB_nCS  ),
+      .USB_SPARE1       (1'b0     ),
 
       .arm              (arm),
       .capturing        (capturing)

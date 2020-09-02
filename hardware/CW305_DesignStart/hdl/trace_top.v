@@ -25,6 +25,7 @@ either expressed or implied, of NewAE Technology Inc.
 
 `timescale 1 ns / 1 ps
 `default_nettype none
+`include "defines_pw.v"
 
 module trace_top #(
   parameter pBYTECNT_SIZE = 7,
@@ -39,12 +40,14 @@ module trace_top #(
   parameter pTIMESTAMP_FULL_WIDTH = 16,
   parameter pTIMESTAMP_SHORT_WIDTH = 8
 )(
-  input  wire trace_clk,
+  input  wire trace_clk_in,
+  output wire trace_clk_out,
   input  wire usb_clk,
   input  wire reset,
 
   `ifdef __ICARUS__
   input wire  I_trigger_clk, // for simulation only
+  input wire  I_trace_clk, // for simulation only
   `endif
 
   // trace:
@@ -60,6 +63,7 @@ module trace_top #(
   input wire          USB_nRD,
   input wire          USB_nWE,
   input wire          USB_nCS,
+  input wire          USB_SPARE1,
 
   // Status LEDs:
   output wire arm,
@@ -74,7 +78,6 @@ module trace_top #(
    wire isout;
    wire [7:0] cmdfifo_din;
    wire [7:0] cmdfifo_dout;
-   wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address;
    wire [pBYTECNT_SIZE-1:0]  reg_bytecnt;
    wire [7:0]   write_data;
    wire [7:0]   read_data;
@@ -84,30 +87,93 @@ module trace_top #(
    wire         reg_write;
    wire         reg_addrvalid;
 
+   wire         trace_clk;
+   wire [3:0]   trace_data;
+   wire         trace_clk_locked;
+   wire         trace_clk_psdone;
+
    assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
    assign cmdfifo_din = USB_Data;
 
-   cw305_usb_reg_fe #(
-      .pBYTECNT_SIZE    (pBYTECNT_SIZE)
-   ) U_usb_reg_main (
-      .rst              (reset),
-      .usb_clk          (usb_clk), 
-      .usb_din          (cmdfifo_din), 
-      .usb_dout         (cmdfifo_dout), 
-      .usb_rdn          (USB_nRD), 
-      .usb_wrn          (USB_nWE),
-      .usb_cen          (USB_nCS),
-      .usb_alen         (1'b0),
-      .usb_addr         (USB_Addr),
-      .usb_isout        (isout), 
-      .reg_address      (reg_address), 
-      .reg_bytecnt      (reg_bytecnt), 
-      .reg_datao        (write_data), 
-      .reg_datai        (read_data),
-      .reg_read         (reg_read), 
-      .reg_write        (reg_write), 
-      .reg_addrvalid    (reg_addrvalid)
-   );
+   `ifdef CW305
+      wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address;
+      cw305_usb_reg_fe #(
+         .pBYTECNT_SIZE    (pBYTECNT_SIZE)
+      ) U_usb_reg_main (
+         .rst              (reset),
+         .usb_clk          (usb_clk), 
+         .usb_din          (cmdfifo_din), 
+         .usb_dout         (cmdfifo_dout), 
+         .usb_rdn          (USB_nRD), 
+         .usb_wrn          (USB_nWE),
+         .usb_cen          (USB_nCS),
+         .usb_alen         (1'b0),
+         .usb_addr         (USB_Addr),
+         .usb_isout        (isout), 
+         .reg_address      (reg_address), 
+         .reg_bytecnt      (reg_bytecnt), 
+         .reg_datao        (write_data), 
+         .reg_datai        (read_data),
+         .reg_read         (reg_read), 
+         .reg_write        (reg_write), 
+         .reg_addrvalid    (reg_addrvalid)
+      );
+      assign trace_clk = trace_clk_in;
+      assign trace_clk_out = trace_clk;
+      assign trace_data = TRACEDATA;
+
+   `else // PhyWhisperer platform
+      wire [pADDR_WIDTH-1:0]  reg_address;
+      usb_reg_main #(
+         .pBYTECNT_SIZE    (pBYTECNT_SIZE)
+      ) U_usb_reg_main (
+         .cwusb_clk        (usb_clk), 
+         .cwusb_din        (cmdfifo_din), 
+         .cwusb_dout       (cmdfifo_dout), 
+         .cwusb_rdn        (USB_nRD), 
+         .cwusb_wrn        (USB_nWE),
+         .cwusb_cen        (USB_nCS),
+         .cwusb_alen       (USB_SPARE1),
+         .cwusb_addr       (USB_Addr),
+         .cwusb_isout      (isout), 
+         .reg_address      (reg_address), 
+         .reg_bytecnt      (reg_bytecnt), 
+         .reg_datao        (write_data), 
+         .reg_datai        (read_data),
+         .reg_read         (reg_read), 
+         .reg_write        (reg_write), 
+         .reg_addrvalid    (reg_addrvalid)
+      );
+
+      // TODO?
+      wire trace_psen = 1'b0;
+      wire trace_psincdec = 1'b0;
+      wire trace_psdone;
+
+      `ifndef __ICARUS__
+          clk_wiz_1 U_trace_clock (
+            .reset        (reset),
+            .clk_in1      (trace_clk_in),
+            .clk_out1     (trace_clk),
+            // Dynamic phase shift ports
+            .psclk        (usb_clk),
+            .psen         (trace_psen),
+            .psincdec     (trace_psincdec),
+            .psdone       (trace_psdone),
+            // Status and control signals
+            .locked       (trace_clk_locked)
+         );
+      `else
+         assign trace_clk_locked = 1'b1;
+         assign trace_clk_psdone = 1'b1;
+         assign trace_clk = I_trace_clk;
+         assign trace_clk_out = trace_clk;
+      `endif
+
+      // TODO-NEXT!
+      assign trace_data = TRACEDATA;
+
+   `endif
 
 
    wire [4:0] clksettings; // TODO-later
@@ -206,7 +272,7 @@ module trace_top #(
    ) U_reg_trace (
       .reset_i                  (reset), 
       .usb_clk                  (usb_clk), 
-      .reg_address              (reg_address), 
+      .reg_address              (reg_address[7:0]), 
       .reg_bytecnt              (reg_bytecnt), 
       .read_data                (read_data_trace), 
       .write_data               (write_data),
@@ -390,7 +456,7 @@ module trace_top #(
 
    /* FRONT END CONNECTIONS */
       .trace_clk                (trace_clk),
-      .trace_data               (TRACEDATA),
+      .trace_data               (trace_data),
 
    /* GENERIC FRONT END CONNECTIONS */
       .O_event                  (fe_event),

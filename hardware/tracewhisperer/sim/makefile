@@ -11,7 +11,7 @@ DUMP=0
 all: testcase compile run
 
 testcase:
-	python3 gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
+	python3 ../../CW305_DesignStart/sim/gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
 	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG)
 
 compile:
@@ -19,32 +19,22 @@ compile:
 	-g2005-sv \
 	-Wportbind \
 	-Wselect-range \
-	-I../hdl \
+	-I../../CW305_DesignStart/hdl \
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-P tb.pDUMP=$(DUMP) \
 	-P tb.pSEED=$(SEED) \
 	-P tb.pCAPTURE_RAW=$(CAPTURE_RAW) \
 	-P tb.pPATTERN_TRIG=$(PATTERN_TRIG) \
 	-P tb.pTIMEOUT=$(TIMEOUT) \
-	-DCW305 \
 
 nofifo:
 	iverilog -ccmdfile_nofifo \
 	-g2005-sv \
 	-Wportbind \
 	-Wselect-range \
-	-I../hdl \
+	-I../../CW305_DesignStart/hdl \
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
-	-DCW305 \
-
-traceonly:
-	iverilog -ccmdfile_traceonly \
-	-g2005-sv \
-	-Wportbind \
-	-Wselect-range \
-	-I../hdl \
-	-I../../phywhisperer/software/phywhisperer/firmware \
 
 run:
 	vvp -l$(LOGFILE) a.out -$(WAVEFORMAT)

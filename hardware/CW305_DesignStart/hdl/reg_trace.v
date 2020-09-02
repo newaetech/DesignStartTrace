@@ -33,7 +33,8 @@ module reg_trace #(
 
 // Interface to cw305_usb_reg_fe:
    input  wire                                  usb_clk,
-   input  wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address,     // Address of register
+   //input  wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address,     // Address of register
+   input  wire [7:0]                            reg_address,  // Address of register
    input  wire [pBYTECNT_SIZE-1:0]              reg_bytecnt,  // Current byte count
    output wire [7:0]                            read_data,       //
    input  wire [7:0]                            write_data,      //

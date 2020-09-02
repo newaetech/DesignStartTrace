@@ -1,0 +1,9 @@
+../hdl/tracewhisperer_top.v
+../../CW305_DesignStart/hdl/trace_top.v
+../../CW305_DesignStart/hdl/reg_trace.v
+../../CW305_DesignStart/hdl/fe_capture_trace.v
+../../phywhisperer/hardware/fpga/hdl/fe_capture_main.v
+../../phywhisperer/hardware/fpga/hdl/usb_reg_main.v
+../../phywhisperer/hardware/fpga/hdl/reg_main.v
+../../phywhisperer/hardware/fpga/hdl/pw_trigger.v
+../../phywhisperer/hardware/fpga/hdl/cdc_pulse.v
