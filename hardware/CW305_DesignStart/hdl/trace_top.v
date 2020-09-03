@@ -51,8 +51,7 @@ module trace_top #(
   `endif
 
   // trace:
-  input  wire TRCENA,
-  input  wire [3:0] TRACEDATA,
+  input  wire [3:0] trace_data,
   output wire O_trace_trig_out,
   input  wire m3_trig,
   output wire O_soft_trig_passthru,
@@ -67,7 +66,11 @@ module trace_top #(
 
   // Status LEDs:
   output wire arm,
-  output wire capturing
+  output wire capturing,
+
+  // Debug:
+  output wire trace_clk_locked,
+  output wire synchronized
 
 );
 
@@ -88,12 +91,11 @@ module trace_top #(
    wire         reg_addrvalid;
 
    wire         trace_clk;
-   wire [3:0]   trace_data;
-   wire         trace_clk_locked;
    wire         trace_clk_psdone;
 
    assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
    assign cmdfifo_din = USB_Data;
+   assign trace_clk_out = trace_clk;
 
    `ifdef CW305
       wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address;
@@ -119,8 +121,6 @@ module trace_top #(
          .reg_addrvalid    (reg_addrvalid)
       );
       assign trace_clk = trace_clk_in;
-      assign trace_clk_out = trace_clk;
-      assign trace_data = TRACEDATA;
 
    `else // PhyWhisperer platform
       wire [pADDR_WIDTH-1:0]  reg_address;
@@ -167,17 +167,12 @@ module trace_top #(
          assign trace_clk_locked = 1'b1;
          assign trace_clk_psdone = 1'b1;
          assign trace_clk = I_trace_clk;
-         assign trace_clk_out = trace_clk;
       `endif
-
-      // TODO-NEXT!
-      assign trace_data = TRACEDATA;
 
    `endif
 
 
    wire [4:0] clksettings; // TODO-later
-   wire synchronized;
 
    wire [pMATCH_RULES-1:0] pattern_enable;
    wire [pMATCH_RULES-1:0] pattern_trig_enable;

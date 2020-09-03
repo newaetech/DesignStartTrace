@@ -64,11 +64,14 @@ module tracewhisperer_top #(
 
   // debug:
   output wire         trace_clk_locked,
+  output wire         synchronized,
 
   // leds:
   output wire led1,
   output wire led2,
-  output wire led3
+  output wire led3,
+
+  output wire reset_dbg // TODO-debug only
 );
 
   wire arm;
@@ -76,6 +79,8 @@ module tracewhisperer_top #(
   wire trace_clk;
 
   reg [22:0] count;
+
+  assign reset_dbg = reset;
 
   always @(posedge trace_clk) begin
      if (reset)
@@ -112,8 +117,7 @@ module tracewhisperer_top #(
       .usb_clk          (clk_usb_buf),
       .reset            (reset    ),
                                   
-      .TRCENA           (TRCENA),
-      .TRACEDATA        (TRACEDATA),
+      .trace_data       (TRACEDATA),
       .O_trace_trig_out (trig_out),
       .m3_trig          (target_trig_in),
 
@@ -136,7 +140,10 @@ module tracewhisperer_top #(
       */
 
       .arm              (arm),
-      .capturing        (capturing)
+      .capturing        (capturing),
+
+      .trace_clk_locked (trace_clk_locked),
+      .synchronized     (synchronized)
    );
 
 

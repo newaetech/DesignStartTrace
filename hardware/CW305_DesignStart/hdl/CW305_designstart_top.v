@@ -276,8 +276,7 @@ module CW305_designstart_top #(
       .usb_clk          (clk_usb_buf),
       .reset            (reset    ),
                                   
-      .TRCENA           (TRCENA   ),
-      .TRACEDATA        (TRACEDATA),
+      .trace_data       (TRACEDATA),
       .O_trace_trig_out (trace_trig_out),
       .m3_trig          (m3_trig_out),
       .O_soft_trig_passthru (soft_trig_passthru),
@@ -295,7 +294,10 @@ module CW305_designstart_top #(
       .USB_SPARE1       (1'b0     ),
 
       .arm              (arm),
-      .capturing        (capturing)
+      .capturing        (capturing),
+
+      .trace_clk_locked (),
+      .synchronized     ()
    );
 
 

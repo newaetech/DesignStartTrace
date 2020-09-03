@@ -176,6 +176,7 @@
         <Option Name="DesignMode" Val="RTL"/>
         <Option Name="TopModule" Val="CW305_designstart_top"/>
         <Option Name="VerilogDir" Val="$PPRDIR/../phywhisperer/software/phywhisperer/firmware"/>
+        <Define Name="CW305"/>
       </Config>
     </FileSet>
     <FileSet Name="constrs_1" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
