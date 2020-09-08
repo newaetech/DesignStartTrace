@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
--- Date        : Wed Sep  2 19:45:22 2020
+-- Date        : Thu Sep  3 13:32:40 2020
 -- Host        : qed running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub
 --               w:/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/fifo_generator_0/fifo_generator_0_stub.vhdl

@@ -49,10 +49,11 @@ set_property PACKAGE_PIN P13 [get_ports reset_dbg]
 # N/C set_property PACKAGE_PIN M12 [get_ports ]
 # TDO set_property PACKAGE_PIN P12 [get_ports ]
 # nRESET set_property PACKAGE_PIN N11 [get_ports ]
-set_property PACKAGE_PIN P11 [get_ports TRACEDATA[3]]
-set_property PACKAGE_PIN N10 [get_ports TRACEDATA[2]]
-set_property PACKAGE_PIN P10 [get_ports TRACEDATA[1]]
-set_property PACKAGE_PIN M10 [get_ports TRACEDATA[0]]
+
+set_property PACKAGE_PIN M10 [get_ports TRACEDATA[3]]
+set_property PACKAGE_PIN P10 [get_ports TRACEDATA[2]]
+set_property PACKAGE_PIN N10 [get_ports TRACEDATA[1]]
+set_property PACKAGE_PIN P11 [get_ports TRACEDATA[0]]
 
 # userio_clk:
 set_property PACKAGE_PIN G11 [get_ports TRACECLOCK]
@@ -85,8 +86,8 @@ set_property PACKAGE_PIN P3 [get_ports {USB_Addr[3]}]
 set_property PACKAGE_PIN H2 [get_ports {USB_Addr[2]}]
 set_property PACKAGE_PIN H1 [get_ports {USB_Addr[1]}]
 set_property PACKAGE_PIN G1 [get_ports {USB_Addr[0]}]
-set_property PACKAGE_PIN L2 [get_ports {USB_Addr[6]}]
-set_property PACKAGE_PIN L1 [get_ports {USB_Addr[7]}]
+set_property PACKAGE_PIN L1 [get_ports {USB_Addr[6]}]
+set_property PACKAGE_PIN L2 [get_ports {USB_Addr[7]}]
 
 set_property PACKAGE_PIN B3 [get_ports USB_nRD]
 set_property PACKAGE_PIN B2 [get_ports USB_nWE]
@@ -106,7 +107,6 @@ set_property PACKAGE_PIN M2 [get_ports trace_clk_locked]
 # borrow MOSI pin:
 set_property PACKAGE_PIN F2 [get_ports synchronized]
 
-
 set_property PACKAGE_PIN M13 [get_ports mcx_trig]
 
 set_input_delay -clock usb_clk 2.0 [get_ports USB_nCS]
@@ -117,9 +117,6 @@ set_input_delay -clock usb_clk 2.0 [get_ports USB_Addr]
 
 set_output_delay -clock usb_clk 1.0 [get_ports USB_Data]
 
-# TODO: sort out later, may lead to SWD debugging issues?
-# (required because otherwise P+R fails with "Poor placement for routing between an IO pin and BUFG")
-#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets swclk_IBUF]
 # --------------------------------------------------
 # Configuration pins
 # --------------------------------------------------
