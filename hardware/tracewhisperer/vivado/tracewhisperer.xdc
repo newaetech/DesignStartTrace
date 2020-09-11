@@ -51,9 +51,9 @@ set_property PACKAGE_PIN P13 [get_ports reset_dbg]
 # nRESET set_property PACKAGE_PIN N11 [get_ports ]
 
 set_property PACKAGE_PIN M10 [get_ports TRACEDATA[3]]
-set_property PACKAGE_PIN P10 [get_ports TRACEDATA[2]]
-set_property PACKAGE_PIN N10 [get_ports TRACEDATA[1]]
-set_property PACKAGE_PIN P11 [get_ports TRACEDATA[0]]
+set_property PACKAGE_PIN N10 [get_ports TRACEDATA[2]]
+set_property PACKAGE_PIN P10 [get_ports TRACEDATA[1]]
+set_property PACKAGE_PIN N11 [get_ports TRACEDATA[0]]
 
 # userio_clk:
 set_property PACKAGE_PIN G11 [get_ports TRACECLOCK]
