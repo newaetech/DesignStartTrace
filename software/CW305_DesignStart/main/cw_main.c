@@ -175,7 +175,7 @@ void enable_trace()
             // portmode appears to have no effect?
             //| ETM_CR_PORTMODE_1_1; //(0x00002000, 1:1)
             //| ETM_CR_PORTMODE_2_1; // 2:1
-    ETM->TRACEIDR = 2; // Trace bus ID for TPIU
+    ETM->TRACEIDR = 1; // Trace bus ID for TPIU
     ETM->FFLR = 0; // Stall processor when FIFO is full
     //ETM->TEEVR = 0x00000020;    // EmbeddedICE comparator 0
     //ETM->TEEVR = 0x00000021;    // EmbeddedICE comparator 1
