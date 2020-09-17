@@ -12,6 +12,7 @@
 *.cwp
 *.csv
 *py.bak
+*.bak
 *.jou
 *.log
 *.bit
