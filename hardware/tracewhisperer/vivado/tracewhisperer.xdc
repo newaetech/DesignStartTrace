@@ -50,10 +50,18 @@ set_property PACKAGE_PIN P13 [get_ports reset_dbg]
 # TDO set_property PACKAGE_PIN P12 [get_ports ]
 # nRESET set_property PACKAGE_PIN N11 [get_ports ]
 
+# works for rev-03 (blue board):
+#set_property PACKAGE_PIN M10 [get_ports TRACEDATA[3]]
+#set_property PACKAGE_PIN N10 [get_ports TRACEDATA[2]]
+#set_property PACKAGE_PIN P10 [get_ports TRACEDATA[1]]
+#set_property PACKAGE_PIN N11 [get_ports TRACEDATA[0]]
+
+# works for rev-4 (production version):
 set_property PACKAGE_PIN M10 [get_ports TRACEDATA[3]]
-set_property PACKAGE_PIN N10 [get_ports TRACEDATA[2]]
-set_property PACKAGE_PIN P10 [get_ports TRACEDATA[1]]
-set_property PACKAGE_PIN N11 [get_ports TRACEDATA[0]]
+set_property PACKAGE_PIN P10 [get_ports TRACEDATA[2]]
+set_property PACKAGE_PIN N10 [get_ports TRACEDATA[1]]
+set_property PACKAGE_PIN P11 [get_ports TRACEDATA[0]]
+set_property PACKAGE_PIN N11 [get_ports TRACEDATA_alt]
 
 # userio_clk:
 set_property PACKAGE_PIN G11 [get_ports TRACECLOCK]
@@ -109,11 +117,13 @@ set_property PACKAGE_PIN F2 [get_ports synchronized]
 
 set_property PACKAGE_PIN M13 [get_ports mcx_trig]
 
+# No spec for these, seems sensible:
 set_input_delay -clock usb_clk 2.0 [get_ports USB_nCS]
 set_input_delay -clock usb_clk 2.0 [get_ports USB_nRD]
 set_input_delay -clock usb_clk 2.0 [get_ports USB_nWE]
 set_input_delay -clock usb_clk 2.0 [get_ports USB_Data]
 set_input_delay -clock usb_clk 2.0 [get_ports USB_Addr]
+set_input_delay -clock usb_clk 2.0 [get_ports USB_SPARE1]
 
 set_output_delay -clock usb_clk 1.0 [get_ports USB_Data]
 
@@ -135,17 +145,29 @@ set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRAC
 set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA[2]}]
 set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA[1]}]
 set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA[0]}]
-# TODO: more?
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA_alt}]
+
+set_input_delay -clock [get_clocks trace_clk] -add_delay 1.000 [get_ports target_trig_in]
+
 
 
 # --------------------------------------------------
 # Remaining output delays
 # --------------------------------------------------
-# TODO?
+# These are quasi-static and don't need constraints, so let's just prevent 'no output delay' warnings:
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports led1]
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports led2]
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports led3]
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports mcx_trig]
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports trig_out]
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports synchronized]
+set_false_path -to [get_ports led1]
+set_false_path -to [get_ports led2]
+set_false_path -to [get_ports led3]
+set_false_path -to [get_ports mcx_trig]
+set_false_path -to [get_ports trig_out]
+set_false_path -to [get_ports synchronized]
 
-
-#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets USB_nRD]
-#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets USB_nWE]
 
 set_property BITSTREAM.CONFIG.USR_ACCESS TIMESTAMP [current_design]
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]

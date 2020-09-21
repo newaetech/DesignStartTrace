@@ -58,6 +58,7 @@ module tracewhisperer_top #(
   input wire          TRCENA,
   input wire          TRACECLOCK,
   input wire [3:0]    TRACEDATA,
+  input wire          TRACEDATA_alt,
 
   // target trigger:
   input wire          target_trig_in,
@@ -77,6 +78,8 @@ module tracewhisperer_top #(
   wire arm;
   wire capturing;
   wire trace_clk;
+  wire [3:0] board_rev;
+  reg  [3:0] trace_data;
 
   reg [22:0] count;
 
@@ -89,11 +92,20 @@ module tracewhisperer_top #(
         count <= count + 1;
   end
 
-  assign led1 = count[22];              // clock alive
-  assign led2 = arm;
-  assign led3 = capturing;
+  assign led1 = count[22];              // clock alive; actually routes to PD pin of 20-pin CW connector
+  assign led3 = arm;                    // "Armed" LED
+  assign led2 = capturing;              // "Capturing" LED
 
   assign mcx_trig = trig_out;
+
+  always @(*) begin
+     case (board_rev)
+        3: trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], TRACEDATA_alt};
+        4: trace_data = TRACEDATA;
+        default: trace_data = TRACEDATA;
+     endcase
+  end
+
 
   wire clk_usb_buf;
 
@@ -117,7 +129,7 @@ module tracewhisperer_top #(
       .usb_clk          (clk_usb_buf),
       .reset            (reset    ),
                                   
-      .trace_data       (TRACEDATA),
+      .trace_data       (trace_data),
       .O_trace_trig_out (trig_out),
       .m3_trig          (target_trig_in),
 
@@ -133,11 +145,7 @@ module tracewhisperer_top #(
       .USB_nCS          (USB_nCS  ),
       .USB_SPARE1       (USB_SPARE1 ),
 
-      /* TODO: needed?
-      .trace_psen      (psen),
-      .trace_psincdec  (psincdec),
-      .trace_psdone    (psdone),
-      */
+      .O_board_rev      (board_rev),
 
       .arm              (arm),
       .capturing        (capturing),

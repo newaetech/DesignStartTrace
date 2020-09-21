@@ -293,6 +293,8 @@ module CW305_designstart_top #(
       .USB_nCS          (USB_nCS  ),
       .USB_SPARE1       (1'b0     ),
 
+      .O_board_rev      (),     // used for PhyWhisperer platform only
+
       .arm              (arm),
       .capturing        (capturing),
 

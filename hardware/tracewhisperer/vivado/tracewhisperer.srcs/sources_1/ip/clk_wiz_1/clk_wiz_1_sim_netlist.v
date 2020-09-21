@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-// Date        : Wed Sep  2 19:45:03 2020
+// Date        : Mon Sep 21 10:31:23 2020
 // Host        : qed running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               W:/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/clk_wiz_1/clk_wiz_1_sim_netlist.v
@@ -15,18 +15,10 @@
 (* NotValidForBitStream *)
 module clk_wiz_1
    (clk_out1,
-    psclk,
-    psen,
-    psincdec,
-    psdone,
     reset,
     locked,
     clk_in1);
   output clk_out1;
-  input psclk;
-  input psen;
-  input psincdec;
-  output psdone;
   input reset;
   output locked;
   input clk_in1;
@@ -34,38 +26,22 @@ module clk_wiz_1
   (* IBUF_LOW_PWR *) wire clk_in1;
   wire clk_out1;
   wire locked;
-  wire psclk;
-  wire psdone;
-  wire psen;
-  wire psincdec;
   wire reset;
 
   clk_wiz_1_clk_wiz_1_clk_wiz inst
        (.clk_in1(clk_in1),
         .clk_out1(clk_out1),
         .locked(locked),
-        .psclk(psclk),
-        .psdone(psdone),
-        .psen(psen),
-        .psincdec(psincdec),
         .reset(reset));
 endmodule
 
 (* ORIG_REF_NAME = "clk_wiz_1_clk_wiz" *) 
 module clk_wiz_1_clk_wiz_1_clk_wiz
    (clk_out1,
-    psclk,
-    psen,
-    psincdec,
-    psdone,
     reset,
     locked,
     clk_in1);
   output clk_out1;
-  input psclk;
-  input psen;
-  input psincdec;
-  output psdone;
   input reset;
   output locked;
   input clk_in1;
@@ -77,10 +53,6 @@ module clk_wiz_1_clk_wiz_1_clk_wiz
   wire clkfbout_buf_clk_wiz_1;
   wire clkfbout_clk_wiz_1;
   wire locked;
-  wire psclk;
-  wire psdone;
-  wire psen;
-  wire psincdec;
   wire reset;
   wire NLW_mmcm_adv_inst_CLKFBOUTB_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKFBSTOPPED_UNCONNECTED;
@@ -96,6 +68,7 @@ module clk_wiz_1_clk_wiz_1_clk_wiz
   wire NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED;
   wire NLW_mmcm_adv_inst_DRDY_UNCONNECTED;
+  wire NLW_mmcm_adv_inst_PSDONE_UNCONNECTED;
   wire [15:0]NLW_mmcm_adv_inst_DO_UNCONNECTED;
 
   (* BOX_TYPE = "PRIMITIVE" *) 
@@ -193,10 +166,10 @@ module clk_wiz_1_clk_wiz_1_clk_wiz
         .DRDY(NLW_mmcm_adv_inst_DRDY_UNCONNECTED),
         .DWE(1'b0),
         .LOCKED(locked),
-        .PSCLK(psclk),
-        .PSDONE(psdone),
-        .PSEN(psen),
-        .PSINCDEC(psincdec),
+        .PSCLK(1'b0),
+        .PSDONE(NLW_mmcm_adv_inst_PSDONE_UNCONNECTED),
+        .PSEN(1'b0),
+        .PSINCDEC(1'b0),
         .PWRDWN(1'b0),
         .RST(reset));
 endmodule

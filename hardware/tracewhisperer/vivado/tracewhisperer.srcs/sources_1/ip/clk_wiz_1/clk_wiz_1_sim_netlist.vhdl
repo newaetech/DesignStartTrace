@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
--- Date        : Wed Sep  2 19:45:03 2020
+-- Date        : Mon Sep 21 10:31:23 2020
 -- Host        : qed running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               W:/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/clk_wiz_1/clk_wiz_1_sim_netlist.vhdl
@@ -17,10 +17,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity clk_wiz_1_clk_wiz_1_clk_wiz is
   port (
     clk_out1 : out STD_LOGIC;
-    psclk : in STD_LOGIC;
-    psen : in STD_LOGIC;
-    psincdec : in STD_LOGIC;
-    psdone : out STD_LOGIC;
     reset : in STD_LOGIC;
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
@@ -48,6 +44,7 @@ architecture STRUCTURE of clk_wiz_1_clk_wiz_1_clk_wiz is
   signal NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_DRDY_UNCONNECTED : STD_LOGIC;
+  signal NLW_mmcm_adv_inst_PSDONE_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_DO_UNCONNECTED : STD_LOGIC_VECTOR ( 15 downto 0 );
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of clkf_buf : label is "PRIMITIVE";
@@ -158,10 +155,10 @@ mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
       DRDY => NLW_mmcm_adv_inst_DRDY_UNCONNECTED,
       DWE => '0',
       LOCKED => locked,
-      PSCLK => psclk,
-      PSDONE => psdone,
-      PSEN => psen,
-      PSINCDEC => psincdec,
+      PSCLK => '0',
+      PSDONE => NLW_mmcm_adv_inst_PSDONE_UNCONNECTED,
+      PSEN => '0',
+      PSINCDEC => '0',
       PWRDWN => '0',
       RST => reset
     );
@@ -173,10 +170,6 @@ use UNISIM.VCOMPONENTS.ALL;
 entity clk_wiz_1 is
   port (
     clk_out1 : out STD_LOGIC;
-    psclk : in STD_LOGIC;
-    psen : in STD_LOGIC;
-    psincdec : in STD_LOGIC;
-    psdone : out STD_LOGIC;
     reset : in STD_LOGIC;
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
@@ -192,10 +185,6 @@ inst: entity work.clk_wiz_1_clk_wiz_1_clk_wiz
       clk_in1 => clk_in1,
       clk_out1 => clk_out1,
       locked => locked,
-      psclk => psclk,
-      psdone => psdone,
-      psen => psen,
-      psincdec => psincdec,
       reset => reset
     );
 end STRUCTURE;

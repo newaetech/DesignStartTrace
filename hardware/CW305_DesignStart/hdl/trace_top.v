@@ -64,6 +64,8 @@ module trace_top #(
   input wire          USB_nCS,
   input wire          USB_SPARE1,
 
+  output wire [3:0]   O_board_rev,
+
   // Status LEDs:
   output wire arm,
   output wire capturing,
@@ -145,21 +147,11 @@ module trace_top #(
          .reg_addrvalid    (reg_addrvalid)
       );
 
-      // TODO?
-      wire trace_psen = 1'b0;
-      wire trace_psincdec = 1'b0;
-      wire trace_psdone;
-
       `ifndef __ICARUS__
           clk_wiz_1 U_trace_clock (
             .reset        (reset),
             .clk_in1      (trace_clk_in),
             .clk_out1     (trace_clk),
-            // Dynamic phase shift ports
-            .psclk        (usb_clk),
-            .psen         (trace_psen),
-            .psincdec     (trace_psincdec),
-            .psdone       (trace_psdone),
             // Status and control signals
             .locked       (trace_clk_locked)
          );
@@ -352,6 +344,7 @@ module trace_top #(
       .O_count_writes   (count_writes),
       .O_counter_quick_start (counter_quick_start),
       .I_capture_enable_pulse (capture_enable_pulse),
+      .O_board_rev      (O_board_rev),
 
       // Trigger:
       .O_trigger_delay  (trigger_delay),
@@ -532,12 +525,6 @@ module trace_top #(
       assign psdone = 1'b1;
       assign trigger_clk = I_trigger_clk;
    `endif
-   /* TODO: temp-debug
-   assign trigger_clk_locked = 1'b1;
-   assign psdone = 1'b1;
-   assign trigger_clk = trace_clk;
-   */
-
 
    pw_trigger #(
       .pCAPTURE_DELAY_WIDTH     (pCAPTURE_DELAY_WIDTH),

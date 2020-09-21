@@ -70,11 +70,6 @@ module clk_wiz_1_clk_wiz
  (// Clock in ports
   // Clock out ports
   output        clk_out1,
-  // Dynamic phase shift ports
-  input         psclk,
-  input         psen,
-  input         psincdec,
-  output        psdone,
   // Status and control signals
   input         reset,
   output        locked,
@@ -108,6 +103,7 @@ wire clk_in2_clk_wiz_1;
 
   wire [15:0] do_unused;
   wire        drdy_unused;
+  wire        psdone_unused;
   wire        locked_int;
   wire        clkfbout_clk_wiz_1;
   wire        clkfbout_buf_clk_wiz_1;
@@ -171,10 +167,10 @@ wire clk_in2_clk_wiz_1;
     .DRDY                (drdy_unused),
     .DWE                 (1'b0),
     // Ports for dynamic phase shift
-    .PSCLK               (psclk),
-    .PSEN                (psen),
-    .PSINCDEC            (psincdec),
-    .PSDONE              (psdone),
+    .PSCLK               (1'b0),
+    .PSEN                (1'b0),
+    .PSINCDEC            (1'b0),
+    .PSDONE              (psdone_unused),
     // Other control and status signals
     .LOCKED              (locked_int),
     .CLKINSTOPPED        (clkinstopped_unused),
