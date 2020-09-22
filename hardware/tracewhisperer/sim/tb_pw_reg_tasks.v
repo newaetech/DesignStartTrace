@@ -1,7 +1,7 @@
 parameter pSLOW_READS = 0;
 
 task write_byte;
-   input [2:0] block;
+   input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
    input [pBYTECNT_SIZE-1:0] subbyte;
    input [7:0] data;
@@ -10,7 +10,7 @@ endtask
 
 
 task read_byte;
-   input [2:0] block;
+   input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
    input [pBYTECNT_SIZE-1:0] subbyte;
    output [7:0] data;
@@ -19,7 +19,7 @@ endtask
 
 
 task write_word;
-   input [2:0] block;
+   input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
    input [31:0] data;
    int subbyte;
@@ -30,7 +30,7 @@ endtask
 
 
 task read_word;
-   input [2:0] block;
+   input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
    output [31:0] data;
    int subbyte;
@@ -41,8 +41,8 @@ endtask
 
 
 task write_1byte;
-   input [2:0] block;
-   input [4:0] address;
+   input [1:0] block;
+   input [5:0] address;
    input [7:0] data;
    @(posedge usb_clk);
    usb_spare1 = 0;
@@ -60,8 +60,8 @@ task write_1byte;
 endtask
 
 task read_1byte;
-   input [2:0] block;
-   input [4:0] address;
+   input [1:0] block;
+   input [5:0] address;
    output [7:0] data;
    @(posedge usb_clk);
    usb_spare1 = 0;
@@ -82,8 +82,8 @@ task read_1byte;
 endtask
 
 task rw_lots_bytes;
-   input [2:0] block;
-   input [4:0] address;
+   input [1:0] block;
+   input [5:0] address;
    @(posedge usb_clk);
    usb_spare1 = 0;
    usb_addr = {block, address};

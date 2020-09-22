@@ -98,7 +98,7 @@ module reg_trace #(
    wire [7:0] rev = 8'h00;
    wire [63:0] trace_count;
 
-   assign selected = reg_addrvalid & reg_address[6:5] == `TRACE_REG_SELECT;
+   assign selected = reg_addrvalid & reg_address[7:6] == `TRACE_REG_SELECT;
    wire [4:0] address = reg_address[4:0];
 
 

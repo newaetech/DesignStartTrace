@@ -1,10 +1,10 @@
 task write_byte;
-   input [2:0] block;
+   input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
    input [pBYTECNT_SIZE-1:0] subbyte;
    input [7:0] data;
    @(posedge usb_clk);
-   usb_addr = {block, address[4:0], subbyte};
+   usb_addr = {block, address[5:0], subbyte};
    usb_wdata = data;
    usb_wrn = 0;
    @(posedge usb_clk);
@@ -17,12 +17,12 @@ endtask
 
 
 task read_byte;
-   input [2:0] block;
+   input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
    input [pBYTECNT_SIZE-1:0] subbyte;
    output [7:0] data;
    @(posedge usb_clk);
-   usb_addr = {block, address[4:0], subbyte};
+   usb_addr = {block, address[5:0], subbyte};
    @(posedge usb_clk);
    usb_rdn = 0;
    usb_cen = 0;
@@ -36,7 +36,7 @@ endtask
 
 
 task write_word;
-   input [2:0] block;
+   input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
    input [31:0] data;
    int subbyte;
@@ -48,7 +48,7 @@ endtask
 
 
 task read_word;
-   input [2:0] block;
+   input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
    output [31:0] data;
    int subbyte;
