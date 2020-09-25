@@ -82,6 +82,8 @@ module trace_top #(
 
    wire isout;
    wire [7:0] cmdfifo_din;
+   wire [7:0] cmdfifo_dout_pre;
+   //reg  [7:0] cmdfifo_dout_reg;
    wire [7:0] cmdfifo_dout;
    wire [pBYTECNT_SIZE-1:0]  reg_bytecnt;
    wire [7:0]   write_data;
@@ -99,6 +101,11 @@ module trace_top #(
    assign cmdfifo_din = USB_Data;
    assign trace_clk_out = trace_clk;
 
+   //always @(posedge usb_clk)
+   //   cmdfifo_dout_reg <= cmdfifo_dout_pre;
+   //assign cmdfifo_dout = O_board_rev[3]? cmdfifo_dout_reg : cmdfifo_dout_pre;
+   assign cmdfifo_dout = cmdfifo_dout_pre;
+
    `ifdef CW305
       wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address;
       cw305_usb_reg_fe #(
@@ -107,7 +114,7 @@ module trace_top #(
          .rst              (reset),
          .usb_clk          (usb_clk), 
          .usb_din          (cmdfifo_din), 
-         .usb_dout         (cmdfifo_dout), 
+         .usb_dout         (cmdfifo_dout_pre), 
          .usb_rdn          (USB_nRD), 
          .usb_wrn          (USB_nWE),
          .usb_cen          (USB_nCS),
@@ -131,7 +138,7 @@ module trace_top #(
       ) U_usb_reg_main (
          .cwusb_clk        (usb_clk), 
          .cwusb_din        (cmdfifo_din), 
-         .cwusb_dout       (cmdfifo_dout), 
+         .cwusb_dout       (cmdfifo_dout_pre), 
          .cwusb_rdn        (USB_nRD), 
          .cwusb_wrn        (USB_nWE),
          .cwusb_cen        (USB_nCS),
@@ -567,7 +574,8 @@ module trace_top #(
           .probe10      (reg_read),             // input wire [0:0]  probe10 
           .probe11      (reg_write),            // input wire [0:0]  probe11 
           .probe12      (reg_addrvalid),        // input wire [0:0]  probe12 
-          .probe13      (trace_pattern0[31:0]), // input wire [31:0] probe13 
+          //.probe13      (trace_pattern0[31:0]), // input wire [31:0] probe13 
+          .probe13      ({24'b0, cmdfifo_dout}), // input wire [31:0] probe13 
           .probe14      (reg_main_selected),    // input wire [0:0]  probe14 
           .probe15      (read_data_main),       // input wire [7:0]  probe15 
           .probe16      (reg_trace_selected),   // input wire [0:0]  probe16 

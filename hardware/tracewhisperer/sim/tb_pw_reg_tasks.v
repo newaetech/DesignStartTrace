@@ -57,6 +57,7 @@ task write_1byte;
    usb_cen = 0;
    @(posedge usb_clk);
    usb_cen = 1;
+   @(posedge usb_clk);
 endtask
 
 task read_1byte;
@@ -118,6 +119,7 @@ task write_next_byte;
    usb_cen = 0;
    @(posedge usb_clk);
    usb_cen = 1;
+   @(posedge usb_clk);
 endtask
 
 task write_match_rule;

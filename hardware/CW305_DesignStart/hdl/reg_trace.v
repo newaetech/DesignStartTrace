@@ -36,7 +36,7 @@ module reg_trace #(
    //input  wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address,     // Address of register
    input  wire [7:0]                            reg_address,  // Address of register
    input  wire [pBYTECNT_SIZE-1:0]              reg_bytecnt,  // Current byte count
-   output wire [7:0]                            read_data,       //
+   output reg  [7:0]                            read_data,       //
    input  wire [7:0]                            write_data,      //
    input  wire                                  reg_read,        // Read flag. One clock cycle AFTER this flag is high
                                                                  // valid data must be present on the read_data bus
@@ -102,51 +102,9 @@ module reg_trace #(
    wire [4:0] address = reg_address[4:0];
 
 
-/*
    //////////////////////////////////
    // read logic:
    //////////////////////////////////
-   always @(posedge usb_clk) begin
-      if (selected && reg_read) begin
-         case (address)
-            `REG_NAME:                  reg_read_data <= name[reg_bytecnt*8 +: 8];
-            `REG_REV:                   reg_read_data <= rev;
-            `REG_CLKSETTINGS:           reg_read_data[4:0] <= O_clksettings;
-
-            `REG_PATTERN_ENABLE:        reg_read_data[pMATCH_RULES-1:0] <= O_pattern_enable;
-            `REG_PATTERN_TRIG_ENABLE:   reg_read_data[pMATCH_RULES-1:0] <= O_pattern_trig_enable;
-            `REG_TRACE_RESET_SYNC:      reg_read_data[0] <= O_trace_reset_sync;
-            `REG_TRACE_WIDTH:           reg_read_data[2:0] <= O_trace_width;
-            `REG_SOFT_TRIG_PASSTHRU:    reg_read_data[0] <= O_soft_trig_passthru;
-            `REG_SOFT_TRIG_ENABLE:      reg_read_data[0] <= O_soft_trig_enable;
-            `REG_CAPTURE_RAW:           reg_read_data[0] <= O_capture_raw;
-
-            `REG_SYNCHRONIZED:          reg_read_data[0] <= I_synchronized;
-
-            `REG_TRACE_PATTERN0:        reg_read_data <= O_trace_pattern0[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN1:        reg_read_data <= O_trace_pattern1[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN2:        reg_read_data <= O_trace_pattern2[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN3:        reg_read_data <= O_trace_pattern3[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN4:        reg_read_data <= O_trace_pattern4[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN5:        reg_read_data <= O_trace_pattern5[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN6:        reg_read_data <= O_trace_pattern6[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN7:        reg_read_data <= O_trace_pattern7[reg_bytecnt*8 +: 8];
-
-            `REG_TRACE_MASK0:           reg_read_data <= O_trace_mask0[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK1:           reg_read_data <= O_trace_mask1[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK2:           reg_read_data <= O_trace_mask2[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK3:           reg_read_data <= O_trace_mask3[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK4:           reg_read_data <= O_trace_mask4[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK5:           reg_read_data <= O_trace_mask5[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK6:           reg_read_data <= O_trace_mask6[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK7:           reg_read_data <= O_trace_mask7[reg_bytecnt*8 +: 8];
-
-            `REG_TRACE_COUNT:           reg_read_data <= trace_count[reg_bytecnt*8 +: 8];
-
-         endcase
-      end
-   end
-*/
 
    always @(*) begin
       if (selected && reg_read) begin
@@ -197,7 +155,10 @@ module reg_trace #(
    end
 
 
-   assign read_data = reg_read_data;
+   // Register output read data to ease timing. If you need data one clock
+   // cycle earlier, simply remove this stage.
+   always @(posedge usb_clk)
+      read_data <= reg_read_data;
 
    assign trace_count = {I_trace_count0,
                          I_trace_count1,

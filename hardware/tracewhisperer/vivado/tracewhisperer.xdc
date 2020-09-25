@@ -125,8 +125,6 @@ set_input_delay -clock usb_clk 2.0 [get_ports USB_Data]
 set_input_delay -clock usb_clk 2.0 [get_ports USB_Addr]
 set_input_delay -clock usb_clk 2.0 [get_ports USB_SPARE1]
 
-set_output_delay -clock usb_clk 1.0 [get_ports USB_Data]
-
 # --------------------------------------------------
 # Configuration pins
 # --------------------------------------------------
@@ -167,6 +165,10 @@ set_false_path -to [get_ports led3]
 set_false_path -to [get_ports mcx_trig]
 set_false_path -to [get_ports trig_out]
 set_false_path -to [get_ports synchronized]
+
+# read data will be grabbed one cycle later so no need to constrain:
+set_output_delay -clock usb_clk 0.0 [get_ports USB_Data]
+set_false_path -to [get_ports USB_Data]
 
 
 set_property BITSTREAM.CONFIG.USR_ACCESS TIMESTAMP [current_design]

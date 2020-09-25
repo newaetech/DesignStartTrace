@@ -13,6 +13,7 @@ task write_byte;
    usb_cen = 1;
    @(posedge usb_clk);
    usb_wrn = 1;
+   @(posedge usb_clk);
 endtask
 
 
@@ -27,10 +28,11 @@ task read_byte;
    usb_rdn = 0;
    usb_cen = 0;
    @(posedge usb_clk);
-   usb_cen = 1;
+   @(posedge usb_clk);
    #1 data = usb_data;
-   repeat(2) @(posedge usb_clk);
+   @(posedge usb_clk);
    usb_rdn = 1;
+   usb_cen = 1;
    repeat(2) @(posedge usb_clk);
 endtask
 

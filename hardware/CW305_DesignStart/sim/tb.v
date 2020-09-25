@@ -379,9 +379,18 @@ module tb();
 
    end
 
+   reg read_select;
 
-   assign usb_data = usb_wrn? 8'bz : usb_wdata;
+   assign usb_data = read_select? 8'bz : usb_wdata;
    assign tio_clkin = pll_clk1;
+
+   always @(*) begin
+      if (usb_wrn == 1'b0)
+         read_select = 1'b0;
+      else if (usb_rdn == 1'b0)
+         read_select = 1'b1;
+   end
+
 
    `ifdef CW305
       `include "tb_cw305_reg_tasks.v"
@@ -430,11 +439,10 @@ module tb();
    always #(pPLL_CLOCK_PERIOD/2) pll_clk1 = !pll_clk1;
    always #(pTRIGGER_CLOCK_PERIOD/2) trigger_clk = !trigger_clk;
 
-   // TODO: add pound delay (PW USB frontend doesn't like it)
-   wire usb_rdn_out = usb_rdn;
-   wire usb_wrn_out = usb_wrn;
-   wire usb_cen_out = usb_cen;
-   wire usb_spare1_out = usb_spare1;
+   wire #1 usb_rdn_out = usb_rdn;
+   wire #1 usb_wrn_out = usb_wrn;
+   wire #1 usb_cen_out = usb_cen;
+   wire #1 usb_spare1_out = usb_spare1;
 
    `ifdef CW305
       CW305_designstart_top #(
