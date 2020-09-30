@@ -55,12 +55,12 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// clk_out1____20.000______0.000______50.0______758.132____919.522
+// clk_out1____80.000______0.000______50.0______176.134____191.950
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
 //----------------------------------------------------------------------------
-// __primary______________10_______________10
+// __primary______________40_______________10
 
 // The following must be inserted into your Verilog file for this
 // core to be instantiated. Change the instance name and port connections

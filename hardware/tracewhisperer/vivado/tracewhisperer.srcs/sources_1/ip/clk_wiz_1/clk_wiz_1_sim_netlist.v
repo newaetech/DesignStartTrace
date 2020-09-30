@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-// Date        : Mon Sep 21 10:31:23 2020
+// Date        : Tue Sep 29 10:10:01 2020
 // Host        : qed running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               W:/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/clk_wiz_1/clk_wiz_1_sim_netlist.v
@@ -91,12 +91,12 @@ module clk_wiz_1_clk_wiz_1_clk_wiz
   (* BOX_TYPE = "PRIMITIVE" *) 
   MMCME2_ADV #(
     .BANDWIDTH("OPTIMIZED"),
-    .CLKFBOUT_MULT_F(64.000000),
+    .CLKFBOUT_MULT_F(25.000000),
     .CLKFBOUT_PHASE(0.000000),
     .CLKFBOUT_USE_FINE_PS("FALSE"),
-    .CLKIN1_PERIOD(100.000000),
+    .CLKIN1_PERIOD(25.000000),
     .CLKIN2_PERIOD(0.000000),
-    .CLKOUT0_DIVIDE_F(32.000000),
+    .CLKOUT0_DIVIDE_F(12.500000),
     .CLKOUT0_DUTY_CYCLE(0.500000),
     .CLKOUT0_PHASE(0.000000),
     .CLKOUT0_USE_FINE_PS("FALSE"),

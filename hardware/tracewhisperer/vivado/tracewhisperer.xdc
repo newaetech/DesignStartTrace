@@ -1,6 +1,6 @@
 set_property IOSTANDARD LVCMOS33 [get_ports *]
 
-create_clock -period 100.000 -name TRACECLOCK -waveform {0.000 50.000} [get_nets TRACECLOCK]
+create_clock -period 40.000 -name TRACECLOCK -waveform {0.000 20.000} [get_nets TRACECLOCK]
 create_clock -period 10.000 -name usb_clk -waveform {0.000 5.000} [get_nets USB_clk]
 
 create_generated_clock -name trigger_clk [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]

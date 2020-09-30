@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-// Date        : Fri Sep 18 14:57:31 2020
+// Date        : Tue Sep 29 10:31:20 2020
 // Host        : qed running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode synth_stub
 //               W:/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_stub.v
