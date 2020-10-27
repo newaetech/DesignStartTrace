@@ -30,7 +30,8 @@ module tracewhisperer_top #(
   parameter pBYTECNT_SIZE = 7,
   parameter pADDR_WIDTH = 8,
   parameter pBUFFER_SIZE = 64,
-  parameter pMATCH_RULES = 8
+  parameter pMATCH_RULES = 8,
+  parameter pUSERIO_WIDTH = 4
 )(
   // clocks and resets:
   input  wire reset,
@@ -58,10 +59,12 @@ module tracewhisperer_top #(
   input wire          TRCENA,
   input wire          TRACECLOCK,
   input wire [3:0]    TRACEDATA,
-  input wire          TRACEDATA_alt,
 
   // target trigger:
   input wire          target_trig_in,
+
+  // 20-pin user header connector
+  inout  wire [pUSERIO_WIDTH-1:0] userio_d,
 
   // debug:
   output wire         trace_clk_locked,
@@ -70,9 +73,7 @@ module tracewhisperer_top #(
   // leds:
   output wire led1,
   output wire led2,
-  output wire led3,
-
-  output wire reset_dbg // TODO-debug only
+  output wire led3
 );
 
   wire arm;
@@ -81,9 +82,10 @@ module tracewhisperer_top #(
   wire [3:0] board_rev;
   reg  [3:0] trace_data;
 
-  reg [22:0] count;
+  wire [pUSERIO_WIDTH-1:0] userio_pwdriven;
+  wire [pUSERIO_WIDTH-1:0] userio_drive_data;
 
-  assign reset_dbg = reset;
+  reg [22:0] count;
 
   always @(posedge trace_clk) begin
      if (reset)
@@ -100,7 +102,7 @@ module tracewhisperer_top #(
 
   always @(*) begin
      case (board_rev)
-        3: trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], TRACEDATA_alt};
+        3: trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
         4: trace_data = TRACEDATA;
         default: trace_data = TRACEDATA;
      endcase
@@ -122,7 +124,8 @@ module tracewhisperer_top #(
       .pBYTECNT_SIZE    (pBYTECNT_SIZE),
       .pADDR_WIDTH      (pADDR_WIDTH),
       .pBUFFER_SIZE     (pBUFFER_SIZE),
-      .pMATCH_RULES     (pMATCH_RULES)
+      .pMATCH_RULES     (pMATCH_RULES),
+      .pUSERIO_WIDTH    (pUSERIO_WIDTH)
    ) U_trace_top (
       .trace_clk_in     (TRACECLOCK),
       .trace_clk_out    (trace_clk),
@@ -147,12 +150,28 @@ module tracewhisperer_top #(
 
       .O_board_rev      (board_rev),
 
+      .userio_d         (userio_d),
+      .O_userio_pwdriven (userio_pwdriven),
+      .O_userio_drive_data (userio_drive_data),
+
       .arm              (arm),
       .capturing        (capturing),
 
       .trace_clk_locked (trace_clk_locked),
       .synchronized     (synchronized)
    );
+
+   userio #(
+      .pWIDTH                   (pUSERIO_WIDTH)
+   ) U_userio (
+      .reset_i                  (reset),
+      .usb_clk                  (1'b0),
+      .userio_d                 (userio_d),
+      .userio_clk               (1'b0),
+      .I_userio_pwdriven        (userio_pwdriven),
+      .I_userio_drive_data      (userio_drive_data)
+   );
+
 
 
 endmodule

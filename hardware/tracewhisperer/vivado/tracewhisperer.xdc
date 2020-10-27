@@ -43,12 +43,12 @@ set_property PACKAGE_PIN A2 [get_ports led3]
 set_property PACKAGE_PIN M3 [get_ports led1]
 
 # front connector:
-# userio_d[0] through [7]:
-set_property PACKAGE_PIN P13 [get_ports reset_dbg]
-# N/C set_property PACKAGE_PIN P13 [get_ports ]
-# N/C set_property PACKAGE_PIN M12 [get_ports ]
-# TDO set_property PACKAGE_PIN P12 [get_ports ]
-# nRESET set_property PACKAGE_PIN N11 [get_ports ]
+# userio_d[3:0]:
+set_property PACKAGE_PIN P13 [get_ports {userio_d[0]}]
+set_property PACKAGE_PIN M12 [get_ports {userio_d[1]}]
+set_property PACKAGE_PIN P12 [get_ports {userio_d[2]}]
+set_property PACKAGE_PIN N11 [get_ports {userio_d[3]}]
+
 
 # works for rev-03 (blue board):
 #set_property PACKAGE_PIN M10 [get_ports TRACEDATA[3]]
@@ -61,7 +61,7 @@ set_property PACKAGE_PIN M10 [get_ports TRACEDATA[3]]
 set_property PACKAGE_PIN P10 [get_ports TRACEDATA[2]]
 set_property PACKAGE_PIN N10 [get_ports TRACEDATA[1]]
 set_property PACKAGE_PIN P11 [get_ports TRACEDATA[0]]
-set_property PACKAGE_PIN N11 [get_ports TRACEDATA_alt]
+#set_property PACKAGE_PIN N11 [get_ports TRACEDATA_alt]
 
 # userio_clk:
 set_property PACKAGE_PIN G11 [get_ports TRACECLOCK]
@@ -145,6 +145,11 @@ set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRAC
 set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA[0]}]
 set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA_alt}]
 
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {userio_d[0]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {userio_d[1]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {userio_d[2]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {userio_d[3]}]
+
 set_input_delay -clock [get_clocks trace_clk] -add_delay 1.000 [get_ports target_trig_in]
 
 
@@ -159,12 +164,21 @@ set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports led3]
 set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports mcx_trig]
 set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports trig_out]
 set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports synchronized]
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports userio_d[0]]
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports userio_d[1]]
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports userio_d[2]]
+set_output_delay -clock [get_clocks trace_clk] 0.0 [get_ports userio_d[3]]
+
 set_false_path -to [get_ports led1]
 set_false_path -to [get_ports led2]
 set_false_path -to [get_ports led3]
 set_false_path -to [get_ports mcx_trig]
 set_false_path -to [get_ports trig_out]
 set_false_path -to [get_ports synchronized]
+set_false_path -to [get_ports userio_d[0]]
+set_false_path -to [get_ports userio_d[1]]
+set_false_path -to [get_ports userio_d[2]]
+set_false_path -to [get_ports userio_d[3]]
 
 # read data will be grabbed one cycle later so no need to constrain:
 set_output_delay -clock usb_clk 0.0 [get_ports USB_Data]

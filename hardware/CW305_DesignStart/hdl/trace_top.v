@@ -38,7 +38,8 @@ module trace_top #(
   parameter pNUM_TRIGGER_WIDTH = 4,
   parameter pCAPTURE_LEN_WIDTH = 24,
   parameter pTIMESTAMP_FULL_WIDTH = 16,
-  parameter pTIMESTAMP_SHORT_WIDTH = 8
+  parameter pTIMESTAMP_SHORT_WIDTH = 8,
+  parameter pUSERIO_WIDTH = 4
 )(
   input  wire trace_clk_in,
   output wire trace_clk_out,
@@ -65,6 +66,14 @@ module trace_top #(
   input wire          USB_SPARE1,
 
   output wire [3:0]   O_board_rev,
+
+  `ifndef CW305
+  // USERIO pins: (TraceWhisperer only, unused for CW305)
+  input  wire [pUSERIO_WIDTH-1:0]   userio_d,
+  output wire [pUSERIO_WIDTH-1:0]   O_userio_pwdriven,
+  output wire [pUSERIO_WIDTH-1:0]   O_userio_drive_data,
+  `endif
+
 
   // Status LEDs:
   output wire arm,
@@ -324,7 +333,8 @@ module trace_top #(
       .pNUM_TRIGGER_PULSES      (pNUM_TRIGGER_PULSES),
       .pNUM_TRIGGER_WIDTH       (pNUM_TRIGGER_WIDTH),
       .pCAPTURE_LEN_WIDTH       (pCAPTURE_LEN_WIDTH),
-      .pQUICK_START_DEFAULT     (1)
+      .pQUICK_START_DEFAULT     (1),
+      .pUSERIO_WIDTH            (pUSERIO_WIDTH)
    ) U_reg_main (
       .reset_i          (reset), 
       .cwusb_clk        (usb_clk), 
@@ -337,6 +347,10 @@ module trace_top #(
       .reg_addrvalid    (reg_addrvalid),
 
       .fe_select        (fe_select),
+
+      .userio_d         (userio_d),
+      .O_userio_pwdriven (O_userio_pwdriven),
+      .O_userio_drive_data (O_userio_drive_data),
 
       .I_fifo_data      (fifo_out_data),
       .I_fifo_empty     (fifo_empty),
