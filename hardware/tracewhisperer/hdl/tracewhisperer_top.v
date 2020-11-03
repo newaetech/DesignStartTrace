@@ -84,6 +84,7 @@ module tracewhisperer_top #(
 
   wire [pUSERIO_WIDTH-1:0] userio_pwdriven;
   wire [pUSERIO_WIDTH-1:0] userio_drive_data;
+  reg swo;
 
   reg [22:0] count;
 
@@ -100,11 +101,17 @@ module tracewhisperer_top #(
 
   assign mcx_trig = trig_out;
 
+  // front panel header has different pin mapping in pre-production boards
   always @(*) begin
      case (board_rev)
-        3: trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
-        4: trace_data = TRACEDATA;
-        default: trace_data = TRACEDATA;
+        3: begin
+              trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
+              swo = userio_d[1];
+           end
+        default: begin // catches production board rev (4)
+              trace_data = TRACEDATA;
+              swo = userio_d[2];
+           end
      endcase
   end
 
@@ -133,6 +140,7 @@ module tracewhisperer_top #(
       .reset            (reset    ),
                                   
       .trace_data       (trace_data),
+      .swo              (swo),
       .O_trace_trig_out (trig_out),
       .m3_trig          (target_trig_in),
 

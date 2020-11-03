@@ -8,3 +8,4 @@
 ../../phywhisperer/hardware/fpga/hdl/pw_trigger.v
 ../../phywhisperer/hardware/fpga/hdl/userio.v
 ../../phywhisperer/hardware/fpga/hdl/cdc_pulse.v
+../../uart/uart_core.v

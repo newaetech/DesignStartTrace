@@ -30,10 +30,15 @@ module fe_capture_trace #(
 )(
     input  wire usb_clk,
     input  wire reset,
+    input  wire swo_clk,
 
     /* FRONT END CONNECTIONS */
     input  wire trace_clk,
     input  wire [3:0] trace_data,
+
+    /* SWO */
+    input  wire I_swo_data_ready,
+    input  wire [7:0] I_swo_data,
 
     /* GENERIC FRONT END CONNECTIONS */
     output wire O_event,
@@ -54,6 +59,7 @@ module fe_capture_trace #(
     input  wire [pMATCH_RULES-1:0] I_pattern_trig_enable,
     input  wire I_soft_trig_enable,
     input  wire I_arm,
+    input  wire I_swo_enable,
 
     input  wire [pBUFFER_SIZE-1:0] I_pattern0, 
     input  wire [pBUFFER_SIZE-1:0] I_pattern1,
@@ -116,6 +122,7 @@ module fe_capture_trace #(
    reg  capturing_r;
 
    (* ASYNC_REG = "TRUE" *) reg capture_raw;
+   (* ASYNC_REG = "TRUE" *) reg [7:0] swo_data;
 
    assign mask[0] = I_mask0;
    assign mask[1] = I_mask1;
@@ -146,11 +153,44 @@ module fe_capture_trace #(
                            (|(match_bits & I_pattern_trig_enable)  & !(|(match_bits_r & I_pattern_trig_enable)) ));
 
 
+   /* SWO: CDC from uart clock to trace clock:
+   always @(posedge swo_clk) begin
+      if (I_swo_enable) begin
+         if (I_swo_data_ready)
+            swo_data_fast <= I_swo_data;
+      end
+   end
+   */
+
+   wire swo_data_ready_traceclk;
+   reg swo_data_ready_traceclk_r;
+   cdc_pulse U_swo_cdc (
+      .reset_i       (reset),
+      .src_clk       (swo_clk),
+      .src_pulse     (I_swo_data_ready),
+      .dst_clk       (trace_clk),
+      .dst_pulse     (swo_data_ready_traceclk)
+   );
+
+   wire [7:0] swo_buf_in = {I_swo_data[0],
+                            I_swo_data[1],
+                            I_swo_data[2],
+                            I_swo_data[3],
+                            I_swo_data[4],
+                            I_swo_data[5],
+                            I_swo_data[6],
+                            I_swo_data[7]};
    // shift trace data into buffer:
    always @(posedge trace_clk) begin
       if (reset)
          buffer <= 0;
-      else begin
+      else if (I_swo_enable) begin
+         swo_data_ready_traceclk_r <= swo_data_ready_traceclk;
+         if (swo_data_ready_traceclk) begin
+            buffer <= {buffer[pBUFFER_SIZE-9:0], swo_buf_in};
+         end
+      end
+      else begin // parallel trace port
          if (I_trace_width == 3'd4)
             buffer <= {buffer[pBUFFER_SIZE-5:0], trace_data[0], trace_data[1], trace_data[2], trace_data[3]};
          else if (I_trace_width == 3'd2)
@@ -176,30 +216,35 @@ module fe_capture_trace #(
          trace_width_r <= 3'b0;
       end
       else begin
-         trace_width_r <= I_trace_width;
-         // allow synchronization to be re-established when trace width is
-         // changed (or forced manually):
-         if (I_reset_sync || (I_trace_width != trace_width_r)) begin
-            synchronized <= 1'b0;
-            valid_count <= 4'd0;
-         end
-         // this catches both half and full sync frames:
-         else if (~synchronized && 
-                  (revbuffer[pBUFFER_SIZE-1-:16] == 16'h7fff) && 
-                  (revbuffer[7:0] == 8'hff) // shorthand to ensure that buffer is full of sync frames
-                 ) begin        // TODO: hmm, above seems dangerously incomplete...
+         if (I_swo_enable)
             synchronized <= 1'b1;
-            valid_count <= 4'd1;
+         else begin
+            trace_width_r <= I_trace_width;
+            // allow synchronization to be re-established when trace width is
+            // changed (or forced manually):
+            if (I_reset_sync || (I_trace_width != trace_width_r)) begin
+               synchronized <= 1'b0;
+               valid_count <= 4'd0;
+            end
+            // this catches both half and full sync frames:
+            else if (~synchronized && 
+                     (revbuffer[pBUFFER_SIZE-1-:16] == 16'h7fff) && 
+                     (revbuffer[7:0] == 8'hff) // shorthand to ensure that buffer is full of sync frames
+                    ) begin        // TODO: hmm, above seems dangerously incomplete...
+               synchronized <= 1'b1;
+               valid_count <= 4'd1;
+            end
+            else if (synchronized)
+               valid_count <= valid_count + 1; // overflow ok and expected
          end
-         else if (synchronized)
-            valid_count <= valid_count + 1; // overflow ok and expected
       end
    end
 
    // valid_buffer is high when the buffer is byte-aligned: every 2 cycles when
    // I_trace_width = 4, every 4 cycles when I_trace_width is 2, and every 8
    // cycles when I_trace_width is 1.
-   assign valid_buffer = synchronized && ( (I_trace_width == 1)? (valid_count % 8 == 0) :
+   assign valid_buffer = synchronized && ( I_swo_enable?  swo_data_ready_traceclk_r :
+                                           (I_trace_width == 1)? (valid_count % 8 == 0) :
                                            (I_trace_width == 2)? (valid_count % 4 == 0) :
                                            (I_trace_width == 4)? (valid_count % 2 == 0) : 1'b0);
 
@@ -350,8 +395,11 @@ module fe_capture_trace #(
                end
                `FE_FIFO_CMD_STAT: begin
                   O_fifo_data[`FE_FIFO_TIME_START +: `FE_FIFO_SHORTTIME_LEN] <= I_fifo_time[`FE_FIFO_SHORTTIME_LEN-1:0];
-                  // TODO: will need to adjust line below for different trace widths
-                  O_fifo_data[`FE_FIFO_DATA_START +: `FE_FIFO_DATA_LEN] <= revbuffer[43-:`FE_FIFO_DATA_LEN];
+                  if (I_swo_enable)
+                     O_fifo_data[`FE_FIFO_DATA_START +: `FE_FIFO_DATA_LEN] <= revbuffer[55-:`FE_FIFO_DATA_LEN];
+                  else
+                     // TODO: will need to adjust line below for different trace widths
+                     O_fifo_data[`FE_FIFO_DATA_START +: `FE_FIFO_DATA_LEN] <= revbuffer[43-:`FE_FIFO_DATA_LEN];
                end
                `FE_FIFO_CMD_TIME: begin
                   O_fifo_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN] <= I_fifo_time;

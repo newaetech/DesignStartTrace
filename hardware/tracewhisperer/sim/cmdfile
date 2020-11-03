@@ -11,5 +11,6 @@
 ../../phywhisperer/hardware/fpga/hdl/pw_trigger.v
 ../../phywhisperer/hardware/fpga/hdl/userio.v
 ../../phywhisperer/hardware/fpga/hdl/cdc_pulse.v
+../../uart/uart_core.v
 ../../phywhisperer/hardware/fpga/vivado/pw_fpga.srcs/sources_1/ip/fifo_generator_0/fifo_generator_0_sim_netlist.v
 -y/mnt/c/Xilinx/Vivado/2018.3/ids_lite/ISE/verilog/src/unisims/

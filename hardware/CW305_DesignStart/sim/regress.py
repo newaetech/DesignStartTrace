@@ -50,6 +50,27 @@ tests.append(dict(name  = 'patterntrigger_raw',
              RULES = 4,
              EVENTS = 30))
 
+tests.append(dict(name  = 'swo',
+             frequency = 1,
+             description = 'SWO development',
+             SWO_MODE = 1,
+             CAPTURE_RAW = 1,
+             PATTERN_TRIG = 0,
+             RULES = 4,
+             EVENTS = 2))
+
+tests.append(dict(name  = 'noswo',
+             frequency = 1,
+             description = 'SWO development, SWO off',
+             SWO_MODE = 0,
+             TIMEOUT = 800000,
+             CAPTURE_RAW = 1,
+             PATTERN_TRIG = 0,
+             RULES = 4,
+             EVENTS = 2))
+
+
+
 
 def print_tests():
     print("Available tests:")

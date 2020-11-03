@@ -36,12 +36,13 @@ module tb();
     parameter pADDR_WIDTH = 21;
     parameter pBYTECNT_SIZE = 7;
     parameter pUSB_CLOCK_PERIOD = 10;
-    parameter pPLL_CLOCK_PERIOD = 6;
+    parameter pPLL_CLOCK_PERIOD = 512;
     parameter pTRIGGER_CLOCK_PERIOD = 2;
     parameter pCAPTURE_RAW = 0;
     parameter pPATTERN_TRIG = 0;
+    parameter pSWO_MODE = 0;
     parameter pSEED = 1;
-    parameter pTIMEOUT = 30000;
+    parameter pTIMEOUT = 2560000;
     parameter pVERBOSE = 0;
     parameter pDUMP = 0;
 
@@ -71,6 +72,8 @@ module tb();
     wire tio_trigger;
     wire tio_clkout;
 
+    wire [3:0] userio_d;
+    wire swo;
 
     int seed;
     int errors;
@@ -152,8 +155,8 @@ module tb();
       trigger_clk = 0;
 
       // pushbutton = ~rst
-      #(pUSB_CLOCK_PERIOD*2) pushbutton = 0;
-      #(pUSB_CLOCK_PERIOD*2) pushbutton = 1;
+      #(pPLL_CLOCK_PERIOD*2) pushbutton = 0;
+      #(pPLL_CLOCK_PERIOD*2) pushbutton = 1;
       #(pUSB_CLOCK_PERIOD*10);
 
       $readmemh("matchtimes.mem", matchdata);
@@ -205,6 +208,9 @@ module tb();
       // TODO: set these intelligently
       write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd800);
       write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h1);
+
+      if (pSWO_MODE)
+         write_byte(`TRACE_REG_SELECT, `REG_SWO_ENABLE, 0, 8'h1);
 
       setup_done = 1;
 
@@ -384,6 +390,8 @@ module tb();
    assign usb_data = read_select? 8'bz : usb_wdata;
    assign tio_clkin = pll_clk1;
 
+   assign userio_d[2] = swo;
+
    always @(*) begin
       if (usb_wrn == 1'b0)
          read_select = 1'b0;
@@ -515,6 +523,9 @@ module tb();
           .TRACEDATA          (TRACEDATA),
           .TRACECLOCK         (1'b0),
 
+          // userio (SWO)
+          .userio_d           (userio_d),
+
           // 20-Pin Connector
           .trig_out           (trig_out),          // output to CW
           .target_trig_in     (m3_trig_out),       // input from target
@@ -523,10 +534,14 @@ module tb();
 
       );
 
-      tb_trace_generator U_tb_trace_generator
-           (.clk                    (trace_clk),
+      tb_trace_generator #(
+            .pSWO_MODE              (pSWO_MODE)
+      ) U_tb_trace_generator
+           (.trace_clk              (trace_clk),
+            .swo_clk                (trigger_clk),
             .reset                  (~pushbutton),
             .TRACEDATA              (TRACEDATA),
+            .swo                    (swo),
             .trig_out               (m3_trig_out)
            );
 

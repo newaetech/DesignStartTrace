@@ -33,6 +33,7 @@ module reg_trace #(
 
 // Interface to cw305_usb_reg_fe:
    input  wire                                  usb_clk,
+   input  wire                                  uart_clk,
    //input  wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address,     // Address of register
    input  wire [7:0]                            reg_address,  // Address of register
    input  wire [pBYTECNT_SIZE-1:0]              reg_bytecnt,  // Current byte count
@@ -88,6 +89,9 @@ module reg_trace #(
 
    input  wire [pBUFFER_SIZE-1:0]               I_matched_data,
 
+   output reg                                   O_swo_enable,
+   output wire [7:0]                            O_swo_bitrate_div,
+
    output wire                                  selected
 
 );
@@ -97,6 +101,12 @@ module reg_trace #(
    reg  [7:0] reg_read_data;
    wire [7:0] rev = 8'h00;
    wire [63:0] trace_count;
+   reg  [7:0]  swo_bitrate_div;
+   (* ASYNC_REG = "TRUE" *) reg [7:0] swo_bitrate_div_uartclock;
+
+   always @(posedge uart_clk) swo_bitrate_div_uartclock <= swo_bitrate_div;
+
+   assign O_swo_bitrate_div = swo_bitrate_div_uartclock;
 
    assign selected = reg_addrvalid & reg_address[7:6] == `TRACE_REG_SELECT;
    wire [5:0] address = reg_address[5:0];
@@ -145,6 +155,9 @@ module reg_trace #(
 
             `REG_RECORD_SYNCS:          reg_read_data = O_record_syncs;
             `REG_MATCHED_DATA:          reg_read_data = I_matched_data[reg_bytecnt*8 +: 8];
+
+            `REG_SWO_ENABLE:            reg_read_data = O_swo_enable;
+            `REG_SWO_BITRATE_DIV:       reg_read_data = swo_bitrate_div;
 
             default:                    reg_read_data = 0;
 
@@ -199,6 +212,9 @@ module reg_trace #(
          O_trace_mask5 <= {pBUFFER_SIZE{1'b1}};
          O_trace_mask6 <= {pBUFFER_SIZE{1'b1}};
          O_trace_mask7 <= {pBUFFER_SIZE{1'b1}};
+         swo_bitrate_div <= 15;
+         O_swo_enable <= 0;
+         O_record_syncs <= 0;
       end
 
       else begin
@@ -232,6 +248,8 @@ module reg_trace #(
                `REG_TRACE_MASK5:        O_trace_mask5[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_MASK6:        O_trace_mask6[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_MASK7:        O_trace_mask7[reg_bytecnt*8 +: 8] <= write_data;
+               `REG_SWO_ENABLE:         O_swo_enable <= write_data;
+               `REG_SWO_BITRATE_DIV:    swo_bitrate_div <= write_data;
             endcase
          end
       end

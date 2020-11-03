@@ -33,6 +33,7 @@ parser.add_argument("--events", type=int, default=1)
 parser.add_argument("--rules", type=int, default=1)
 parser.add_argument("--raw", type=int, default=0)
 parser.add_argument("--patterntrig", type=int, default=0)
+parser.add_argument("--swo_mode", type=int, default=0)
 args = parser.parse_args()
 
 rawmode = args.raw
@@ -55,7 +56,8 @@ def sync_frame(n=1, synctype='rand'):
         synctime = 0
     elif synctype == 'long':
         synctime = 1
-    for i in range(n):
+    # in swo mode, do a single sync frame followed by nothing:
+    if args.swo_mode:
         if synctime:
             mem.write('// long sync frame:\n')
             mem.write('f f f f f f f 7\n\n')
@@ -64,6 +66,21 @@ def sync_frame(n=1, synctype='rand'):
             mem.write('// short sync frame:\n')
             mem.write('f f f 7\n\n')
             inc_time(4)
+        mem.write('// idle:\n')
+        mem.write('f ' * n)
+        mem.write('\n\n')
+        inc_time(n)
+    # in parallel trace mode, sync frames are constantly present:
+    else:
+        for i in range(n):
+            if synctime:
+                mem.write('// long sync frame:\n')
+                mem.write('f f f f f f f 7\n\n')
+                inc_time(8)
+            else:
+                mem.write('// short sync frame:\n')
+                mem.write('f f f 7\n\n')
+                inc_time(4)
 
 
 def sw_trig():
@@ -170,7 +187,11 @@ for i in range(args.rules):
 # create trace data:
 # lots of sync frames initially to allow all setup register writes to be done:
 # (plus some non-sync frames that shouldn't be recorded)
-sync_frame(400)
+if args.swo_mode:
+    sync_frame(100)
+else:
+    sync_frame(400)
+#sync_frame(400)
 random_frame(random.randrange(2,10), record=False)
 sync_frame(random.randrange(8,16))
 
