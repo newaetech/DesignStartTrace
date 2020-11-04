@@ -38,7 +38,7 @@ module tb_trace_generator (
 parameter pSWO_MODE = 0;
 parameter pSWO_DIV = 15;
 
-reg [15:0] i;
+reg [31:0] i;
 reg [3:0] tracedata [0:32767];
 reg [63:0] trigtime [0:1];
 reg [3:0] TRACEDATA_r;
@@ -52,6 +52,7 @@ initial begin
    $readmemh("swtrigtime.mem", trigtime);
 end
 
+/*
 always @(posedge trace_clk) begin
    if (reset) begin
       i <= 0;
@@ -73,16 +74,63 @@ always @(posedge trace_clk) begin
          swo_txin_trace <= 1'b0;
    end
 end
-
-/*
-cdc_pulse U_swo_cdc (
-   .reset_i       (reset),
-   .src_clk       (trace_clk),
-   .src_pulse     (swo_txin_trace),
-   .dst_clk       (swo_clk),
-   .dst_pulse     (swo_txin)
-);
 */
+
+int command;
+int num_nibbles;
+int j;
+int tot_nibbles;
+
+initial begin
+   i = 0;
+   TRACEDATA = 0;
+   swo_txin_trace = 0;
+   trig_out = 0;
+   tot_nibbles = 0;
+   @ (negedge reset);
+   @ (posedge trace_clk);
+   command = 0;
+   while (command != 2) begin
+      command = tracedata[i];
+      i = i + 1;
+      num_nibbles = tracedata[i];
+      i = i + 1;
+      num_nibbles += (tracedata[i] << 4);
+      i = i + 1;
+      //$display("Got command: %d, nibbles: %d, i: %d", command, num_nibbles, i);
+      if (command == 0) begin
+         for (j = 0; j < num_nibbles; j = j + 1)  begin
+            @ (posedge trace_clk);
+            TRACEDATA_r = TRACEDATA;
+            TRACEDATA = tracedata[i+j];
+            if (j[0])
+               swo_txin_trace = 1'b1;
+            else
+               swo_txin_trace = 1'b0;
+         end
+         i = i + num_nibbles;
+         tot_nibbles = tot_nibbles + num_nibbles;
+      end
+      else if (command == 1) begin
+         repeat (num_nibbles) @ (posedge trace_clk);
+         swo_txin_trace = 1'b0;
+         tot_nibbles = tot_nibbles + num_nibbles;
+      end
+      else if (command == 2) begin
+         $display("Info: done processing tracedata.mem.");
+      end
+      else begin
+         $display("ERROR: unexpected command %d (i=%d)", command, i);
+         @ (posedge trace_clk);
+      end
+
+      if (tot_nibbles == trigtime[0])
+         #1 trig_out = 1;
+      else
+         trig_out = 0;
+   end
+end
+
 
 always @(posedge swo_clk) begin
    swo_txin_trace_r <= swo_txin_trace;

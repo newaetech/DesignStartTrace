@@ -42,11 +42,17 @@ patterntrig = args.patterntrig
 random.seed(args.seed)
 
 # initial value to make things line up:
-time = 2
+time = 0
 
 last_event_time = 0
 
 rules = [0]*8
+
+
+def write_command_length(command=0, length=0):
+    length_lo = length & 15;
+    length_hi = length >> 4;
+    mem.write('%x %x %x\n' % (command, length_lo, length_hi))
 
 
 def sync_frame(n=1, synctype='rand'):
@@ -60,41 +66,52 @@ def sync_frame(n=1, synctype='rand'):
     if args.swo_mode:
         if synctime:
             mem.write('// long sync frame:\n')
+            write_command_length(0, 8)
             mem.write('f f f f f f f 7\n\n')
             inc_time(8)
         else:
             mem.write('// short sync frame:\n')
+            write_command_length(0, 4)
             mem.write('f f f 7\n\n')
             inc_time(4)
-        mem.write('// idle:\n')
-        mem.write('f ' * n)
-        mem.write('\n\n')
         inc_time(n)
+        while n > 0:
+            if n > 255:
+                idles = 255
+            else:
+                idles = n
+            mem.write('// idle:\n')
+            write_command_length(1, idles)
+            n = n - idles
     # in parallel trace mode, sync frames are constantly present:
     else:
         for i in range(n):
             if synctime:
                 mem.write('// long sync frame:\n')
+                write_command_length(0, 8)
                 mem.write('f f f f f f f 7\n\n')
                 inc_time(8)
             else:
                 mem.write('// short sync frame:\n')
+                write_command_length(0, 4)
                 mem.write('f f f 7\n\n')
                 inc_time(4)
 
 
 def sw_trig():
     global last_event_time
+    mem.write('\n// ** SW TRIGGER TIME: %d **\n\n' % time)
     trig.write('%016x\n' % time)
     last_event_time = time + 2 # adjust for delays in the RTL
 
 
-def random_frame(n=1, minlen=2, maxlen=16, record=True):
+def random_frame(n=1, minlen=2, maxlen=15, record=True):
     total_nibbles = 0
     for i in range(n):
         nibbles = random.randrange(minlen, maxlen+1, 2)
         total_nibbles += nibbles
         mem.write('// random %d-nibble frame:\n' % nibbles)
+        write_command_length(0, nibbles)
         for j in range(nibbles):
             # since the testbench isn't that smart, avoid starting with 0xff or 0x7f since that 
             # could be confused to be part of a sync frame:
@@ -150,6 +167,7 @@ def match_frame(rule=0):
     for x in pattern:
         hexpattern += '%02x' % x
     mem.write('// matching pattern, rule %d: %s (%s)\n' % (rule, pattern, hexpattern))
+    write_command_length(0, len(pattern)*2)
     for x in pattern:
         mem.write('%01x %01x ' % (x & 0xf, (x>>4) & 0xf))
         #rawlog.write('%01x%01x\n' % (x & 0xf, (x>>4) & 0xf))
@@ -190,8 +208,7 @@ for i in range(args.rules):
 if args.swo_mode:
     sync_frame(100)
 else:
-    sync_frame(400)
-#sync_frame(400)
+    sync_frame(40)
 random_frame(random.randrange(2,10), record=False)
 sync_frame(random.randrange(8,16))
 
@@ -201,7 +218,7 @@ if patterntrig:
     match_frame(trig_rule)
     for i in range(args.events):
         sync_frame(random.randrange(0,10))
-        random_frame(random.randrange(0,20))
+        random_frame(random.randrange(0,15))
         sync_frame(random.randrange(0,4))
     sync_frame(10)
 
@@ -219,6 +236,7 @@ else:
     sync_frame(10)
 
 # done:
+mem.write("// Done\n2 0 0\n");
 mem.close()
 regs.close()
 trig.close()
