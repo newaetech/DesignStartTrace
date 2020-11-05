@@ -3,7 +3,7 @@ set_property IOSTANDARD LVCMOS33 [get_ports *]
 create_clock -period 40.000 -name TRACECLOCK -waveform {0.000 20.000} [get_nets TRACECLOCK]
 create_clock -period 10.000 -name usb_clk -waveform {0.000 5.000} [get_nets USB_clk]
 
-#create_generated_clock -name trigger_clk [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
+create_generated_clock -name trigger_clk -master_clock [get_clocks usb_clk] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
 #create_generated_clock -name trace_clk [get_pins U_trace_top/U_trace_clock/inst/mmcm_adv_inst/CLKOUT0]
 
 #set_clock_groups -asynchronous \
@@ -148,13 +148,24 @@ set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRAC
 set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA[0]}]
 set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA_alt}]
 
-set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {userio_d[0]}]
-set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {userio_d[1]}]
-set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {userio_d[2]}]
-set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {userio_d[3]}]
-
 set_input_delay -clock [get_clocks usb_clk] -add_delay 1.000 [get_ports target_trig_in]
 
+# Unconstrain the userio_d inputs:
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 0.000 [get_ports {userio_d[0]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 0.000 [get_ports {userio_d[1]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 0.000 [get_ports {userio_d[2]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 0.000 [get_ports {userio_d[3]}]
+set_false_path -from [get_ports {userio_d[0]}]
+set_false_path -from [get_ports {userio_d[1]}]
+set_false_path -from [get_ports {userio_d[2]}]
+set_false_path -from [get_ports {userio_d[3]}]
+
+# help fast trigger logic by loosening timing for quasi-static control signals:
+set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk]
+set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk]
+
+set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk]
+set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk]
 
 
 # --------------------------------------------------
