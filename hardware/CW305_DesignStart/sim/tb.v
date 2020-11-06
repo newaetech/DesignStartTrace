@@ -35,9 +35,9 @@ either expressed or implied, of NewAE Technology Inc.
 module tb();
     parameter pADDR_WIDTH = 21;
     parameter pBYTECNT_SIZE = 7;
-    parameter pUSB_CLOCK_PERIOD = 10;
-    //parameter pPLL_CLOCK_PERIOD = 256;
-    parameter pPLL_CLOCK_PERIOD = 170;
+    //parameter pUSB_CLOCK_PERIOD = 10;
+    parameter pUSB_CLOCK_PERIOD = 42;
+    parameter pPLL_CLOCK_PERIOD = 168;
     parameter pTRIGGER_CLOCK_PERIOD = 2;
     parameter pCAPTURE_RAW = 0;
     parameter pPATTERN_TRIG = 0;
@@ -115,6 +115,7 @@ module tb();
    bit in_sync;
    int sync_counter;
    reg [63:0] sync_data;
+   int slop;
 
    // TODO: verify trigger timing
    always @(*) begin
@@ -291,7 +292,12 @@ module tb();
             end
             else
                $display("Correct rule on match event %0d", match_index);
-            if (total_time != expected_time) begin
+            // now check timestamp -- exact in the case of trace, some slop allowed for SWO
+            if (pSWO_MODE)
+               slop = 5; // TODO: tie this into clock ratios?
+            else
+               slop = 0;
+            if ( (total_time > expected_time + slop) || (total_time < expected_time - slop) ) begin
                errors += 1;
                $display("ERROR on match event %0d: expected timestamp %0d, got %0d", match_index, expected_time, total_time);
             end

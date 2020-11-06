@@ -48,6 +48,7 @@ last_event_time = 0
 
 rules = [0]*8
 
+first_match_frame = True
 
 def write_command_length(command=0, length=0):
     length_lo = length & 15;
@@ -102,7 +103,7 @@ def sw_trig():
     global last_event_time
     mem.write('\n// ** SW TRIGGER TIME: %d **\n\n' % time)
     trig.write('%016x\n' % time)
-    last_event_time = time + 2 # adjust for delays in the RTL
+    last_event_time = time + 0 # adjust for delays in the RTL - TODO!
 
 
 def random_frame(n=1, minlen=2, maxlen=15, record=True):
@@ -160,6 +161,7 @@ def match_frame(rule=0):
     """
     global last_event_time
     global rules
+    global first_match_frame
     inc_time(len(rules[rule])*2)
     # generate the trace data:
     hexpattern = '0x'
@@ -177,7 +179,17 @@ def match_frame(rule=0):
     # log the expected match time:
     rule = 2**rule;
     if not rawmode:
-        matchtimes.write('%016x\n' % ((rule << 56) + time-last_event_time))
+        if args.swo_mode:
+            multiplier = 4 # TODO: make this ratio of trace_clk : usb_clk
+        else:
+            multiplier = 1
+        if first_match_frame and args.swo_mode:
+            adjust = 4
+            first_match_frame = False
+            print ('yay!')
+        else:
+            adjust = 0
+        matchtimes.write('%016x\n' % ((rule << 56) + (time-last_event_time+adjust)*multiplier))
     last_event_time = time + 1 # adjust for delays in the RTL
 
 
@@ -206,7 +218,7 @@ for i in range(args.rules):
 # lots of sync frames initially to allow all setup register writes to be done:
 # (plus some non-sync frames that shouldn't be recorded)
 if args.swo_mode:
-    sync_frame(100)
+    sync_frame(200)
 else:
     sync_frame(40)
 random_frame(random.randrange(2,10), record=False)
