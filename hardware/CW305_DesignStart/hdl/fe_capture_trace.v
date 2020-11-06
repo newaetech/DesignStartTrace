@@ -122,7 +122,7 @@ module fe_capture_trace #(
    reg  capturing_r;
 
    (* ASYNC_REG = "TRUE" *) reg capture_raw;
-   reg [7:0] swo_data_reg;
+   wire [7:0] swo_data_reg;
 
    assign mask[0] = I_mask0;
    assign mask[1] = I_mask1;
@@ -155,17 +155,19 @@ module fe_capture_trace #(
 
    wire swo_data_ready_traceclk;
    reg swo_data_ready_traceclk_r;
-   cdc_pulse U_swo_cdc (
+
+
+   cdc_bus #(
+      .pDATA_WIDTH   (8)
+   ) U_swo_cdc (
       .reset_i       (reset),
       .src_clk       (swo_clk),
       .src_pulse     (I_swo_data_ready),
+      .src_data      (I_swo_data),
       .dst_clk       (trace_clk),
-      .dst_pulse     (swo_data_ready_traceclk)
+      .dst_pulse     (swo_data_ready_traceclk),
+      .dst_data      (swo_data_reg)
    );
-
-   always @(posedge swo_clk) 
-      if (I_swo_data_ready)
-         swo_data_reg <= I_swo_data;
 
    wire [7:0] swo_buf_in = {swo_data_reg[0],
                             swo_data_reg[1],
