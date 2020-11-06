@@ -122,7 +122,7 @@ module fe_capture_trace #(
    reg  capturing_r;
 
    (* ASYNC_REG = "TRUE" *) reg capture_raw;
-   (* ASYNC_REG = "TRUE" *) reg [7:0] swo_data;
+   reg [7:0] swo_data_reg;
 
    assign mask[0] = I_mask0;
    assign mask[1] = I_mask1;
@@ -153,15 +153,6 @@ module fe_capture_trace #(
                            (|(match_bits & I_pattern_trig_enable)  & !(|(match_bits_r & I_pattern_trig_enable)) ));
 
 
-   /* SWO: CDC from uart clock to trace clock:
-   always @(posedge swo_clk) begin
-      if (I_swo_enable) begin
-         if (I_swo_data_ready)
-            swo_data_fast <= I_swo_data;
-      end
-   end
-   */
-
    wire swo_data_ready_traceclk;
    reg swo_data_ready_traceclk_r;
    cdc_pulse U_swo_cdc (
@@ -172,14 +163,18 @@ module fe_capture_trace #(
       .dst_pulse     (swo_data_ready_traceclk)
    );
 
-   wire [7:0] swo_buf_in = {I_swo_data[0],
-                            I_swo_data[1],
-                            I_swo_data[2],
-                            I_swo_data[3],
-                            I_swo_data[4],
-                            I_swo_data[5],
-                            I_swo_data[6],
-                            I_swo_data[7]};
+   always @(posedge swo_clk) 
+      if (I_swo_data_ready)
+         swo_data_reg <= I_swo_data;
+
+   wire [7:0] swo_buf_in = {swo_data_reg[0],
+                            swo_data_reg[1],
+                            swo_data_reg[2],
+                            swo_data_reg[3],
+                            swo_data_reg[4],
+                            swo_data_reg[5],
+                            swo_data_reg[6],
+                            swo_data_reg[7]};
    // shift trace data into buffer:
    always @(posedge trace_clk) begin
       if (reset)
