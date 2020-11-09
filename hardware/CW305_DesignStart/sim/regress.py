@@ -52,41 +52,21 @@ tests.append(dict(name  = 'patterntrigger_raw',
 
 tests.append(dict(name  = 'swo_raw_swtrig',
              frequency = 1,
-             description = 'SWO development',
+             description = 'SWO, raw mode',
              SWO_MODE = 1,
              CAPTURE_RAW = 1,
              PATTERN_TRIG = 0,
              RULES = 4,
-             EVENTS = 2))
+             EVENTS = 30))
 
 tests.append(dict(name  = 'swo_rules_swtrig',
              frequency = 1,
-             description = 'SWO development',
+             description = 'SWO, rules mode',
              SWO_MODE = 1,
              CAPTURE_RAW = 0,
              PATTERN_TRIG = 0,
              RULES = 8,
-             EVENTS = 8))
-
-tests.append(dict(name  = 'noswo_rules_swtrig',
-             frequency = 1,
-             description = 'SWO development, SWO off',
-             SWO_MODE = 0,
-             CAPTURE_RAW = 0,
-             PATTERN_TRIG = 0,
-             RULES = 8,
-             EVENTS = 4))
-
-tests.append(dict(name  = 'noswo',
-             frequency = 1,
-             description = 'SWO development, SWO off',
-             SWO_MODE = 0,
-             TIMEOUT = 50000,
-             CAPTURE_RAW = 1,
-             PATTERN_TRIG = 0,
-             RULES = 4,
-             EVENTS = 2))
-
+             EVENTS = 30))
 
 
 

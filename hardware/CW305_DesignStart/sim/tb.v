@@ -163,10 +163,6 @@ module tb();
 
       $readmemh("matchtimes.mem", matchdata);
 
-      write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'h12345678);
-      read_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, read_data);
-      $display("XXX: read %h", read_data);
-
       // enable all patterns:
       write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'hff);
 
@@ -260,24 +256,21 @@ module tb();
          match_index += pattern_rule_bytes;
       end
 
+      total_time = 0;
       while (matchdata[match_index] != 64'hFFFF_FFFF_FFFF_FFFF) begin
-         total_time = 0;
+         //$display("total_time=%0d on match_index=%0d, byte=%x", total_time, match_index, expected_byte);
+         //total_time = 0;
          wait_fifo_not_empty();
 
          read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
 
          while (command == `FE_FIFO_CMD_TIME) begin
-            total_time = read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN];
+            total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN]; // note: no +1 here!
             wait_fifo_not_empty();
             read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
          end
 
-         total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_SHORTTIME_LEN];
-
-         while (command == `FE_FIFO_CMD_TIME) begin
-            wait_fifo_not_empty();
-            read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
-         end
+         total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_SHORTTIME_LEN] + 1; // note: 
 
          if (pCAPTURE_RAW == 0) begin // rules mode
             expected_rule = matchdata[match_index][63:56];
@@ -299,9 +292,10 @@ module tb();
                slop = 0;
             if ( (total_time > expected_time + slop) || (total_time < expected_time - slop) ) begin
                errors += 1;
-               $display("ERROR on match event %0d: expected timestamp %0d, got %0d", match_index, expected_time, total_time);
+               $display("ERROR on match event %0d at time %t: expected timestamp %0d, got %0d", match_index, $time, expected_time, total_time);
             end
             match_index += 1;
+            total_time = 0;
          end
 
          else begin // raw mode 
@@ -310,13 +304,14 @@ module tb();
                $display("ERROR at time %t: expected data command (%2b), got %2b", $time, `FE_FIFO_CMD_STAT, command);
             end
             expected_byte = matchdata[match_index][63:56];
+            expected_time = matchdata[match_index][55:0];
             $display("Expected: %2h Got: %2h", expected_byte, fifo_data);
 
-            // TODO: currently not checking time
             if (fifo_data != expected_byte) begin
                // Ignore sync frames, which may be present. For now we assume these bytes are part
                // of sync frames, and we'll actually verify that later.
                if ( (fifo_data == 8'hff) || (fifo_data == 8'h7f) ) begin
+                  //total_time += 1;
                   if (in_sync == 0) begin
                      sync_counter = 1;
                      sync_data = {56'h0, fifo_data};
@@ -343,6 +338,20 @@ module tb();
             end
 
             else begin
+               if (pSWO_MODE)
+                  slop = 2; // TODO: tie this into clock ratios?
+               else
+                  slop = 0;
+               if ( (total_time > expected_time + slop) || (total_time < expected_time - slop) ) begin 
+                  errors += 1;
+                  $display("ERROR on match byte #%0d (byte=%0x) at time %t: expected timestamp %0d, got %0d", match_index, fifo_data, $time, expected_time, total_time);
+                  total_time = 0;
+               end
+               else begin
+                  //$display("good time on match byte #%0d (byte=%0x): %0d", match_index, fifo_data, expected_time);
+                  total_time = 0;
+               end
+
                if (in_sync == 1) begin
                   if (sync_counter % 2 != 0) begin
                      errors += 1;

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Wed Nov  4 03:50:32 2020
+[*] Fri Nov  6 04:23:25 2020
 [*]
 [dumpfile] "/mnt/c/Users/jp/GitHub/DesignStartTrace/hardware/tracewhisperer/sim/results/tb.fst"
-[dumpfile_mtime] "Wed Nov  4 03:35:00 2020"
-[dumpfile_size] 323454
+[dumpfile_mtime] "Fri Nov  6 04:18:27 2020"
+[dumpfile_size] 141577
 [savefile] "/mnt/c/Users/jp/GitHub/DesignStartTrace/hardware/tracewhisperer/sim/tb.gtkw"
 [timestart] 0
 [size] 3840 2131
 [pos] -1 -1
-*-25.125996 215296000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-21.788963 35028000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb.
 [treeopen] tb.U_dut.
 [treeopen] tb.U_dut.U_trace_top.
@@ -18,8 +18,9 @@
 [treeopen] tb.U_dut.U_trace_top.U_trigger.
 [treeopen] tb.U_dut.U_trace_top.U_uart_rx.
 [treeopen] tb.U_tb_trace_generator.
-[sst_width] 458
-[signals_width] 595
+[treeopen] tb.U_tb_trace_generator.U_uart_tx.
+[sst_width] 379
+[signals_width] 447
 [sst_expanded] 1
 [sst_vpaned_height] 1005
 @800200
@@ -55,6 +56,7 @@ tb.U_dut.U_trace_top.U_usb_reg_main.cwusb_din[7:0]
 -trace_generator
 @28
 tb.setup_done
+tb.U_tb_trace_generator.trace_clk
 @800022
 tb.U_dut.TRACEDATA[3:0]
 @28
@@ -73,7 +75,7 @@ tb.U_tb_trace_generator.U_uart_tx.txd_syn
 tb.U_tb_trace_generator.U_uart_tx.txd_ack
 @22
 tb.U_tb_trace_generator.U_uart_tx.txd_data[7:0]
-@28
+@29
 tb.U_tb_trace_generator.U_uart_tx.txd
 @22
 tb.U_tb_trace_generator.U_uart_tx.txd_bit_ctr_reg[4:0]
@@ -168,7 +170,7 @@ tb.U_dut.U_trace_top.U_reg_main.read_data[7:0]
 tb.U_dut.U_trace_top.U_reg_main.reg_capture_len[23:0]
 @1401200
 -reg_main
-@800200
+@c00200
 -fe_capture_trace
 @28
 tb.U_dut.U_trace_top.U_fe_capture_trace.trace_clk
@@ -182,6 +184,7 @@ tb.U_dut.U_trace_top.U_fe_capture_trace.I_reset_sync
 tb.U_dut.U_trace_top.U_fe_capture_trace.I_trace_width[2:0]
 @22
 tb.U_dut.U_trace_top.U_fe_capture_trace.revbuffer[63:0]
+tb.U_dut.U_trace_top.U_fe_capture_trace.buffer[63:0]
 @28
 tb.U_dut.U_trace_top.U_fe_capture_trace.valid_buffer
 @24
@@ -204,12 +207,14 @@ tb.U_dut.U_trace_top.U_fe_capture_trace.I_fifo_time[15:0]
 @28
 tb.U_dut.U_trace_top.U_fe_capture_trace.I_fifo_command[1:0]
 tb.U_dut.U_trace_top.U_fe_capture_trace.m3_trig
+tb.U_dut.U_trace_top.U_fe_capture_trace.m3_trig_r
 tb.U_dut.U_trace_top.U_fe_capture_trace.O_trigger_match
+tb.U_dut.U_trace_top.U_fe_capture_trace.I_soft_trig_enable
 @22
 tb.U_dut.U_trace_top.U_fe_capture_trace.match_bits[7:0]
 tb.U_dut.U_trace_top.U_fe_capture_trace.match_bits_r[7:0]
 tb.U_dut.U_trace_top.U_fe_capture_trace.I_pattern_trig_enable[7:0]
-@c00201
+@800200
 -SWO
 @28
 tb.U_dut.U_trace_top.U_fe_capture_trace.I_swo_enable
@@ -217,11 +222,12 @@ tb.U_dut.U_trace_top.U_fe_capture_trace.I_swo_data_ready
 tb.U_dut.U_trace_top.U_fe_capture_trace.swo_data_ready_traceclk
 @22
 tb.U_dut.U_trace_top.U_fe_capture_trace.I_swo_data[7:0]
-@1401201
--SWO
+tb.U_dut.U_trace_top.U_fe_capture_trace.swo_data_reg[7:0]
 @1000200
+-SWO
+@1401200
 -fe_capture_trace
-@c00200
+@800200
 -fe_capture_main
 @28
 tb.U_dut.U_trace_top.U_fe_capture_main.I_arm
@@ -241,7 +247,7 @@ tb.U_dut.U_trace_top.U_fe_capture_main.state_data
 tb.U_dut.U_trace_top.U_fe_capture_main.state_time
 tb.U_dut.U_trace_top.U_fe_capture_main.ctr_running
 tb.U_dut.U_trace_top.U_fe_capture_main.I_counter_quick_start
-@c00022
+@c00024
 tb.U_dut.U_trace_top.U_fe_capture_main.timestamp_ctr[15:0]
 @28
 (0)tb.U_dut.U_trace_top.U_fe_capture_main.timestamp_ctr[15:0]
@@ -266,7 +272,7 @@ tb.U_dut.U_trace_top.U_fe_capture_main.timestamp_ctr[15:0]
 tb.U_dut.U_trace_top.U_fe_capture_main.O_capturing
 tb.U_dut.U_trace_top.U_fe_capture_main.O_fifo_wr
 tb.U_dut.U_trace_top.U_fe_capture_main.O_fifo_flush
-@1401200
+@1000200
 -fe_capture_main
 @28
 tb.U_dut.U_trace_top.U_trigger.O_capture_enable_pulse
@@ -290,7 +296,7 @@ tb.U_dut.U_trace_top.U_trigger.capture_enable_start
 tb.U_dut.U_trace_top.m3_trig
 tb.U_dut.U_trace_top.O_trace_trig_out
 tb.U_dut.trig_out
-@800200
+@c00200
 -UART Rx
 @28
 tb.U_dut.U_trace_top.U_reg_trace.O_swo_enable
@@ -302,7 +308,7 @@ tb.U_dut.U_trace_top.U_uart_rx.rxd_syn
 tb.U_dut.U_trace_top.U_uart_rx.rxd_ack
 @22
 tb.U_dut.U_trace_top.U_uart_rx.rxd_data[7:0]
-@1000200
+@1401200
 -UART Rx
 [pattern_trace] 1
 [pattern_trace] 0

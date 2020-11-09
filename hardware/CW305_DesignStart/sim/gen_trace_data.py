@@ -43,12 +43,15 @@ random.seed(args.seed)
 
 # initial value to make things line up:
 time = 0
-
-last_event_time = 0
-
+last_event_time = 3
 rules = [0]*8
+first_event = True
+recording = False
 
-first_match_frame = True
+if args.swo_mode:
+    multiplier = 4 # TODO: make this ratio of trace_clk : usb_clk
+else:
+    multiplier = 1
 
 def write_command_length(command=0, length=0):
     length_lo = length & 15;
@@ -57,6 +60,9 @@ def write_command_length(command=0, length=0):
 
 
 def sync_frame(n=1, synctype='rand'):
+    #global last_event_time
+    if n == 0:
+        return
     if synctype == 'rand':
         synctime = random.randrange(0,2)
     elif synctype == 'short':
@@ -97,22 +103,35 @@ def sync_frame(n=1, synctype='rand'):
                 write_command_length(0, 4)
                 mem.write('f f f 7\n\n')
                 inc_time(4)
+    # Note that sync frames don't get checked, so they're not "events" as
+    # far as the testbench is concerned, and so we don't touch
+    # last_event_time here.
 
 
 def sw_trig():
     global last_event_time
     mem.write('\n// ** SW TRIGGER TIME: %d **\n\n' % time)
     trig.write('%016x\n' % time)
-    last_event_time = time + 0 # adjust for delays in the RTL - TODO!
+    # different delay adjustment based on mode; doesn't matter, just make it work!
+    if rawmode:
+        last_event_time = time - 3
+    else:
+        last_event_time = time - 1
 
 
-def random_frame(n=1, minlen=2, maxlen=15, record=True):
+def random_frame(n=1, minlen=2, maxlen=15):
+    global last_event_time
+    global first_event
+    if n == 0:
+        return
     total_nibbles = 0
     for i in range(n):
         nibbles = random.randrange(minlen, maxlen+1, 2)
         total_nibbles += nibbles
-        mem.write('// random %d-nibble frame:\n' % nibbles)
+        #mem.write('// random %d-nibble frame:\n' % nibbles)
+        mem.write('// random %d-nibble frame (rawmode=%s, recording=%s):\n' % (nibbles, rawmode, recording))
         write_command_length(0, nibbles)
+        last_time = last_event_time
         for j in range(nibbles):
             # since the testbench isn't that smart, avoid starting with 0xff or 0x7f since that 
             # could be confused to be part of a sync frame:
@@ -122,14 +141,24 @@ def random_frame(n=1, minlen=2, maxlen=15, record=True):
                 top = 16
             nibble = random.randrange(0,top)
             mem.write('%01x ' % nibble)
-            #rawlog.write('%01x' % nibble)
-            if rawmode and record:
+            if rawmode and recording:
                 if j % 2:
-                    matchtimes.write('%016x\n' % (((nibble << 4) + lastnib) << 56)) # TODO: timestamps
+                    inc_time(2)
+                    if first_event and args.swo_mode:
+                        adjust = 2
+                        first_event = False
+                    else:
+                        adjust = 0
+                    matchtimes.write('%016x\n' % ((((nibble << 4) + lastnib) << 56) + (time-last_time+adjust)*multiplier))
+                    last_time = time
                 else:
                     lastnib = nibble
         mem.write('\n\n')
-    inc_time(total_nibbles)
+        if rawmode and recording:
+            last_event_time = time
+        else:
+            inc_time(nibbles)
+
 
 
 def gen_rule(rule=0, length=8, patterntrig=0):
@@ -159,10 +188,10 @@ def match_frame(rule=0):
     """
     rule: int, rule number to use
     """
+    # TODO: check for recording, because later we want to call this before trigger
     global last_event_time
     global rules
-    global first_match_frame
-    inc_time(len(rules[rule])*2)
+    global first_event
     # generate the trace data:
     hexpattern = '0x'
     pattern = rules[rule]
@@ -170,27 +199,32 @@ def match_frame(rule=0):
         hexpattern += '%02x' % x
     mem.write('// matching pattern, rule %d: %s (%s)\n' % (rule, pattern, hexpattern))
     write_command_length(0, len(pattern)*2)
+    last_time = last_event_time
+
     for x in pattern:
         mem.write('%01x %01x ' % (x & 0xf, (x>>4) & 0xf))
-        #rawlog.write('%01x%01x\n' % (x & 0xf, (x>>4) & 0xf))
         if rawmode:
-            matchtimes.write('%016x\n' % (x << 56)) # TODO: timestamps
+            inc_time(2)
+            if first_event and args.swo_mode:
+                adjust = 2
+                first_event = False
+            else:
+                adjust = 0
+            matchtimes.write('%016x\n' % ((x << 56) + (time-last_time+adjust)*multiplier))
+            last_time = time
     mem.write('\n\n')
-    # log the expected match time:
-    rule = 2**rule;
+
     if not rawmode:
-        if args.swo_mode:
-            multiplier = 4 # TODO: make this ratio of trace_clk : usb_clk
-        else:
-            multiplier = 1
-        if first_match_frame and args.swo_mode:
-            adjust = 4
-            first_match_frame = False
-            print ('yay!')
+        inc_time(len(rules[rule])*2)
+        rule = 2**rule;
+        if first_event and args.swo_mode:
+            adjust = 2
+            first_event = False
         else:
             adjust = 0
         matchtimes.write('%016x\n' % ((rule << 56) + (time-last_event_time+adjust)*multiplier))
-    last_event_time = time + 1 # adjust for delays in the RTL
+
+    last_event_time = time
 
 
 def inc_time(nibbles):
@@ -203,7 +237,6 @@ mem = open('tracedata.mem', 'w+')
 regs = open('registers.v', 'w+')
 matchtimes = open('matchtimes.mem', 'w+')
 trig = open('swtrigtime.mem', 'w+')
-#rawlog = open('rawlog.mem', 'w+')
 
 # generate match rules:
 if patterntrig:
@@ -221,13 +254,19 @@ if args.swo_mode:
     sync_frame(200)
 else:
     sync_frame(40)
-random_frame(random.randrange(2,10), record=False)
+random_frame(random.randrange(2,10))
+# TODO: add some random non-triggering match frame
 sync_frame(random.randrange(8,16))
 
 # trigger + stuff:
+recording = True
 
 if patterntrig:
     match_frame(trig_rule)
+    if rawmode:
+        last_event_time = time - 3
+    else:
+        last_event_time = time - 1
     for i in range(args.events):
         sync_frame(random.randrange(0,10))
         random_frame(random.randrange(0,15))
