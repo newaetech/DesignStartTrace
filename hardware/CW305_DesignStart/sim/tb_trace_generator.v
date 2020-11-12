@@ -37,7 +37,7 @@ module tb_trace_generator (
 );
 
 parameter pSWO_MODE = 0;
-parameter pSWO_DIV = 15;
+parameter pSWO_DIV = 16'd15;
 
 reg [31:0] i;
 reg [3:0] tracedata [0:32767];
@@ -155,7 +155,7 @@ uart_core U_uart_tx (
    .data_bits                (4'd8),
    .stop_bits                (2'd1),
    // External data interface
-   .rxd                      (),
+   .rxd                      (1'b1),
    .txd                      (swo),
    // UART Rx
    .rxd_syn                  (),

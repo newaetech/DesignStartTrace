@@ -41,6 +41,7 @@ module CW305_designstart_top #(
   // for simulation only:
   `ifdef __ICARUS__
   input wire  I_trigger_clk,
+  output wire trace_generator_done,
   `endif
 
   // debug:
@@ -192,11 +193,16 @@ module CW305_designstart_top #(
   `else 
      // in simulation we simply emulate the trace pins instead:
      assign ext_clock = sys_clock;
-     tb_trace_generator U_tb_trace_generator
-          (.clk                    (sys_clock),
+     tb_trace_generator #(
+           .pSWO_MODE              (0)
+     ) U_tb_trace_generator
+          (.trace_clk              (sys_clock),
+           .swo_clk                (1'b0),
            .reset                  (reset),
            .TRACEDATA              (TRACEDATA),
-           .trig_out               (m3_trig_out)
+           .trig_out               (m3_trig_out),
+           .done                   (trace_generator_done),
+           .swo                    ()
           );
   `endif
 
@@ -285,7 +291,7 @@ module CW305_designstart_top #(
       .I_trigger_clk    (I_trigger_clk),
       .I_trace_clk      (1'b0),
       `endif
-                                  
+
       .USB_Data         (USB_Data ),
       .USB_Addr         (USB_Addr ),
       .USB_nRD          (USB_nRD  ),
@@ -297,6 +303,12 @@ module CW305_designstart_top #(
 
       .arm              (arm),
       .capturing        (capturing),
+
+      // unused for CW305:
+      .swo              (1'b0),
+      .userio_d         (4'b0),
+      .O_userio_pwdriven (),
+      .O_userio_drive_data (),
 
       .trace_clk_locked (),
       .synchronized     ()

@@ -68,13 +68,10 @@ module trace_top #(
 
   output wire [3:0]   O_board_rev,
 
-  `ifndef CW305
   // USERIO pins: (TraceWhisperer only, unused for CW305)
   input  wire [pUSERIO_WIDTH-1:0]   userio_d,
   output wire [pUSERIO_WIDTH-1:0]   O_userio_pwdriven,
   output wire [pUSERIO_WIDTH-1:0]   O_userio_drive_data,
-  `endif
-
 
   // Status LEDs:
   output wire arm,
@@ -105,7 +102,9 @@ module trace_top #(
    wire         reg_addrvalid;
 
    wire         trace_clk;
-   wire         trace_clk_premux;
+   wire         trace_clk_premux_x1;
+   wire         trace_clk_premux_x2;
+   wire         trace_clk_in_muxed;
 
    assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
    assign cmdfifo_din = USB_Data;
@@ -115,6 +114,7 @@ module trace_top #(
    //   cmdfifo_dout_reg <= cmdfifo_dout_pre;
    //assign cmdfifo_dout = O_board_rev[3]? cmdfifo_dout_reg : cmdfifo_dout_pre;
    assign cmdfifo_dout = cmdfifo_dout_pre;
+
 
    `ifdef CW305
       wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address;
@@ -139,7 +139,8 @@ module trace_top #(
          .reg_write        (reg_write), 
          .reg_addrvalid    (reg_addrvalid)
       );
-      assign trace_clk_premux = trace_clk_in;
+      assign trace_clk_premux_x1 = trace_clk_in; // TODO?
+      assign trace_clk_premux_x2 = trace_clk_in;
 
    `else // PhyWhisperer platform
       wire [pADDR_WIDTH-1:0]  reg_address;
@@ -165,30 +166,39 @@ module trace_top #(
       );
 
       `ifndef __ICARUS__
+          BUFGMUX U_trace_clock_premux (
+             .I0            (trace_clk_in),
+             .I1            (usb_clk),
+             .S             (swo_enable),
+             .O             (trace_clk_in_muxed)
+          );
+
           clk_wiz_1 U_trace_clock (
             .reset        (reset),
-            .clk_in1      (trace_clk_in),
-            .clk_out1     (trace_clk_premux),
+            .clk_in1      (trace_clk_in_muxed),
+            .clk_out1     (trace_clk_premux_x2),
+            .clk_out2     (trace_clk_premux_x1),
             // Status and control signals
             .locked       (trace_clk_locked)
          );
       `else
          assign trace_clk_locked = 1'b1;
-         assign trace_clk_premux = I_trace_clk;
+         assign trace_clk_premux_x1 = usb_clk;
+         assign trace_clk_premux_x2 = I_trace_clk;
       `endif
 
    `endif
 
    // when using SWO, use the USB clock as the "trace clock":
    `ifndef __ICARUS__
-      BUFGMUX U_trace_clock_mux (
-         .I0            (trace_clk_premux),
-         .I1            (usb_clk),
+      BUFGMUX U_trace_clock_postmux (
+         .I0            (trace_clk_premux_x2),
+         .I1            (trace_clk_premux_x1),
          .S             (swo_enable),
          .O             (trace_clk)
       );
    `else
-      assign trace_clk = swo_enable? usb_clk : trace_clk_premux;
+      assign trace_clk = swo_enable? trace_clk_premux_x1 : trace_clk_premux_x2;
    `endif
 
 

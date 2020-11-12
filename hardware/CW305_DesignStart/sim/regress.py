@@ -14,6 +14,7 @@ parser.add_argument("--seed", type=int, help="Seed to use when running a single 
 parser.add_argument("--tests", help="Run all tests whose name contains TESTS", default='')
 parser.add_argument("--list", help="List available tests.", action='store_true')
 parser.add_argument("--dump", help="Enable waveform dumping.", action='store_true')
+parser.add_argument("--CW305", help="Run CW305 tests only.", action='store_true')
 args = parser.parse_args()
 
 random.seed()
@@ -50,24 +51,24 @@ tests.append(dict(name  = 'patterntrigger_raw',
              RULES = 4,
              EVENTS = 30))
 
-tests.append(dict(name  = 'swo_raw_swtrig',
-             frequency = 1,
-             description = 'SWO, raw mode',
-             SWO_MODE = 1,
-             CAPTURE_RAW = 1,
-             PATTERN_TRIG = 0,
-             RULES = 4,
-             EVENTS = 30))
-
-tests.append(dict(name  = 'swo_rules_swtrig',
-             frequency = 1,
-             description = 'SWO, rules mode',
-             SWO_MODE = 1,
-             CAPTURE_RAW = 0,
-             PATTERN_TRIG = 0,
-             RULES = 8,
-             EVENTS = 30))
-
+if not args.CW305:
+    tests.append(dict(name  = 'swo_raw_swtrig',
+                 frequency = 1,
+                 description = 'SWO, raw mode',
+                 SWO_MODE = 1,
+                 CAPTURE_RAW = 1,
+                 PATTERN_TRIG = 0,
+                 RULES = 4,
+                 EVENTS = 30))
+    
+    tests.append(dict(name  = 'swo_rules_swtrig',
+                 frequency = 1,
+                 description = 'SWO, rules mode',
+                 SWO_MODE = 1,
+                 CAPTURE_RAW = 0,
+                 PATTERN_TRIG = 0,
+                 RULES = 8,
+                 EVENTS = 30))
 
 
 def print_tests():
