@@ -47,6 +47,8 @@ last_event_time = 3
 rules = [0]*8
 first_event = True
 recording = False
+nibble_index = 0
+match_index = 0
 
 if args.swo_mode:
     multiplier = 4 # TODO: make this ratio of trace_clk : usb_clk
@@ -61,6 +63,8 @@ def write_command_length(command=0, length=0):
 
 def sync_frame(n=1, synctype='rand'):
     #global last_event_time
+    global nibble_index
+    global match_index
     if n == 0:
         return
     if synctype == 'rand':
@@ -69,6 +73,7 @@ def sync_frame(n=1, synctype='rand'):
         synctime = 0
     elif synctype == 'long':
         synctime = 1
+    mem.write("// nibble index: %d; match index: %d\n" % (nibble_index, match_index))
     # in swo mode, do a single sync frame followed by nothing:
     if args.swo_mode:
         if synctime:
@@ -76,11 +81,13 @@ def sync_frame(n=1, synctype='rand'):
             write_command_length(0, 8)
             mem.write('f f f f f f f 7\n\n')
             inc_time(8)
+            nibble_index += 8 + 3
         else:
             mem.write('// short sync frame:\n')
             write_command_length(0, 4)
             mem.write('f f f 7\n\n')
             inc_time(4)
+            nibble_index += 4 + 3
         inc_time(n)
         while n > 0:
             if n > 255:
@@ -98,11 +105,13 @@ def sync_frame(n=1, synctype='rand'):
                 write_command_length(0, 8)
                 mem.write('f f f f f f f 7\n\n')
                 inc_time(8)
+                nibble_index += 8 + 3
             else:
                 mem.write('// short sync frame:\n')
                 write_command_length(0, 4)
                 mem.write('f f f 7\n\n')
                 inc_time(4)
+                nibble_index += 4 + 3
     # Note that sync frames don't get checked, so they're not "events" as
     # far as the testbench is concerned, and so we don't touch
     # last_event_time here.
@@ -122,14 +131,16 @@ def sw_trig():
 def random_frame(n=1, minlen=2, maxlen=15):
     global last_event_time
     global first_event
+    global nibble_index
+    global match_index
     if n == 0:
         return
     total_nibbles = 0
     for i in range(n):
         nibbles = random.randrange(minlen, maxlen+1, 2)
         total_nibbles += nibbles
-        #mem.write('// random %d-nibble frame:\n' % nibbles)
-        mem.write('// random %d-nibble frame (rawmode=%s, recording=%s):\n' % (nibbles, rawmode, recording))
+        mem.write("// nibble index: %d; match index: %d\n" % (nibble_index, match_index))
+        mem.write('// random %d-nibble frame:\n' % nibbles)
         write_command_length(0, nibbles)
         last_time = last_event_time
         for j in range(nibbles):
@@ -154,6 +165,9 @@ def random_frame(n=1, minlen=2, maxlen=15):
                 else:
                     lastnib = nibble
         mem.write('\n\n')
+        nibble_index += nibbles + 3
+        if recording:
+            match_index += nibbles/2
         if rawmode and recording:
             last_event_time = time
         else:
@@ -192,11 +206,14 @@ def match_frame(rule=0):
     global last_event_time
     global rules
     global first_event
+    global nibble_index
+    global match_index
     # generate the trace data:
     hexpattern = '0x'
     pattern = rules[rule]
     for x in pattern:
         hexpattern += '%02x' % x
+    mem.write("// nibble index: %d; match index: %d\n" % (nibble_index, match_index))
     mem.write('// matching pattern, rule %d: %s (%s)\n' % (rule, pattern, hexpattern))
     write_command_length(0, len(pattern)*2)
     last_time = last_event_time
@@ -213,6 +230,9 @@ def match_frame(rule=0):
             matchtimes.write('%016x\n' % ((x << 56) + (time-last_time+adjust)*multiplier))
             last_time = time
     mem.write('\n\n')
+    nibble_index += len(pattern)*2 + 3
+    if recording:
+        match_index += len(pattern)
 
     if not rawmode:
         inc_time(len(rules[rule])*2)

@@ -88,7 +88,7 @@ module tb();
 
     wire trace_clk = pll_clk1;  // shorthand for testbench
 
-   reg [63:0] matchdata[0:255];
+   reg [63:0] matchdata[0:2047];
    int cycle;
    int total_time;
 
@@ -116,6 +116,8 @@ module tb();
    int sync_counter;
    reg [63:0] sync_data;
    int slop;
+
+   wire trace_generator_done;
 
    // TODO: verify trigger timing
    always @(*) begin
@@ -204,7 +206,7 @@ module tb();
       write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
 
       // TODO: set these intelligently
-      write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd800);
+      write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd20000);
       write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h1);
 
       if (pSWO_MODE)
@@ -392,7 +394,9 @@ module tb();
       end
 
       #(pUSB_CLOCK_PERIOD*10);
-      $display("All expected events processed.");
+      $display("All expected events processed. Waiting for trace generator to be done...");
+      wait (trace_generator_done);
+      $display("Trace generator done.");
       if (errors)
          $display("SIMULATION FAILED (%0d errors, %0d warnings).", errors, warnings);
       else
@@ -501,6 +505,7 @@ module tb();
           .trig_out           (trig_out),
 
           .I_trigger_clk      (trigger_clk),
+          .trace_generator_done (trace_generator_done),
 
           // unused here:
           .swclk              (1'b0),
@@ -558,7 +563,8 @@ module tb();
             .reset                  (~pushbutton),
             .TRACEDATA              (TRACEDATA),
             .swo                    (swo),
-            .trig_out               (m3_trig_out)
+            .trig_out               (m3_trig_out),
+            .done                   (trace_generator_done)
            );
 
    `endif

@@ -32,7 +32,8 @@ module tb_trace_generator (
   input  wire reset,
   output reg  [3:0] TRACEDATA,
   output wire swo,
-  output reg  trig_out
+  output reg  trig_out,
+  output reg  done
 );
 
 parameter pSWO_MODE = 0;
@@ -82,6 +83,7 @@ int j;
 int tot_nibbles;
 
 initial begin
+   done = 0;
    i = 0;
    TRACEDATA = 0;
    swo_txin_trace = 0;
@@ -118,6 +120,7 @@ initial begin
       end
       else if (command == 2) begin
          $display("Info: done processing tracedata.mem.");
+         done = 1;
       end
       else begin
          $display("ERROR: unexpected command %d (i=%d)", command, i);
