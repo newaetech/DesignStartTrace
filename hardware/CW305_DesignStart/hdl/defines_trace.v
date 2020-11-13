@@ -59,6 +59,8 @@
 
 `define REG_SWO_ENABLE          6'h20
 `define REG_SWO_BITRATE_DIV     6'h21
+`define REG_UART_STOP_BITS      6'h22
+`define REG_UART_DATA_BITS      6'h23
 
 // FIFO bitfields:
 //                   31 30 29 28 27 26 25 24   23 22 21 20 19 18 17 16   15 14 13 12 11 10  9  8   7  6  5  4  3  2  1  0

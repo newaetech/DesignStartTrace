@@ -193,8 +193,9 @@ set_false_path -from [get_ports {userio_d[3]}]
 
 
 # quasi-static control signals:
-set_false_path -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_reg*/C] -to [all_registers]
-set_false_path -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_swo_bitrate_div_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_uart_stop_bits_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_uart_data_bits_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [all_registers]
 
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_mask*_reg*/C] -to [all_registers]

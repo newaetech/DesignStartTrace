@@ -90,7 +90,9 @@ module reg_trace #(
    input  wire [pBUFFER_SIZE-1:0]               I_matched_data,
 
    output reg                                   O_swo_enable,
-   output wire [7:0]                            O_swo_bitrate_div,
+   output reg  [7:0]                            O_swo_bitrate_div,
+   output reg  [1:0]                            O_uart_stop_bits,
+   output reg  [3:0]                            O_uart_data_bits,
 
    output wire                                  selected
 
@@ -101,12 +103,6 @@ module reg_trace #(
    reg  [7:0] reg_read_data;
    wire [7:0] rev = 8'h00;
    wire [63:0] trace_count;
-   reg  [7:0]  swo_bitrate_div;
-   (* ASYNC_REG = "TRUE" *) reg [7:0] swo_bitrate_div_uartclock;
-
-   always @(posedge uart_clk) swo_bitrate_div_uartclock <= swo_bitrate_div;
-
-   assign O_swo_bitrate_div = swo_bitrate_div_uartclock;
 
    assign selected = reg_addrvalid & reg_address[7:6] == `TRACE_REG_SELECT;
    wire [5:0] address = reg_address[5:0];
@@ -157,7 +153,9 @@ module reg_trace #(
             `REG_MATCHED_DATA:          reg_read_data = I_matched_data[reg_bytecnt*8 +: 8];
 
             `REG_SWO_ENABLE:            reg_read_data = O_swo_enable;
-            `REG_SWO_BITRATE_DIV:       reg_read_data = swo_bitrate_div;
+            `REG_SWO_BITRATE_DIV:       reg_read_data = O_swo_bitrate_div;
+            `REG_UART_STOP_BITS:        reg_read_data = O_uart_stop_bits;
+            `REG_UART_DATA_BITS:        reg_read_data = O_uart_data_bits;
 
             default:                    reg_read_data = 0;
 
@@ -194,8 +192,8 @@ module reg_trace #(
          O_trace_reset_sync <= 0;
          O_trace_width <= 4;    // default to 4-lane operation, matching default FW setting
          O_soft_trig_passthru <= 1;
-         O_soft_trig_enable <= 0;
-         O_capture_raw <= 0;
+         O_soft_trig_enable <= 1;
+         O_capture_raw <= 1;
          O_trace_pattern0 <= 0;
          O_trace_pattern1 <= 0;
          O_trace_pattern2 <= 0;
@@ -212,8 +210,10 @@ module reg_trace #(
          O_trace_mask5 <= {pBUFFER_SIZE{1'b1}};
          O_trace_mask6 <= {pBUFFER_SIZE{1'b1}};
          O_trace_mask7 <= {pBUFFER_SIZE{1'b1}};
-         swo_bitrate_div <= 15;
+         O_swo_bitrate_div <= 7;
          O_swo_enable <= 0;
+         O_uart_stop_bits <= 1;
+         O_uart_data_bits <= 8;
          O_record_syncs <= 0;
       end
 
@@ -249,7 +249,9 @@ module reg_trace #(
                `REG_TRACE_MASK6:        O_trace_mask6[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_MASK7:        O_trace_mask7[reg_bytecnt*8 +: 8] <= write_data;
                `REG_SWO_ENABLE:         O_swo_enable <= write_data;
-               `REG_SWO_BITRATE_DIV:    swo_bitrate_div <= write_data;
+               `REG_SWO_BITRATE_DIV:    O_swo_bitrate_div <= write_data;
+               `REG_UART_STOP_BITS:     O_uart_stop_bits <= write_data;
+               `REG_UART_DATA_BITS:     O_uart_data_bits <= write_data;
             endcase
          end
       end

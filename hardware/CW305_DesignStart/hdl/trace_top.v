@@ -279,6 +279,8 @@ module trace_top #(
    wire [7:0] swo_data_byte;
    reg swo_ack;
    wire [2:0] uart_rx_state;
+   wire [3:0] uart_data_bits;
+   wire [1:0] uart_stop_bits;
 
    reg  reg_arm_feclk;
    (* ASYNC_REG = "TRUE" *) reg  [1:0] reg_arm_pipe;
@@ -344,6 +346,8 @@ module trace_top #(
 
       .O_swo_enable             (swo_enable      ),
       .O_swo_bitrate_div        (swo_bitrate_div ),
+      .O_uart_stop_bits         (uart_stop_bits  ),
+      .O_uart_data_bits         (uart_data_bits  ),
 
       .selected                 (reg_trace_selected)
    );
@@ -565,8 +569,8 @@ module trace_top #(
       .reset_n                  (~reset),
       // Configuration inputs
       .bit_rate                 ({8'b0, swo_bitrate_div}),
-      .data_bits                (4'd8),
-      .stop_bits                (2'd1),
+      .data_bits                (uart_data_bits),
+      .stop_bits                (uart_stop_bits),
       // External data interface
       .rxd                      (swo),
       .txd                      (),
