@@ -102,9 +102,7 @@ module trace_top #(
    wire         reg_addrvalid;
 
    wire         trace_clk;
-   wire         trace_clk_premux_x1;
-   wire         trace_clk_premux_x2;
-   wire         trace_clk_in_muxed;
+   wire         trace_clk_premux;
 
    assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
    assign cmdfifo_din = USB_Data;
@@ -139,8 +137,7 @@ module trace_top #(
          .reg_write        (reg_write), 
          .reg_addrvalid    (reg_addrvalid)
       );
-      assign trace_clk_premux_x1 = trace_clk_in; // TODO?
-      assign trace_clk_premux_x2 = trace_clk_in;
+      assign trace_clk_premux = trace_clk_in;
 
    `else // PhyWhisperer platform
       wire [pADDR_WIDTH-1:0]  reg_address;
@@ -166,39 +163,30 @@ module trace_top #(
       );
 
       `ifndef __ICARUS__
-          BUFGMUX U_trace_clock_premux (
-             .I0            (trace_clk_in),
-             .I1            (usb_clk),
-             .S             (swo_enable),
-             .O             (trace_clk_in_muxed)
-          );
-
           clk_wiz_1 U_trace_clock (
             .reset        (reset),
-            .clk_in1      (trace_clk_in_muxed),
-            .clk_out1     (trace_clk_premux_x2),
-            .clk_out2     (trace_clk_premux_x1),
+            .clk_in1      (trace_clk_in),
+            .clk_out1     (trace_clk_premux),
             // Status and control signals
             .locked       (trace_clk_locked)
          );
       `else
          assign trace_clk_locked = 1'b1;
-         assign trace_clk_premux_x1 = usb_clk;
-         assign trace_clk_premux_x2 = I_trace_clk;
+         assign trace_clk_premux = I_trace_clk;
       `endif
 
    `endif
 
    // when using SWO, use the USB clock as the "trace clock":
    `ifndef __ICARUS__
-      BUFGMUX U_trace_clock_postmux (
-         .I0            (trace_clk_premux_x2),
-         .I1            (trace_clk_premux_x1),
+      BUFGMUX U_trace_clock_mux (
+         .I0            (trace_clk_premux),
+         .I1            (usb_clk),
          .S             (swo_enable),
          .O             (trace_clk)
       );
    `else
-      assign trace_clk = swo_enable? trace_clk_premux_x1 : trace_clk_premux_x2;
+      assign trace_clk = swo_enable? usb_clk : trace_clk_premux;
    `endif
 
 

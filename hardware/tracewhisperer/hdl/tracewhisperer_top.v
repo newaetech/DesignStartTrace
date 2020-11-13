@@ -91,7 +91,7 @@ module tracewhisperer_top #(
   always @(posedge trace_clk) begin
      if (reset)
         count <= 23'b0;
-     else if (trig_out == 1'b0) // disable counter during capture to minimize noise
+     else
         count <= count + 1;
   end
 

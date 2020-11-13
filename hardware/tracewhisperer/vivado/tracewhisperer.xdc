@@ -1,10 +1,23 @@
 set_property IOSTANDARD LVCMOS33 [get_ports *]
 
 create_clock -period 40.000 -name TRACECLOCK -waveform {0.000 20.000} [get_nets TRACECLOCK]
-create_clock -period 10.000 -name usb_clk -waveform {0.000 5.000} [get_nets USB_clk]
+create_clock -period 10.400 -name usb_clk -waveform {0.000 5.200} [get_nets USB_clk]
 
-create_generated_clock -name trigger_clk -master_clock [get_clocks usb_clk] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
-#create_generated_clock -name trace_clk [get_pins U_trace_top/U_trace_clock/inst/mmcm_adv_inst/CLKOUT0]
+create_generated_clock -name trace_clk_from_trace -source [get_pins U_trace_top/U_trace_clock_mux/I0] -combinational [get_pins U_trace_top/U_trace_clock_mux/O]
+create_generated_clock -name trace_clk_from_usb -master_clock [get_clocks usb_clk] -source [get_pins U_trace_top/U_trace_clock_mux/I1] -combinational [get_pins U_trace_top/U_trace_clock_mux/O] -add
+
+#create_generated_clock -name trigger_clk -master_clock [get_clocks usb_clk] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
+
+create_generated_clock -name trigger_clk_from_usb -master_clock [get_clocks trace_clk_from_usb] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
+create_generated_clock -name trigger_clk_from_trace -master_clock [get_clocks trace_clk_from_trace] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
+
+create_generated_clock -name trace_clk [get_pins U_trace_top/U_trace_clock/inst/mmcm_adv_inst/CLKOUT0]
+
+set_clock_groups -physically_exclusive \
+                 -group {trace_clk_from_trace trigger_clk_from_trace} \
+                 -group {trace_clk_from_usb trigger_clk_from_usb}
+
+#set_bus_skew -from [get_ports {TRACEDATA* userio_d*}] -to [get_pins U_trace_top/U_fe_capture_trace/buffer_reg*/D] 1.0
 
 #set_clock_groups -asynchronous \
 #                 -group [get_clocks usb_clk] \
@@ -28,8 +41,10 @@ set_property PACKAGE_PIN K3 [get_ports reset]
 # virtual clock:
 create_clock -period 100.000 -name slow_out_clk
 
+
 # avoid multiple_clock analysis problems:
-set_case_analysis 1 [get_pins U_trace_top/U_trace_clock_mux/S]
+#set_case_analysis 1 [get_pins U_trace_top/U_trace_clock_mux/S]
+
 
 # Reset
 set_input_delay -clock [get_clocks usb_clk] -add_delay 0.500 [get_ports reset*]
@@ -64,7 +79,6 @@ set_property PACKAGE_PIN M10 [get_ports TRACEDATA[3]]
 set_property PACKAGE_PIN P10 [get_ports TRACEDATA[2]]
 set_property PACKAGE_PIN N10 [get_ports TRACEDATA[1]]
 set_property PACKAGE_PIN P11 [get_ports TRACEDATA[0]]
-#set_property PACKAGE_PIN N11 [get_ports TRACEDATA_alt]
 
 # userio_clk:
 set_property PACKAGE_PIN G11 [get_ports TRACECLOCK]
@@ -142,11 +156,15 @@ set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
 # --------------------------------------------------
 # Remaining input delays
 # --------------------------------------------------
-set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA[3]}]
-set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA[2]}]
-set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA[1]}]
-set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA[0]}]
-set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 1.000 [get_ports {TRACEDATA_alt}]
+set_input_delay -clock [get_clocks trace_clk_from_trace] -add_delay 0.000 [get_ports {TRACEDATA[3]}]
+set_input_delay -clock [get_clocks trace_clk_from_trace] -add_delay 0.000 [get_ports {TRACEDATA[2]}]
+set_input_delay -clock [get_clocks trace_clk_from_trace] -add_delay 0.000 [get_ports {TRACEDATA[1]}]
+set_input_delay -clock [get_clocks trace_clk_from_trace] -add_delay 0.000 [get_ports {TRACEDATA[0]}]
+#set_false_path -from [get_ports {TRACEDATA[3]}]
+#set_false_path -from [get_ports {TRACEDATA[2]}]
+#set_false_path -from [get_ports {TRACEDATA[1]}]
+#set_false_path -from [get_ports {TRACEDATA[0]}]
+
 
 set_input_delay -clock [get_clocks usb_clk] -add_delay 1.000 [get_ports target_trig_in]
 
@@ -161,11 +179,50 @@ set_false_path -from [get_ports {userio_d[2]}]
 set_false_path -from [get_ports {userio_d[3]}]
 
 # help fast trigger logic by loosening timing for quasi-static control signals:
-set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk]
-set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk]
+#set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk_from_usb]
+#set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk_from_usb]
+#
+#set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk_from_trace]
+#set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk_from_trace]
+#
+#set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk_from_usb]
+#set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk_from_usb]
+#
+#set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk_from_trace]
+#set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk_from_trace]
 
-set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk]
-set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk]
+
+# quasi-static control signals:
+set_false_path -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [all_registers]
+
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_mask*_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_pattern*_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_swo_enable_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_swo_enable_reg/C] -to [get_pins U_trace_top/U_trace_clock_mux/CE0]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_pattern_trig_enable_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_soft_trig_enable_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_pattern_enable_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_fe_capture_trace/synchronized_reg/C] -to [get_pins U_trace_top/U_reg_trace/read_data_reg*/D]
+set_false_path -from [get_pins U_trace_top/U_fe_capture_trace/synchronized_reg/C] -to [get_pins U_trace_top/U_reg_main/read_data_reg*/D]
+set_false_path -from [get_pins U_trace_top/U_fe_capture_trace/O_matched_data_reg*/C] -to [get_pins U_trace_top/U_reg_trace/read_data_reg*/D]
+set_false_path -from [get_pins U_trace_top/U_fe_capture_trace/O_trace_count*_reg*/C] -to [get_pins U_trace_top/U_reg_trace/read_data_reg*/D]
+
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_counter_quick_start_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_trigger_delay_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_trigger_width_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_num_triggers_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_trigger_enable_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_capture_len_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_count_writes_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_width_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_capture_raw_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_record_syncs_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_reset_sync_reg/C] -to [all_registers]
+
+set_false_path -from [get_port reset] -to [all_registers]
+set_false_path -from [get_port target_trig_in] -to [all_registers]
 
 
 # --------------------------------------------------
