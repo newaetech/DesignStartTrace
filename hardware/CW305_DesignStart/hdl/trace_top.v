@@ -388,6 +388,9 @@ module trace_top #(
       .I_capture_enable_pulse (capture_enable_pulse),
       .O_board_rev      (O_board_rev),
 
+      .I_locked1        (trace_clk_locked),
+      .I_locked2        (trigger_clk_locked),
+
       // Trigger:
       .O_trigger_delay  (trigger_delay),
       .O_trigger_width  (trigger_width),
