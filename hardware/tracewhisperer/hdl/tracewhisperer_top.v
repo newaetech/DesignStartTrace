@@ -80,6 +80,7 @@ module tracewhisperer_top #(
   wire capturing;
   wire trace_clk;
   wire [3:0] board_rev;
+  wire reverse_tracedata;
   reg  [3:0] trace_data;
 
   wire [pUSERIO_WIDTH-1:0] userio_pwdriven;
@@ -105,11 +106,17 @@ module tracewhisperer_top #(
   always @(*) begin
      case (board_rev)
         3: begin
-              trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
+              if (reverse_tracedata)
+                 trace_data = {userio_d[3], TRACEDATA[2], TRACEDATA[1], TRACEDATA[3]};
+              else
+                 trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
               swo = userio_d[1];
            end
         default: begin // catches production board rev (4)
-              trace_data = TRACEDATA;
+              if (reverse_tracedata)
+                 trace_data = {TRACEDATA[0], TRACEDATA[1], TRACEDATA[2], TRACEDATA[3]};
+              else
+                 trace_data = TRACEDATA;
               swo = userio_d[2];
            end
      endcase
@@ -157,6 +164,7 @@ module tracewhisperer_top #(
       .USB_SPARE1       (USB_SPARE1 ),
 
       .O_board_rev      (board_rev),
+      .O_reverse_tracedata (reverse_tracedata),
 
       .userio_d         (userio_d),
       .O_userio_pwdriven (userio_pwdriven),

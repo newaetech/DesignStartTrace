@@ -94,6 +94,8 @@ module reg_trace #(
    output reg  [1:0]                            O_uart_stop_bits,
    output reg  [3:0]                            O_uart_data_bits,
 
+   output reg                                   O_reverse_tracedata,
+
    output wire                                  selected
 
 );
@@ -157,6 +159,8 @@ module reg_trace #(
             `REG_UART_STOP_BITS:        reg_read_data = O_uart_stop_bits;
             `REG_UART_DATA_BITS:        reg_read_data = O_uart_data_bits;
 
+            `REG_REVERSE_TRACEDATA:     reg_read_data = O_reverse_tracedata;
+
             default:                    reg_read_data = 0;
 
          endcase
@@ -215,6 +219,7 @@ module reg_trace #(
          O_uart_stop_bits <= 1;
          O_uart_data_bits <= 8;
          O_record_syncs <= 0;
+         O_reverse_tracedata <= 1; // TODO: change default to 0 later
       end
 
       else begin
@@ -252,6 +257,7 @@ module reg_trace #(
                `REG_SWO_BITRATE_DIV:    O_swo_bitrate_div <= write_data;
                `REG_UART_STOP_BITS:     O_uart_stop_bits <= write_data;
                `REG_UART_DATA_BITS:     O_uart_data_bits <= write_data;
+               `REG_REVERSE_TRACEDATA:  O_reverse_tracedata <= write_data;
             endcase
          end
       end

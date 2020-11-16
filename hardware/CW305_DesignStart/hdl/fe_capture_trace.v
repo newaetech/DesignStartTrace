@@ -60,6 +60,7 @@ module fe_capture_trace #(
     input  wire I_soft_trig_enable,
     input  wire I_arm,
     input  wire I_swo_enable,
+    input  wire I_capture_now,
 
     input  wire [pBUFFER_SIZE-1:0] I_pattern0, 
     input  wire [pBUFFER_SIZE-1:0] I_pattern1,
@@ -148,13 +149,23 @@ module fe_capture_trace #(
    assign O_data_cmd = capture_raw? `FE_FIFO_CMD_STAT : `FE_FIFO_CMD_DATA;
    assign O_max_short_timestamp = 2**`FE_FIFO_SHORTTIME_LEN-1;
 
-   assign O_trigger_match = I_arm && 
+   wire capture_now_pulse;
+
+   assign O_trigger_match = capture_now_pulse || (I_arm && 
                          ( (m3_trig & !m3_trig_r & I_soft_trig_enable) ||
-                           (|(match_bits & I_pattern_trig_enable)  & !(|(match_bits_r & I_pattern_trig_enable)) ));
+                           (|(match_bits & I_pattern_trig_enable)  & !(|(match_bits_r & I_pattern_trig_enable)) )) );
 
 
    wire swo_data_ready_traceclk;
    reg swo_data_ready_traceclk_r;
+
+   cdc_pulse U_capture_now_cdc (
+      .reset_i       (reset),
+      .src_clk       (usb_clk),
+      .src_pulse     (I_capture_now),
+      .dst_clk       (trace_clk),
+      .dst_pulse     (capture_now_pulse)
+   );
 
 
    cdc_bus #(

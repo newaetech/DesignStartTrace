@@ -4,6 +4,7 @@ SEED=1
 RULES=8
 EVENTS=3
 CAPTURE_RAW=0
+CAPTURE_NOW = 0
 PATTERN_TRIG = 0
 SWO_MODE = 0
 TIMEOUT= 100000
@@ -13,7 +14,7 @@ all: testcase compile run
 
 testcase:
 	python3 ../../CW305_DesignStart/sim/gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
-	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG) --swo_mode $(SWO_MODE)
+	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG) --swo_mode $(SWO_MODE) --capturenow $(CAPTURE_NOW)
 
 compile:
 	iverilog -ccmdfile \
@@ -28,6 +29,7 @@ compile:
 	-P tb.pCAPTURE_RAW=$(CAPTURE_RAW) \
 	-P tb.pPATTERN_TRIG=$(PATTERN_TRIG) \
 	-P tb.pTIMEOUT=$(TIMEOUT) \
+        -P tb.pCAPTURE_NOW=$(CAPTURE_NOW) \
 
 nofifo:
 	iverilog -ccmdfile_nofifo \

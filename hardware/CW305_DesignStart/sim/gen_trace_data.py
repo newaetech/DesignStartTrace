@@ -33,11 +33,13 @@ parser.add_argument("--events", type=int, default=1)
 parser.add_argument("--rules", type=int, default=1)
 parser.add_argument("--raw", type=int, default=0)
 parser.add_argument("--patterntrig", type=int, default=0)
+parser.add_argument("--capturenow", type=int, default=0)
 parser.add_argument("--swo_mode", type=int, default=0)
 args = parser.parse_args()
 
 rawmode = args.raw
 patterntrig = args.patterntrig
+capturenow = args.capturenow
 
 random.seed(args.seed)
 
@@ -119,10 +121,15 @@ def sync_frame(n=1, synctype='rand'):
 
 def sw_trig():
     global last_event_time
-    mem.write('\n// ** SW TRIGGER TIME: %d **\n\n' % time)
-    trig.write('%016x\n' % time)
+    if capturenow:
+        mem.write('\n// ** CAPTURE NOW TIME: %d **\n\n' % time)
+    else:
+        mem.write('\n// ** SW TRIGGER TIME: %d **\n\n' % time)
+        trig.write('%016x\n' % time)
     # different delay adjustment based on mode; doesn't matter, just make it work!
-    if rawmode:
+    if capturenow:
+        pass
+    elif rawmode:
         last_event_time = time - 3
     else:
         last_event_time = time - 1
@@ -274,6 +281,8 @@ if args.swo_mode:
     sync_frame(200)
 else:
     sync_frame(40)
+if (capturenow):
+    recording = True
 random_frame(random.randrange(2,10))
 # TODO: add some random non-triggering match frame
 sync_frame(random.randrange(8,16))

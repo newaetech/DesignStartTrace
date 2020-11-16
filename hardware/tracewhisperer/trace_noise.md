@@ -49,6 +49,19 @@ So even with **moderately** busy trace traffic which is not even close to
 saturating the trace bus, up to **2 orders of magnitude more traces** are
 required for a successful CPA attack.
 
+With SWO:
+
+| Trace Activity             | 20 traces | 50 traces | 100 traces | 200 traces | 500 traces |
+|----------------------------|-----------|-----------|------------|------------|------------|
+| none                       | 0.8       | 0         | -          | -          | -          |
+| isync frames               | 16        | 0.06      | 0          | -          | -          |
+| PC samples every 64 cycles | 114       | 40        | 29         | 2          | 0          |
+
+Note that due to the lower bandwidth of the SWO link, the periodic PC
+sampling fully saturates the link, so this represents the worst case
+scenario as far as SWO trace noise is concerned.
+
+
 ## Avoiding Trace Noise
 That is the bad news... the good news is that when trace sniffing is done on
 the CW305 platform (where the soft-core Cortex M3 co-located on the same

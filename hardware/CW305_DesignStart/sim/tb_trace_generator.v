@@ -53,30 +53,6 @@ initial begin
    $readmemh("swtrigtime.mem", trigtime);
 end
 
-/*
-always @(posedge trace_clk) begin
-   if (reset) begin
-      i <= 0;
-      TRACEDATA <= 0;
-      TRACEDATA_r <= 0;
-      swo_txin_trace <= 0;
-   end
-   else begin
-      i <= i + 1;
-      TRACEDATA <= tracedata[i];
-      TRACEDATA_r <= TRACEDATA;
-      if (i == trigtime[0])
-         trig_out <= 1'b1;
-      else
-         trig_out <= 1'b0;
-      if (i[0])
-         swo_txin_trace <= 1'b1;
-      else
-         swo_txin_trace <= 1'b0;
-   end
-end
-*/
-
 int command;
 int num_nibbles;
 int j;

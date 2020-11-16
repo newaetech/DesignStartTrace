@@ -70,6 +70,16 @@ if not args.CW305:
                  RULES = 8,
                  EVENTS = 30))
 
+    tests.append(dict(name  = 'capture_now',
+                 frequency = 1,
+                 description = '...',
+                 CAPTURE_RAW = 1,
+                 PATTERN_TRIG = 0,
+                 CAPTURE_NOW = 1,
+                 RULES = 1,
+                 EVENTS = 30))
+
+
 
 def print_tests():
     print("Available tests:")

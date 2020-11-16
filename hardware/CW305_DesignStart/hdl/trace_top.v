@@ -67,6 +67,7 @@ module trace_top #(
   input wire          USB_SPARE1,
 
   output wire [3:0]   O_board_rev,
+  output wire         O_reverse_tracedata,
 
   // USERIO pins: (TraceWhisperer only, unused for CW305)
   input  wire [pUSERIO_WIDTH-1:0]   userio_d,
@@ -262,6 +263,7 @@ module trace_top #(
    wire [pCAPTURE_LEN_WIDTH-1:0] capture_len;
    wire count_writes;
    wire counter_quick_start;
+   wire capture_now;
    wire capture_enable_pulse;
 
    wire fe_event;
@@ -349,6 +351,8 @@ module trace_top #(
       .O_uart_stop_bits         (uart_stop_bits  ),
       .O_uart_data_bits         (uart_data_bits  ),
 
+      .O_reverse_tracedata      (O_reverse_tracedata),
+
       .selected                 (reg_trace_selected)
    );
 
@@ -389,6 +393,7 @@ module trace_top #(
       .O_capture_len    (capture_len),
       .O_count_writes   (count_writes),
       .O_counter_quick_start (counter_quick_start),
+      .O_capture_now    (capture_now),
       .I_capture_enable_pulse (capture_enable_pulse),
       .O_board_rev      (O_board_rev),
 
@@ -521,6 +526,7 @@ module trace_top #(
       .I_soft_trig_enable       (soft_trig_enable),
       .I_arm                    (reg_arm_feclk),
       .I_swo_enable             (swo_enable),
+      .I_capture_now            (capture_now),
 
       .I_pattern0               (trace_pattern0),
       .I_pattern1               (trace_pattern1),

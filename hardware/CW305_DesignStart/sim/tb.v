@@ -40,8 +40,10 @@ module tb();
     parameter pPLL_CLOCK_PERIOD = 168;
     parameter pTRIGGER_CLOCK_PERIOD = 2;
     parameter pCAPTURE_RAW = 0;
+    parameter pCAPTURE_NOW = 0;
     parameter pPATTERN_TRIG = 0;
     parameter pSWO_MODE = 0;
+    parameter pSWO_DIV = 15;
     parameter pSEED = 1;
     parameter pTIMEOUT = 2560000;
     parameter pVERBOSE = 0;
@@ -203,14 +205,19 @@ module tb();
 
       write_byte(`TRACE_REG_SELECT, `REG_CAPTURE_RAW, 0, pCAPTURE_RAW);
 
-      write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
-
       // TODO: set these intelligently
       write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd20000);
       write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h1);
 
-      if (pSWO_MODE)
+      if (pSWO_MODE) begin
          write_byte(`TRACE_REG_SELECT, `REG_SWO_ENABLE, 0, 8'h1);
+         write_byte(`TRACE_REG_SELECT, `REG_SWO_BITRATE_DIV, 0, pSWO_DIV);
+      end
+
+      if (pCAPTURE_NOW == 0)
+         write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
+      else
+         write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h3);
 
       setup_done = 1;
 
@@ -292,6 +299,7 @@ module tb();
                slop = 5; // TODO: tie this into clock ratios?
             else
                slop = 0;
+            // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:
             if ( (total_time > expected_time + slop) || (total_time < expected_time - slop) ) begin
                errors += 1;
                $display("ERROR on match event %0d at time %t: expected timestamp %0d, got %0d", match_index, $time, expected_time, total_time);
@@ -344,9 +352,15 @@ module tb();
                   slop = 2; // TODO: tie this into clock ratios?
                else
                   slop = 0;
+               // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:
                if ( (total_time > expected_time + slop) || (total_time < expected_time - slop) ) begin 
-                  errors += 1;
-                  $display("ERROR on match byte #%0d (byte=%0x) at time %t: expected timestamp %0d, got %0d", match_index, fifo_data, $time, expected_time, total_time);
+                  if (pCAPTURE_NOW && (match_index == 0)) begin
+                     $display("info: skipping time check on first byte because pCAPTURE_NOW");
+                  end
+                  else begin
+                     errors += 1;
+                     $display("ERROR on match byte #%0d (byte=%0x) at time %t: expected timestamp %0d, got %0d", match_index, fifo_data, $time, expected_time, total_time);
+                  end
                   total_time = 0;
                end
                else begin
@@ -556,7 +570,8 @@ module tb();
       );
 
       tb_trace_generator #(
-            .pSWO_MODE              (pSWO_MODE)
+            .pSWO_MODE              (pSWO_MODE),
+            .pSWO_DIV               (pSWO_DIV)
       ) U_tb_trace_generator
            (.trace_clk              (trace_clk),
             .swo_clk                (trigger_clk),
