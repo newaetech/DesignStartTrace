@@ -66,6 +66,7 @@ module trace_top #(
   input wire          USB_SPARE1,
 
   output wire [3:0]   O_board_rev,
+  output wire         O_reverse_trace,
 
   `ifndef CW305
   // USERIO pins: (TraceWhisperer only, unused for CW305)
@@ -324,6 +325,8 @@ module trace_top #(
       .I_trace_count7           (trace_count7    ),
       .I_matched_data           (matched_data    ),
 
+      .O_reverse_trace          (O_reverse_trace ),
+
       .selected                 (reg_trace_selected)
    );
 
@@ -377,6 +380,10 @@ module trace_top #(
       .O_psincdec       (psincdec),
       .O_psen           (psen),
       .I_psdone         (psdone),
+
+      // MMCM lock status:
+      .I_locked1        (trace_clk_locked),
+      .I_locked2        (trigger_clk_locked),
 
       .selected         (reg_main_selected)
    );

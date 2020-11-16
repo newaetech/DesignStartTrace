@@ -88,6 +88,8 @@ module reg_trace #(
 
    input  wire [pBUFFER_SIZE-1:0]               I_matched_data,
 
+   output reg                                   O_reverse_trace,
+
    output wire                                  selected
 
 );
@@ -146,6 +148,8 @@ module reg_trace #(
             `REG_RECORD_SYNCS:          reg_read_data = O_record_syncs;
             `REG_MATCHED_DATA:          reg_read_data = I_matched_data[reg_bytecnt*8 +: 8];
 
+            `REG_REVERSE_TRACE:         reg_read_data = O_reverse_trace;
+
             default:                    reg_read_data = 0;
 
          endcase
@@ -199,6 +203,7 @@ module reg_trace #(
          O_trace_mask5 <= {pBUFFER_SIZE{1'b1}};
          O_trace_mask6 <= {pBUFFER_SIZE{1'b1}};
          O_trace_mask7 <= {pBUFFER_SIZE{1'b1}};
+         O_reverse_trace <= 1'b1;
       end
 
       else begin
@@ -214,6 +219,8 @@ module reg_trace #(
                `REG_SOFT_TRIG_ENABLE:   O_soft_trig_enable <= write_data[0];
                `REG_CAPTURE_RAW:        O_capture_raw <= write_data[0];
                `REG_RECORD_SYNCS:       O_record_syncs <= write_data[0];
+
+               `REG_REVERSE_TRACE:      O_reverse_trace <= write_data[0];
 
                `REG_TRACE_PATTERN0:     O_trace_pattern0[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_PATTERN1:     O_trace_pattern1[reg_bytecnt*8 +: 8] <= write_data;

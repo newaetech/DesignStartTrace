@@ -206,6 +206,8 @@ module tb();
       write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd800);
       write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h1);
 
+      write_byte(`TRACE_REG_SELECT, `REG_REVERSE_TRACE, 0, 8'h0);
+
       setup_done = 1;
 
    end
