@@ -103,7 +103,7 @@ module reg_trace #(
 
    wire [63:0] name = {8'h65, 8'h63, 8'h61, 8'h72, 8'h54, 8'h6d, 8'h72, 8'h41}; // ASCII for 'ArmTrace'
    reg  [7:0] reg_read_data;
-   wire [7:0] rev = 8'h00;
+   wire [7:0] rev = 8'h01;
    wire [63:0] trace_count;
    reg  reset_sync;
    reg  reset_sync_r;
