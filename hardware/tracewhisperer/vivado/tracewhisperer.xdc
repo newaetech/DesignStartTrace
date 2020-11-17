@@ -221,10 +221,18 @@ set_false_path -from [get_pins U_trace_top/U_reg_main/reg_count_writes_reg/C] -t
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_width_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_capture_raw_reg/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_record_syncs_reg/C] -to [all_registers]
-set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_reset_sync_reg/C] -to [all_registers]
+#set_false_path -from [get_pins U_trace_top/U_reg_trace/O_reset_sync_reg/C] -to [all_registers]
 
 set_false_path -from [get_port reset] -to [all_registers]
 set_false_path -from [get_port target_trig_in] -to [all_registers]
+
+# CDC related exceptions:
+set_false_path -to [get_pins U_trace_top/U_fifo/fifo_full_pipe_reg[0]/D]
+set_false_path -to [get_pins U_trace_top/U_fifo/fifo_overflow_blocked_pipe_reg[0]/D]
+set_false_path -to [get_pins U_trace_top/reg_arm_pipe_reg[0]/D]
+set_false_path -to [get_pins U_trace_top/U_fe_capture_main/arm_pipe_reg[0]/D]
+set_false_path -from [get_pins U_trace_top/*/*_cdc/dst_req_reg/C] -to [get_pins U_trace_top/*/*_cdc/ack_pipe_reg[0]/D]
+set_false_path -from [get_pins U_trace_top/*/*_cdc/src_req_reg/C] -to [get_pins U_trace_top/*/*_cdc/req_pipe_reg[0]/D]
 
 
 # --------------------------------------------------
