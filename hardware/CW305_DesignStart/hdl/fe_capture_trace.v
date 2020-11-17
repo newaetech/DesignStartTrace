@@ -52,7 +52,8 @@ module fe_capture_trace #(
     /* REGISTER CONNECTIONS */
     output wire O_fifo_fe_status,
     input  wire [2:0] I_trace_width, // supported values: 1/2/4
-    input  wire I_reset_sync,
+    input  wire I_reset_sync_arm,
+    input  wire I_reset_sync_reg,
     input  wire I_capture_raw,
     input  wire I_record_syncs,
     input  wire [pMATCH_RULES-1:0] I_pattern_enable,
@@ -124,6 +125,7 @@ module fe_capture_trace #(
 
    (* ASYNC_REG = "TRUE" *) reg capture_raw;
    wire [7:0] swo_data_reg;
+   wire reset_sync;
 
    assign mask[0] = I_mask0;
    assign mask[1] = I_mask1;
@@ -158,6 +160,15 @@ module fe_capture_trace #(
 
    wire swo_data_ready_traceclk;
    reg swo_data_ready_traceclk_r;
+
+   cdc_pulse U_reset_sync_cdc (
+      .reset_i       (reset),
+      .src_clk       (usb_clk),
+      .src_pulse     (I_reset_sync_arm || I_reset_sync_reg),
+      .dst_clk       (trace_clk),
+      .dst_pulse     (reset_sync)
+   );
+
 
    cdc_pulse U_capture_now_cdc (
       .reset_i       (reset),
@@ -230,7 +241,7 @@ module fe_capture_trace #(
             trace_width_r <= I_trace_width;
             // allow synchronization to be re-established when trace width is
             // changed (or forced manually):
-            if (I_reset_sync || (I_trace_width != trace_width_r)) begin
+            if (reset_sync || (I_trace_width != trace_width_r)) begin
                synchronized <= 1'b0;
                valid_count <= 4'd0;
             end

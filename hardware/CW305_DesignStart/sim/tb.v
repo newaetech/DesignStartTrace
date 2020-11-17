@@ -167,6 +167,10 @@ module tb();
 
       $readmemh("matchtimes.mem", matchdata);
 
+      //write_byte(`TRACE_REG_SELECT, `REG_TRACE_RESET_SYNC, 0, 8'h1);
+      // TODO: temporary:
+      write_byte(`TRACE_REG_SELECT, `REG_REVERSE_TRACEDATA, 0, 8'h0);
+
       // enable all patterns:
       write_byte(`TRACE_REG_SELECT, `REG_PATTERN_ENABLE, 0, 8'hff);
 

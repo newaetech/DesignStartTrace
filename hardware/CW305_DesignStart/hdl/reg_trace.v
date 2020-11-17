@@ -53,7 +53,6 @@ module reg_trace #(
 
    output reg  [pMATCH_RULES-1:0]               O_pattern_enable,
    output reg  [pMATCH_RULES-1:0]               O_pattern_trig_enable,
-   output reg                                   O_trace_reset_sync,
    output reg  [2:0]                            O_trace_width,
    output reg                                   O_soft_trig_passthru,
    output reg                                   O_soft_trig_enable,
@@ -95,6 +94,7 @@ module reg_trace #(
    output reg  [3:0]                            O_uart_data_bits,
 
    output reg                                   O_reverse_tracedata,
+   output wire                                  O_reset_sync,
 
    output wire                                  selected
 
@@ -105,6 +105,8 @@ module reg_trace #(
    reg  [7:0] reg_read_data;
    wire [7:0] rev = 8'h00;
    wire [63:0] trace_count;
+   reg  reset_sync;
+   reg  reset_sync_r;
 
    assign selected = reg_addrvalid & reg_address[7:6] == `TRACE_REG_SELECT;
    wire [5:0] address = reg_address[5:0];
@@ -123,7 +125,6 @@ module reg_trace #(
 
             `REG_PATTERN_ENABLE:        reg_read_data = O_pattern_enable;
             `REG_PATTERN_TRIG_ENABLE:   reg_read_data = O_pattern_trig_enable;
-            `REG_TRACE_RESET_SYNC:      reg_read_data = O_trace_reset_sync;
             `REG_TRACE_WIDTH:           reg_read_data = O_trace_width;
             `REG_SOFT_TRIG_PASSTHRU:    reg_read_data = O_soft_trig_passthru;
             `REG_SOFT_TRIG_ENABLE:      reg_read_data = O_soft_trig_enable;
@@ -193,7 +194,6 @@ module reg_trace #(
          O_clksettings <= 0;
          O_pattern_enable <= 0;
          O_pattern_trig_enable <= 0;
-         O_trace_reset_sync <= 0;
          O_trace_width <= 4;    // default to 4-lane operation, matching default FW setting
          O_soft_trig_passthru <= 1;
          O_soft_trig_enable <= 1;
@@ -220,6 +220,8 @@ module reg_trace #(
          O_uart_data_bits <= 8;
          O_record_syncs <= 0;
          O_reverse_tracedata <= 1; // TODO: change default to 0 later
+         reset_sync <= 0;
+         reset_sync_r <= 0;
       end
 
       else begin
@@ -229,7 +231,6 @@ module reg_trace #(
 
                `REG_PATTERN_ENABLE:     O_pattern_enable <= write_data[pMATCH_RULES-1:0];
                `REG_PATTERN_TRIG_ENABLE:O_pattern_trig_enable <= write_data[pMATCH_RULES-1:0];
-               `REG_TRACE_RESET_SYNC:   O_trace_reset_sync <= write_data[0];
                `REG_TRACE_WIDTH:        O_trace_width <= write_data[2:0];
                `REG_SOFT_TRIG_PASSTHRU: O_soft_trig_passthru <= write_data[0];
                `REG_SOFT_TRIG_ENABLE:   O_soft_trig_enable <= write_data[0];
@@ -260,8 +261,18 @@ module reg_trace #(
                `REG_REVERSE_TRACEDATA:  O_reverse_tracedata <= write_data;
             endcase
          end
+
+         // RESYNC register is special:
+         if (selected && reg_write && (address == `REG_TRACE_RESET_SYNC))
+            reset_sync <= 1'b1;
+         else 
+            reset_sync <= 1'b0;
+         reset_sync_r <= reset_sync;
+
       end
    end
+
+   assign O_reset_sync = reset_sync & ~reset_sync_r;
 
                /* TODO: CDC on inputs?
                `REG_MATCHING_PATTERN:   I_matching_pattern <= write_data[pMATCH_RULES-1:0];

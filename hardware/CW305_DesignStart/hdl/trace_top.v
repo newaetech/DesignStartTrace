@@ -283,6 +283,8 @@ module trace_top #(
    wire [2:0] uart_rx_state;
    wire [3:0] uart_data_bits;
    wire [1:0] uart_stop_bits;
+   wire arm_pulse;
+   wire reset_sync_from_reg;
 
    reg  reg_arm_feclk;
    (* ASYNC_REG = "TRUE" *) reg  [1:0] reg_arm_pipe;
@@ -311,7 +313,6 @@ module trace_top #(
 
       .O_pattern_enable         (pattern_enable  ),
       .O_pattern_trig_enable    (pattern_trig_enable),
-      .O_trace_reset_sync       (trace_reset_sync),
       .O_trace_width            (trace_width     ),
       .O_soft_trig_passthru     (O_soft_trig_passthru),
       .O_soft_trig_enable       (soft_trig_enable),
@@ -352,6 +353,7 @@ module trace_top #(
       .O_uart_data_bits         (uart_data_bits  ),
 
       .O_reverse_tracedata      (O_reverse_tracedata),
+      .O_reset_sync             (reset_sync_from_reg),
 
       .selected                 (reg_trace_selected)
    );
@@ -389,6 +391,7 @@ module trace_top #(
       .fe_clk           (trace_clk),
       .O_arm            (arm),
       .O_reg_arm        (reg_arm),
+      .O_arm_pulse      (arm_pulse),
       .I_flushing       (fifo_flush),
       .O_capture_len    (capture_len),
       .O_count_writes   (count_writes),
@@ -518,7 +521,8 @@ module trace_top #(
    /* REGISTER CONNECTIONS */
       .O_fifo_fe_status         (synchronized),
       .I_trace_width            (trace_width),
-      .I_reset_sync             (trace_reset_sync),
+      .I_reset_sync_arm         (arm_pulse),
+      .I_reset_sync_reg         (reset_sync_from_reg),
       .I_capture_raw            (capture_raw),
       .I_record_syncs           (record_syncs),
       .I_pattern_enable         (pattern_enable  ),
