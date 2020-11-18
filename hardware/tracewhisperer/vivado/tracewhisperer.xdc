@@ -132,6 +132,12 @@ set_property PACKAGE_PIN M2 [get_ports trace_clk_locked]
 # borrow MOSI pin:
 set_property PACKAGE_PIN F2 [get_ports synchronized]
 
+# borrow HS1 pin:
+set_property PACKAGE_PIN B1 [get_ports tms]
+
+# borrow HS2 pin:
+set_property PACKAGE_PIN C1 [get_ports tck]
+
 set_property PACKAGE_PIN M13 [get_ports mcx_trig]
 
 # No spec for these, seems sensible:

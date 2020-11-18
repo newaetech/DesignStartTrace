@@ -80,7 +80,11 @@ module trace_top #(
 
   // Debug:
   output wire trace_clk_locked,
-  output wire synchronized
+  output wire synchronized,
+
+  // JTAG:
+  output wire tms,
+  output wire tck
 
 );
 
@@ -286,6 +290,11 @@ module trace_top #(
    wire arm_pulse;
    wire reset_sync_from_reg;
 
+   wire jtag_go;
+   wire jtag_done;
+   wire [15:0] jtag_pattern;
+   wire [7:0] jtag_clk_div;
+
    reg  reg_arm_feclk;
    (* ASYNC_REG = "TRUE" *) reg  [1:0] reg_arm_pipe;
 
@@ -354,6 +363,11 @@ module trace_top #(
 
       .O_reverse_tracedata      (O_reverse_tracedata),
       .O_reset_sync             (reset_sync_from_reg),
+
+      .O_jtag_go                (jtag_go),
+      .I_jtag_done              (jtag_done),
+      .O_jtag_pattern           (jtag_pattern),
+      .O_jtag_clk_div           (jtag_clk_div),
 
       .selected                 (reg_trace_selected)
    );
@@ -594,6 +608,28 @@ module trace_top #(
       .txd_data                 (8'd0),
       .txd_ack                  ()
    );
+
+
+   `ifndef CW305
+   jtag_bit_banger #(
+      .pPATTERN_WIDTH           (16)
+   ) U_jtag_bitbanger (
+      .reset                    (reset),
+      .clk                      (usb_clk),
+      .pattern                  (jtag_pattern),
+      .go                       (jtag_go),
+      .clk_div                  (jtag_clk_div),
+      .tms_out                  (tms),
+      .tck_out                  (tck),
+      .busy                     (),
+      .done                     (jtag_done)
+   );
+   `else
+      assign tms = 1'b1;
+      assign tck = 1'b1;
+      assign jtag_done = 1'b0;
+   `endif
+
 
    //always @(posedge trace_clk) swo_ack <= swo_data_ready;
    always @(posedge trigger_clk) swo_ack <= swo_data_ready;

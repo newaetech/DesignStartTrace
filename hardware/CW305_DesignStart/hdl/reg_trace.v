@@ -96,6 +96,11 @@ module reg_trace #(
    output reg                                   O_reverse_tracedata,
    output wire                                  O_reset_sync,
 
+   output reg                                   O_jtag_go,
+   input  wire                                  I_jtag_done,
+   output reg  [15:0]                           O_jtag_pattern,
+   output reg  [7:0]                            O_jtag_clk_div,
+
    output wire                                  selected
 
 );
@@ -162,6 +167,9 @@ module reg_trace #(
 
             `REG_REVERSE_TRACEDATA:     reg_read_data = O_reverse_tracedata;
 
+            `REG_JTAG_PATTERN:          reg_read_data = O_jtag_pattern[reg_bytecnt*8 +: 8];
+            `REG_JTAG_CLK_DIV:          reg_read_data = O_jtag_clk_div;
+
             default:                    reg_read_data = 0;
 
          endcase
@@ -222,6 +230,9 @@ module reg_trace #(
          O_reverse_tracedata <= 1; // TODO: change default to 0 later
          reset_sync <= 0;
          reset_sync_r <= 0;
+         O_jtag_go <= 0;
+         O_jtag_pattern <= 16'he79e; // JTAG to SWD sequence
+         O_jtag_clk_div <= 100;
       end
 
       else begin
@@ -259,6 +270,9 @@ module reg_trace #(
                `REG_UART_STOP_BITS:     O_uart_stop_bits <= write_data;
                `REG_UART_DATA_BITS:     O_uart_data_bits <= write_data;
                `REG_REVERSE_TRACEDATA:  O_reverse_tracedata <= write_data;
+
+               `REG_JTAG_PATTERN:       O_jtag_pattern[reg_bytecnt*8 +: 8] <= write_data;
+               `REG_JTAG_CLK_DIV:       O_jtag_clk_div <= write_data;
             endcase
          end
 
@@ -268,6 +282,12 @@ module reg_trace #(
          else 
             reset_sync <= 1'b0;
          reset_sync_r <= reset_sync;
+
+         // JTAG register is special:
+         if (selected && reg_write && (address == `REG_JTAG_BITBANG_GO))
+            O_jtag_go <= 1'b1;
+         else if (I_jtag_done)
+            O_jtag_go <= 1'b0;
 
       end
    end

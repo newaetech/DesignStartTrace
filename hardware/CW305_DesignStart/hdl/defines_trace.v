@@ -64,6 +64,10 @@
 
 `define REG_REVERSE_TRACEDATA   6'h24
 
+`define REG_JTAG_BITBANG_GO     6'h25
+`define REG_JTAG_PATTERN        6'h26
+`define REG_JTAG_CLK_DIV        6'h27
+
 // FIFO bitfields:
 //                   31 30 29 28 27 26 25 24   23 22 21 20 19 18 17 16   15 14 13 12 11 10  9  8   7  6  5  4  3  2  1  0
 //                 +------------------------++------------------+-----++------------------------++------------------------+

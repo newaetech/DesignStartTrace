@@ -70,6 +70,10 @@ module tracewhisperer_top #(
   output wire         trace_clk_locked,
   output wire         synchronized,
 
+  // JTAG:
+  output wire         tms,
+  output wire         tck,
+
   // leds:
   output wire led1,
   output wire led2,
@@ -174,7 +178,10 @@ module tracewhisperer_top #(
       .capturing        (capturing),
 
       .trace_clk_locked (trace_clk_locked),
-      .synchronized     (synchronized)
+      .synchronized     (synchronized),
+
+      .tms              (tms),
+      .tck              (tck)
    );
 
    userio #(
