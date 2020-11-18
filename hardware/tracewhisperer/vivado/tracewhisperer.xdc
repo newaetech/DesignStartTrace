@@ -6,7 +6,6 @@ create_clock -period 10.400 -name usb_clk -waveform {0.000 5.200} [get_nets USB_
 create_generated_clock -name trace_clk_from_trace -source [get_pins U_trace_top/U_trace_clock_mux/I0] -combinational [get_pins U_trace_top/U_trace_clock_mux/O]
 create_generated_clock -name trace_clk_from_usb -master_clock [get_clocks usb_clk] -source [get_pins U_trace_top/U_trace_clock_mux/I1] -combinational [get_pins U_trace_top/U_trace_clock_mux/O] -add
 
-#create_generated_clock -name trigger_clk -master_clock [get_clocks usb_clk] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
 
 create_generated_clock -name trigger_clk_from_usb -master_clock [get_clocks trace_clk_from_usb] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
 create_generated_clock -name trigger_clk_from_trace -master_clock [get_clocks trace_clk_from_trace] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
@@ -17,20 +16,6 @@ set_clock_groups -physically_exclusive \
                  -group {trace_clk_from_trace trigger_clk_from_trace} \
                  -group {trace_clk_from_usb trigger_clk_from_usb}
 
-#set_bus_skew -from [get_ports {TRACEDATA* userio_d*}] -to [get_pins U_trace_top/U_fe_capture_trace/buffer_reg*/D] 1.0
-
-#set_clock_groups -asynchronous \
-#                 -group [get_clocks usb_clk] \
-#                 -group [get_clocks trigger_clk]
-#
-#set_clock_groups -asynchronous \
-#                 -group [get_clocks usb_clk] \
-#                 -group [get_clocks trace_clk]
-#
-#set_clock_groups -asynchronous \
-#                 -group [get_clocks trigger_clk] \
-#                 -group [get_clocks trace_clk]
-
 
 # reset from USB_SPARE0:
 set_property PACKAGE_PIN K3 [get_ports reset]
@@ -40,10 +25,6 @@ set_property PACKAGE_PIN K3 [get_ports reset]
 
 # virtual clock:
 create_clock -period 100.000 -name slow_out_clk
-
-
-# avoid multiple_clock analysis problems:
-#set_case_analysis 1 [get_pins U_trace_top/U_trace_clock_mux/S]
 
 
 # Reset
@@ -67,14 +48,7 @@ set_property PACKAGE_PIN M12 [get_ports {userio_d[1]}]
 set_property PACKAGE_PIN P12 [get_ports {userio_d[2]}]
 set_property PACKAGE_PIN N11 [get_ports {userio_d[3]}]
 
-
-# works for rev-03 (blue board):
-#set_property PACKAGE_PIN M10 [get_ports TRACEDATA[3]]
-#set_property PACKAGE_PIN N10 [get_ports TRACEDATA[2]]
-#set_property PACKAGE_PIN P10 [get_ports TRACEDATA[1]]
-#set_property PACKAGE_PIN N11 [get_ports TRACEDATA[0]]
-
-# works for rev-4 (production version):
+# works for rev-4 (production version); rev-3 version is also supported by muxing the inputs appropriately in the FPGA
 set_property PACKAGE_PIN M10 [get_ports TRACEDATA[3]]
 set_property PACKAGE_PIN P10 [get_ports TRACEDATA[2]]
 set_property PACKAGE_PIN N10 [get_ports TRACEDATA[1]]
@@ -94,17 +68,6 @@ set_property PACKAGE_PIN H3 [get_ports {USB_Data[2]}]
 set_property PACKAGE_PIN A5 [get_ports {USB_Data[1]}]
 set_property PACKAGE_PIN B6 [get_ports {USB_Data[0]}]
 
-# order as per schematic:
-#set_property PACKAGE_PIN J3  [get_ports USB_Addr[7] ]
-#set_property PACKAGE_PIN P4  [get_ports USB_Addr[6] ]
-#set_property PACKAGE_PIN P3  [get_ports USB_Addr[5] ]
-#set_property PACKAGE_PIN H2  [get_ports USB_Addr[4] ]
-#set_property PACKAGE_PIN H1  [get_ports USB_Addr[3] ]
-#set_property PACKAGE_PIN G1  [get_ports USB_Addr[2] ]
-#set_property PACKAGE_PIN L2  [get_ports USB_Addr[1] ]
-#set_property PACKAGE_PIN L1  [get_ports USB_Addr[0] ]
-
-# corrected order:
 set_property PACKAGE_PIN J3 [get_ports {USB_Addr[5]}]
 set_property PACKAGE_PIN P4 [get_ports {USB_Addr[4]}]
 set_property PACKAGE_PIN P3 [get_ports {USB_Addr[3]}]
@@ -184,19 +147,6 @@ set_false_path -from [get_ports {userio_d[1]}]
 set_false_path -from [get_ports {userio_d[2]}]
 set_false_path -from [get_ports {userio_d[3]}]
 
-# help fast trigger logic by loosening timing for quasi-static control signals:
-#set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk_from_usb]
-#set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk_from_usb]
-#
-#set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk_from_trace]
-#set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_trace/swo_bitrate_div_uartclock_reg*/C] -to [get_clocks trigger_clk_from_trace]
-#
-#set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk_from_usb]
-#set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk_from_usb]
-#
-#set_multicycle_path 2 -setup -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk_from_trace]
-#set_multicycle_path 2 -hold -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [get_clocks trigger_clk_from_trace]
-
 
 # quasi-static control signals:
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_swo_bitrate_div_reg*/C] -to [all_registers]
@@ -227,7 +177,6 @@ set_false_path -from [get_pins U_trace_top/U_reg_main/reg_count_writes_reg/C] -t
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_width_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_capture_raw_reg/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_record_syncs_reg/C] -to [all_registers]
-#set_false_path -from [get_pins U_trace_top/U_reg_trace/O_reset_sync_reg/C] -to [all_registers]
 
 set_false_path -from [get_port reset] -to [all_registers]
 set_false_path -from [get_port target_trig_in] -to [all_registers]
