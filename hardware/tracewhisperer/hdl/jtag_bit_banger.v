@@ -22,7 +22,8 @@
 
 
 module jtag_bit_banger #(
-   parameter pPATTERN_WIDTH = 16
+   parameter pPATTERN_WIDTH = 16,
+   parameter pIDLES = 64
 )(
    input  wire                          reset,
    input  wire                          clk,
@@ -57,24 +58,37 @@ module jtag_bit_banger #(
          tms <= 1'b1;
       end
 
-      else if (busy && (bit_counter <= pPATTERN_WIDTH)) begin
+      else if (busy && (bit_counter < pPATTERN_WIDTH + pIDLES*2)) begin
          if (clock_counter == clk_div) begin
             tck <= ~tck;
             clock_counter <= 0;
             if (tck) begin
                bit_counter <= bit_counter + 1;
-               if (bit_counter == pPATTERN_WIDTH) begin
+               if ( (bit_counter < pIDLES) || (bit_counter >= pPATTERN_WIDTH + pIDLES) )
+                  tms <= 1'b1;
+               /*
+               else if (bit_counter == pPATTERN_WIDTH) begin
                   busy <= 1'b0;
                   done <= 1'b1;
                   tms <= 1'bz;
                   tck <= 1'bz;
                end
+               */
                else
-                  tms <= pattern[bit_counter];
+                  tms <= pattern[bit_counter-pIDLES];
             end
          end
          else
             clock_counter <= clock_counter + 1;
+      end
+
+      else if (bit_counter == pPATTERN_WIDTH + pIDLES*2) begin
+         busy <= 1'b0;
+         done <= 1'b1;
+         tms <= 1'bz;
+         tck <= 1'bz;
+         bit_counter <= 0;
+         clock_counter <= 0;
       end
 
       else begin
