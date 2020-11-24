@@ -309,8 +309,6 @@ module CW305_designstart_top #(
       .userio_d         (4'b0),
       .O_userio_pwdriven (),
       .O_userio_drive_data (),
-      .tms              (),
-      .tck              (),
 
       .trace_clk_locked (),
       .synchronized     ()

@@ -223,9 +223,6 @@ module tb();
       else
          write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h3);
 
-      // to manually verify:
-      //write_byte(`TRACE_REG_SELECT, `REG_JTAG_BITBANG_GO, 0, 8'h1);
-
       setup_done = 1;
 
    end

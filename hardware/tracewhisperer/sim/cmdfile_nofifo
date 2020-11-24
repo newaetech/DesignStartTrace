@@ -1,5 +1,4 @@
 ../hdl/tracewhisperer_top.v
-../hdl/jtag_bit_banger.v
 ../../CW305_DesignStart/hdl/trace_top.v
 ../../CW305_DesignStart/hdl/reg_trace.v
 ../../CW305_DesignStart/hdl/fe_capture_trace.v

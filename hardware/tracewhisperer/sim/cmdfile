@@ -1,7 +1,6 @@
 ../../CW305_DesignStart/sim/tb.v
 ../../CW305_DesignStart/sim/tb_trace_generator.v
 ../hdl/tracewhisperer_top.v
-../hdl/jtag_bit_banger.v
 ../../CW305_DesignStart/hdl/trace_top.v
 ../../phywhisperer/hardware/fpga/hdl/usb_reg_main.v
 ../../CW305_DesignStart/hdl/reg_trace.v
