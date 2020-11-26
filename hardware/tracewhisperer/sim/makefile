@@ -40,6 +40,16 @@ nofifo:
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
 
+nofifo_swo_only:
+	iverilog -ccmdfile_swo_only_nofifo \
+	-g2005-sv \
+	-Wportbind \
+	-Wselect-range \
+	-I../../CW305_DesignStart/hdl \
+	-I../../phywhisperer/software/phywhisperer/firmware \
+	-DNOFIFO \
+
+
 run:
 	vvp -l$(LOGFILE) a.out -$(WAVEFORMAT)
 

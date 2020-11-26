@@ -37,12 +37,12 @@ module cdc_bus #(
    (* ASYNC_REG = "TRUE" *) reg  [pSYNC_STAGES-1:0] req_pipe;
    (* ASYNC_REG = "TRUE" *) reg  [pSYNC_STAGES-1:0] ack_pipe;
    (* ASYNC_REG = "TRUE" *) reg  [pDATA_WIDTH-1:0] dst_data_reg;
+   (* ASYNC_REG = "TRUE" *) reg  [pDATA_WIDTH-1:0] transfer_data;
    reg  src_req;
    reg  dst_req;
    reg  dst_req_r;
    reg  src_ack;
    wire busy;
-   reg  [pDATA_WIDTH-1:0] transfer_data;
    reg  valid_data;
 
    assign dst_data = dst_data_reg;
