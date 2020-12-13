@@ -280,7 +280,7 @@ module CW305_designstart_top #(
       .trace_clk_in     (ext_clock),
       .trace_clk_out    (),
       .usb_clk          (clk_usb_buf),
-      .reset            (reset    ),
+      .reset_pin        (reset    ),
                                   
       .trace_data       (TRACEDATA),
       .O_trace_trig_out (trace_trig_out),

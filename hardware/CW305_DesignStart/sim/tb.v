@@ -161,9 +161,12 @@ module tb();
       trigger_clk = 0;
 
       // pushbutton = ~rst
-      #(pPLL_CLOCK_PERIOD*2) pushbutton = 0;
-      #(pPLL_CLOCK_PERIOD*2) pushbutton = 1;
+      //#(pPLL_CLOCK_PERIOD*2) pushbutton = 0;
+      //#(pPLL_CLOCK_PERIOD*2) pushbutton = 1;
       #(pUSB_CLOCK_PERIOD*10);
+
+      write_byte(`MAIN_REG_SELECT, `REG_RESET_REG, 0, 8'h1);
+      write_byte(`MAIN_REG_SELECT, `REG_RESET_REG, 0, 8'h0);
 
       $readmemh("matchtimes.mem", matchdata);
 
@@ -540,7 +543,7 @@ module tb();
           .pADDR_WIDTH        (8),
           .pBYTECNT_SIZE      (pBYTECNT_SIZE)
       ) U_dut (
-          .reset              (~pushbutton),
+          .USB_SPARE0         (~pushbutton),
 
           // USB Interface
           .USB_clk            (usb_clk    ),

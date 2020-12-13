@@ -44,7 +44,7 @@ module trace_top #(
   input  wire trace_clk_in,
   output wire trace_clk_out,
   input  wire usb_clk,
-  input  wire reset,
+  input  wire reset_pin,
 
   `ifdef __ICARUS__
   input wire  I_trigger_clk, // for simulation only
@@ -103,6 +103,8 @@ module trace_top #(
 
    wire         trace_clk;
    wire         trace_clk_premux;
+
+   wire reset;
 
 
    assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
@@ -367,7 +369,8 @@ module trace_top #(
       .pQUICK_START_DEFAULT     (1),
       .pUSERIO_WIDTH            (pUSERIO_WIDTH)
    ) U_reg_main (
-      .reset_i          (reset), 
+      .reset_pin        (reset_pin),
+      .fpga_reset       (reset),
       .cwusb_clk        (usb_clk), 
       .reg_address      (reg_address[7:0]), 
       .reg_bytecnt      (reg_bytecnt), 

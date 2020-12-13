@@ -17,8 +17,7 @@ set_clock_groups -physically_exclusive \
                  -group {trace_clk_from_usb trigger_clk_from_usb}
 
 
-# reset from USB_SPARE0:
-set_property PACKAGE_PIN K3 [get_ports reset]
+set_property PACKAGE_PIN K3 [get_ports USB_SPARE0]
 
 
 # Master clock frequencies derived from clock wizard
@@ -28,7 +27,7 @@ create_clock -period 100.000 -name slow_out_clk
 
 
 # Reset
-set_input_delay -clock [get_clocks usb_clk] -add_delay 0.500 [get_ports reset*]
+set_input_delay -clock [get_clocks usb_clk] -add_delay 0.500 [get_ports USB_SPARE0*]
 
 # *****************************************************************************
 
@@ -172,7 +171,9 @@ set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_width_reg*/C] -to
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_capture_raw_reg/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_record_syncs_reg/C] -to [all_registers]
 
-set_false_path -from [get_port reset] -to [all_registers]
+set_false_path -from [get_port USB_SPARE0] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_reset_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_reset_select_reg/C] -to [all_registers]
 set_false_path -from [get_port target_trig_in] -to [all_registers]
 
 # CDC related exceptions:

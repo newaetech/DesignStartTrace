@@ -34,7 +34,7 @@ module tracewhisperer_top #(
   parameter pUSERIO_WIDTH = 4
 )(
   // clocks and resets:
-  input  wire reset,
+  input  wire USB_SPARE0,
 
   // for simulation only:
   `ifdef __ICARUS__
@@ -89,12 +89,7 @@ module tracewhisperer_top #(
 
   reg [22:0] count;
 
-  always @(posedge trace_clk) begin
-     if (reset)
-        count <= 23'b0;
-     else
-        count <= count + 1;
-  end
+  always @(posedge trace_clk) count <= count + 1;
 
   assign led1 = count[22];              // clock alive; actually routes to PD pin of 20-pin CW connector
   assign led3 = arm;                    // "Armed" LED
@@ -144,7 +139,7 @@ module tracewhisperer_top #(
       .trace_clk_in     (TRACECLOCK),
       .trace_clk_out    (trace_clk),
       .usb_clk          (clk_usb_buf),
-      .reset            (reset    ),
+      .reset_pin        (1'b0),
                                   
       .trace_data       (trace_data),
       .swo              (swo),
@@ -180,7 +175,6 @@ module tracewhisperer_top #(
    userio #(
       .pWIDTH                   (pUSERIO_WIDTH)
    ) U_userio (
-      .reset_i                  (reset),
       .usb_clk                  (1'b0),
       .userio_d                 (userio_d),
       .userio_clk               (1'b0),
