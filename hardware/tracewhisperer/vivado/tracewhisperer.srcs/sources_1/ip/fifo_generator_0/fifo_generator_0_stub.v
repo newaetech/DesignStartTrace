@@ -1,11 +1,11 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-// Date        : Thu Sep  3 13:32:40 2020
+// Date        : Mon Dec 14 08:58:54 2020
 // Host        : qed running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode synth_stub
-//               w:/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/fifo_generator_0/fifo_generator_0_stub.v
-// Design      : fifo_generator_0
+// Command     : write_verilog -force -mode synth_stub -rename_top fifo_generator_0 -prefix
+//               fifo_generator_0_ fifo_generator_fallthrough_stub.v
+// Design      : fifo_generator_fallthrough
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7s15ftgb196-2
 // --------------------------------------------------------------------------------
