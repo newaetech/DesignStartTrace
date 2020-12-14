@@ -63,6 +63,7 @@ module tb();
     reg k15_sel;
     reg l14_sel;
     reg pushbutton;
+    reg reset;
     reg pll_clk1;
     reg trigger_clk;
     wire tio_clkin;
@@ -157,16 +158,18 @@ module tb();
       k15_sel = 0;
       l14_sel = 0;
       pushbutton = 1;
+      reset = 0;
       pll_clk1 = 0;
       trigger_clk = 0;
 
-      // pushbutton = ~rst
       //#(pPLL_CLOCK_PERIOD*2) pushbutton = 0;
       //#(pPLL_CLOCK_PERIOD*2) pushbutton = 1;
       #(pUSB_CLOCK_PERIOD*10);
 
       write_byte(`MAIN_REG_SELECT, `REG_RESET_REG, 0, 8'h1);
+      reset = 1;
       write_byte(`MAIN_REG_SELECT, `REG_RESET_REG, 0, 8'h0);
+      reset = 0;
 
       $readmemh("matchtimes.mem", matchdata);
 
@@ -232,7 +235,7 @@ module tb();
 
    // maintain a cycle counter
    always @(posedge trace_clk) begin
-      if (pushbutton == 0)
+      if (reset == 1)
          cycle <= 0;
       else
          cycle <= cycle + 1;
@@ -511,7 +514,7 @@ module tb();
           .k16_sel            (k16_sel   ),
           .k15_sel            (k15_sel   ),
           .l14_sel            (l14_sel   ),
-          .resetn             (pushbutton),
+          .resetn             (~reset    ),
           .led1               (led1      ),
           .led2               (led2      ),
           .led3               (led3      ),
@@ -543,7 +546,7 @@ module tb();
           .pADDR_WIDTH        (8),
           .pBYTECNT_SIZE      (pBYTECNT_SIZE)
       ) U_dut (
-          .USB_SPARE0         (~pushbutton),
+          .USB_SPARE0         (1'b0       ),
 
           // USB Interface
           .USB_clk            (usb_clk    ),
@@ -582,7 +585,7 @@ module tb();
       ) U_tb_trace_generator
            (.trace_clk              (trace_clk),
             .swo_clk                (trigger_clk),
-            .reset                  (~pushbutton),
+            .reset                  (reset),
             .TRACEDATA              (TRACEDATA),
             .swo                    (swo),
             .trig_out               (m3_trig_out),

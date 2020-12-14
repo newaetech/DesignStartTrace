@@ -37,7 +37,6 @@ module cw305_usb_reg_fe #(
    input  wire [pADDR_WIDTH-1:0] usb_addr,
    input  wire         usb_rdn,
    input  wire         usb_wrn,
-   input  wire         usb_alen,        // unused here
    input  wire         usb_cen,
 
  /* Interface to registers */
