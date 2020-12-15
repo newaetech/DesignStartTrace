@@ -505,12 +505,13 @@ module tb();
          usb_cen = 0;
          repeat (2) @(posedge usb_clk);
          usb_spare1 = 1;
-         usb_cen = 1;
          @(posedge usb_clk);
          #1 data = usb_data;
          fifo_word[i*8 +: 8] = data;
+         //usb_cen = 1;
          repeat(2) @(posedge usb_clk);
       end
+      usb_cen = 1;
    endtask
 
 

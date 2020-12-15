@@ -132,6 +132,7 @@ module trace_top #(
          .usb_cen          (USB_nCS),
          .usb_addr         (USB_Addr),
          .usb_isout        (isout), 
+         .I_drive_data     (usb_drive_data),
          .reg_address      (reg_address), 
          .reg_bytecnt      (reg_bytecnt), 
          .reg_datao        (write_data), 
@@ -155,8 +156,7 @@ module trace_top #(
          .cwusb_cen        (USB_nCS),
          .cwusb_addr       (USB_Addr),
          .cwusb_isout      (isout), 
-         .I_fast_fifo_rdn  (I_fast_fifo_rdn),
-         .O_fast_fifo_rd   (fast_fifo_rd),
+         .I_drive_data     (usb_drive_data),
          .reg_address      (reg_address), 
          .reg_bytecnt      (reg_bytecnt), 
          .reg_datao        (write_data), 
@@ -243,7 +243,7 @@ module trace_top #(
    wire fifo_empty;
    wire capture_done;
    wire [5:0] fifo_status;
-   wire fast_fifo_rd;
+   wire usb_drive_data;
    wire reg_arm;
 
    wire [`FE_SELECT_WIDTH-1:0] fe_select;
@@ -394,7 +394,9 @@ module trace_top #(
       .I_fifo_status    (fifo_status),
 
       .O_data_available (O_data_available),
-      .I_fast_fifo_rd   (fast_fifo_rd),
+      .I_fast_fifo_rdn  (I_fast_fifo_rdn),
+      .I_usb_cen        (USB_nCS),
+      .O_usb_drive_data (usb_drive_data),
 
       .fe_clk           (trace_clk),
       .O_arm            (arm),

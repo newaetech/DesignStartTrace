@@ -297,7 +297,8 @@ module CW305_designstart_top #(
       .USB_nRD          (USB_nRD  ),
       .USB_nWE          (USB_nWE  ),
       .USB_nCS          (USB_nCS  ),
-      .USB_SPARE1       (1'b0     ),
+      .O_data_available ( ), // unused
+      .I_fast_fifo_rdn  (1'b1), // unused
 
       .O_board_rev      (),     // used for PhyWhisperer platform only
 
