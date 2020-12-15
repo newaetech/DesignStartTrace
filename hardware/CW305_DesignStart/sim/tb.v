@@ -117,6 +117,7 @@ module tb();
 
    bit setup_done;
    bit in_sync;
+   bit fast_fifo_mode;
    int sync_counter;
    reg [63:0] sync_data;
    int slop;
@@ -258,6 +259,16 @@ module tb();
       #10 wait(setup_done);
       match_index = 0;
 
+      `ifdef CW305
+         fast_fifo_mode = 0;
+      `else
+         fast_fifo_mode = $urandom % 2;
+      `endif
+      if (fast_fifo_mode)
+         $display("Using fast FIFO read mode");
+      else
+         $display("Using regular FIFO read mode");
+
       if (pPATTERN_TRIG && pCAPTURE_RAW) begin
          // in this case, the pattern bytes weren't written to a FIFO but we can retrieve them from a register:
          wait_fifo_not_empty();
@@ -277,21 +288,35 @@ module tb();
       end
 
       total_time = 0;
+      write_byte(`MAIN_REG_SELECT, `REG_FAST_FIFO_RD_EN, 0, {7'b0, fast_fifo_mode});
       while (matchdata[match_index] != 64'hFFFF_FFFF_FFFF_FFFF) begin
          //$display("total_time=%0d on match_index=%0d, byte=%x", total_time, match_index, expected_byte);
          //total_time = 0;
-         wait_fifo_not_empty();
-
-         //read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
-         write_byte(`MAIN_REG_SELECT, `REG_FAST_FIFO_RD_EN, 0, 8'h1);
-         read_fifo(1);
-
+         read_fifo(fast_fifo_mode);
          while (command == `FE_FIFO_CMD_TIME) begin
             total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN]; // note: no +1 here!
-            wait_fifo_not_empty();
-            //read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
-            read_fifo(1);
+            read_fifo(fast_fifo_mode);
          end
+
+         /*
+         if (fast_fifo_mode) begin
+            read_fifo(fast_fifo_mode);
+            while (command == `FE_FIFO_CMD_TIME) begin
+               total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN]; // note: no +1 here!
+               read_fifo(fast_fifo_mode);
+            end
+         end
+
+         else begin
+            wait_fifo_not_empty();
+            read_fifo(fast_fifo_mode);
+            while (command == `FE_FIFO_CMD_TIME) begin
+               total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN]; // note: no +1 here!
+               wait_fifo_not_empty();
+               read_fifo(fast_fifo_mode);
+            end
+         end
+         */
 
          total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_SHORTTIME_LEN] + 1; // note: 
 
@@ -479,8 +504,10 @@ module tb();
       input fast_read;
       if (fast_read)
          fast_fifo_read(read_data);
-      else
+      else begin
+         wait_fifo_not_empty();
          read_word(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, read_data);
+      end
       read_data = {8'b0, read_data[31:8]};
       command = read_data[`FE_FIFO_CMD_START +: `FE_FIFO_CMD_BIT_LEN];
 
@@ -511,7 +538,6 @@ module tb();
          //usb_cen = 1;
          repeat(2) @(posedge usb_clk);
       end
-      usb_cen = 1;
    endtask
 
 
