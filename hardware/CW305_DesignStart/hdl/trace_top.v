@@ -59,12 +59,13 @@ module trace_top #(
   output wire O_soft_trig_passthru,
 
   // USB:
-  inout wire [7:0]    USB_Data,
-  input wire [pADDR_WIDTH-1:0] USB_Addr,
-  input wire          USB_nRD,
-  input wire          USB_nWE,
-  input wire          USB_nCS,
-  input wire          USB_SPARE1,
+  inout  wire [7:0]    USB_Data,
+  input  wire [pADDR_WIDTH-1:0] USB_Addr,
+  input  wire          USB_nRD,
+  input  wire          USB_nWE,
+  input  wire          USB_nCS,
+  output wire          O_data_available,
+  input  wire          I_fast_fifo_rdn,
 
   output wire [3:0]   O_board_rev,
   output wire         O_reverse_tracedata,
@@ -154,6 +155,8 @@ module trace_top #(
          .cwusb_cen        (USB_nCS),
          .cwusb_addr       (USB_Addr),
          .cwusb_isout      (isout), 
+         .I_fast_fifo_rdn  (I_fast_fifo_rdn),
+         .O_fast_fifo_rd   (fast_fifo_rd),
          .reg_address      (reg_address), 
          .reg_bytecnt      (reg_bytecnt), 
          .reg_datao        (write_data), 
@@ -240,6 +243,7 @@ module trace_top #(
    wire fifo_empty;
    wire capture_done;
    wire [5:0] fifo_status;
+   wire fast_fifo_rd;
    wire reg_arm;
 
    wire [`FE_SELECT_WIDTH-1:0] fe_select;
@@ -388,6 +392,9 @@ module trace_top #(
       .I_fifo_empty     (fifo_empty),
       .O_fifo_read      (fifo_read),
       .I_fifo_status    (fifo_status),
+
+      .O_data_available (O_data_available),
+      .I_fast_fifo_rd   (fast_fifo_rd),
 
       .fe_clk           (trace_clk),
       .O_arm            (arm),

@@ -56,6 +56,7 @@ module tb();
     reg usb_rdn;
     reg usb_wrn;
     reg usb_cen;
+    wire usb_spare0;
     reg usb_spare1;
 
     reg j16_sel;
@@ -281,12 +282,15 @@ module tb();
          //total_time = 0;
          wait_fifo_not_empty();
 
-         read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
+         //read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
+         write_byte(`MAIN_REG_SELECT, `REG_FAST_FIFO_RD_EN, 0, 8'h1);
+         read_fifo(1);
 
          while (command == `FE_FIFO_CMD_TIME) begin
             total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN]; // note: no +1 here!
             wait_fifo_not_empty();
-            read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
+            //read_fifo(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 0, read_data);
+            read_fifo(1);
          end
 
          total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_SHORTTIME_LEN] + 1; // note: 
@@ -439,7 +443,7 @@ module tb();
    always @(*) begin
       if (usb_wrn == 1'b0)
          read_select = 1'b0;
-      else if (usb_rdn == 1'b0)
+      else if (usb_rdn == 1'b0 || usb_spare1 == 1'b0)
          read_select = 1'b1;
    end
 
@@ -472,7 +476,11 @@ module tb();
 
 
    task read_fifo;
-      read_word(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, read_data);
+      input fast_read;
+      if (fast_read)
+         fast_fifo_read(read_data);
+      else
+         read_word(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, read_data);
       read_data = {8'b0, read_data[31:8]};
       command = read_data[`FE_FIFO_CMD_START +: `FE_FIFO_CMD_BIT_LEN];
 
@@ -485,6 +493,25 @@ module tb();
       fifo_data =                 read_data[15:8];
    endtask
 
+
+   task fast_fifo_read;
+      output [31:0] fifo_word;
+      int i;
+      reg [7:0] data;
+      wait (usb_spare0);
+      for (i = 0; i < 4; i = i + 1) begin
+         @(posedge usb_clk);
+         usb_spare1 = 0;
+         usb_cen = 0;
+         repeat (2) @(posedge usb_clk);
+         usb_spare1 = 1;
+         usb_cen = 1;
+         @(posedge usb_clk);
+         #1 data = usb_data;
+         fifo_word[i*8 +: 8] = data;
+         repeat(2) @(posedge usb_clk);
+      end
+   endtask
 
 
    always #(pUSB_CLOCK_PERIOD/2) usb_clk = !usb_clk;
@@ -546,7 +573,6 @@ module tb();
           .pADDR_WIDTH        (8),
           .pBYTECNT_SIZE      (pBYTECNT_SIZE)
       ) U_dut (
-          .USB_SPARE0         (1'b0       ),
 
           // USB Interface
           .USB_clk            (usb_clk    ),
@@ -555,7 +581,8 @@ module tb();
           .USB_nRD            (usb_rdn_out),
           .USB_nWE            (usb_wrn_out),
           .USB_nCS            (usb_cen_out),
-          .USB_SPARE1         (usb_spare1 ),
+          .USB_SPARE0         (usb_spare0 ),
+          .USB_SPARE1         (usb_spare1_out ),
 
           // LEDs on Board
           .led1               (led1      ),

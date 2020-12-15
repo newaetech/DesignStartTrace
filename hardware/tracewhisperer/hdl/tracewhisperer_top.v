@@ -34,8 +34,6 @@ module tracewhisperer_top #(
   parameter pUSERIO_WIDTH = 4
 )(
   // clocks and resets:
-  input  wire USB_SPARE0,
-
   // for simulation only:
   `ifdef __ICARUS__
   input wire  I_trigger_clk,
@@ -47,21 +45,22 @@ module tracewhisperer_top #(
   output wire mcx_trig,
 
   // host USB:
-  input wire          USB_clk,
-  inout wire [7:0]    USB_Data,
-  input wire [pADDR_WIDTH-1:0] USB_Addr,
-  input wire          USB_nRD,
-  input wire          USB_nWE,
-  input wire          USB_nCS,
-  input wire          USB_SPARE1,
+  input  wire          USB_clk,
+  inout  wire [7:0]    USB_Data,
+  input  wire [pADDR_WIDTH-1:0] USB_Addr,
+  input  wire          USB_nRD,
+  input  wire          USB_nWE,
+  input  wire          USB_nCS,
+  output wire          USB_SPARE0,
+  input  wire          USB_SPARE1,
 
   // trace:
-  input wire          TRCENA,
-  input wire          TRACECLOCK,
-  input wire [3:0]    TRACEDATA,
+  input  wire          TRCENA,
+  input  wire          TRACECLOCK,
+  input  wire [3:0]    TRACEDATA,
 
   // target trigger:
-  input wire          target_trig_in,
+  input  wire          target_trig_in,
 
   // 20-pin user header connector
   inout  wire [pUSERIO_WIDTH-1:0] userio_d,
@@ -156,7 +155,8 @@ module tracewhisperer_top #(
       .USB_nRD          (USB_nRD  ),
       .USB_nWE          (USB_nWE  ),
       .USB_nCS          (USB_nCS  ),
-      .USB_SPARE1       (USB_SPARE1 ),
+      .O_data_available (USB_SPARE0 ),
+      .I_fast_fifo_rdn  (USB_SPARE1 ),
 
       .O_board_rev      (board_rev),
       .O_reverse_tracedata (reverse_tracedata),
