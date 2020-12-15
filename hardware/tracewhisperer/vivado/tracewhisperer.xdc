@@ -26,9 +26,6 @@ set_property PACKAGE_PIN K3 [get_ports USB_SPARE0]
 create_clock -period 100.000 -name slow_out_clk
 
 
-# Reset
-set_input_delay -clock [get_clocks usb_clk] -add_delay 0.500 [get_ports USB_SPARE0*]
-
 # *****************************************************************************
 
 # LEDs
@@ -147,6 +144,7 @@ set_false_path -from [get_pins U_trace_top/U_reg_trace/O_uart_stop_bits_reg*/C] 
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_uart_data_bits_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_reverse_tracedata*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_timestamps_disable_reg/C] -to [all_registers]
 
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_mask*_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_pattern*_reg*/C] -to [all_registers]
@@ -171,7 +169,6 @@ set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_width_reg*/C] -to
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_capture_raw_reg/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_record_syncs_reg/C] -to [all_registers]
 
-set_false_path -from [get_port USB_SPARE0] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_main/reg_reset_reg/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_main/reg_reset_select_reg/C] -to [all_registers]
 set_false_path -from [get_port target_trig_in] -to [all_registers]
@@ -199,6 +196,7 @@ set_output_delay -clock [get_clocks usb_clk] 0.0 [get_ports userio_d[0]]
 set_output_delay -clock [get_clocks usb_clk] 0.0 [get_ports userio_d[1]]
 set_output_delay -clock [get_clocks usb_clk] 0.0 [get_ports userio_d[2]]
 set_output_delay -clock [get_clocks usb_clk] 0.0 [get_ports userio_d[3]]
+set_output_delay -clock [get_clocks usb_clk] 0.0 [get_ports USB_SPARE0]
 
 set_false_path -to [get_ports led1]
 set_false_path -to [get_ports led2]
@@ -210,6 +208,7 @@ set_false_path -to [get_ports userio_d[0]]
 set_false_path -to [get_ports userio_d[1]]
 set_false_path -to [get_ports userio_d[2]]
 set_false_path -to [get_ports userio_d[3]]
+set_false_path -to [get_ports USB_SPARE0]
 
 # read data will be grabbed one cycle later so no need to constrain:
 set_output_delay -clock usb_clk 0.0 [get_ports USB_Data]

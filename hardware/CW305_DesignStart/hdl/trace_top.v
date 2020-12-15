@@ -289,6 +289,7 @@ module trace_top #(
    wire [1:0] uart_stop_bits;
    wire arm_pulse;
    wire reset_sync_from_reg;
+   wire timestamps_disable;
 
    reg  reg_arm_feclk;
    (* ASYNC_REG = "TRUE" *) reg  [1:0] reg_arm_pipe;
@@ -407,6 +408,7 @@ module trace_top #(
       .O_count_writes   (count_writes),
       .O_counter_quick_start (counter_quick_start),
       .O_capture_now    (capture_now),
+      .O_timestamps_disable (timestamps_disable),
       .I_capture_enable_pulse (capture_enable_pulse),
       .O_board_rev      (O_board_rev),
 
@@ -476,7 +478,7 @@ module trace_top #(
       .cwusb_clk                (usb_clk),
       .fe_clk                   (trace_clk), 
 
-      .I_timestamps_disable     (1'b0), // TODO?
+      .I_timestamps_disable     (timestamps_disable),
       .I_arm                    (arm),
       .I_reg_arm                (reg_arm),
       .I_capture_len            (capture_len),

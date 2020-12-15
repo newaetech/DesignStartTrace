@@ -60,7 +60,7 @@ if not args.CW305:
                  PATTERN_TRIG = 0,
                  RULES = 4,
                  EVENTS = 30))
-    
+
     tests.append(dict(name  = 'swo_rules_swtrig',
                  frequency = 1,
                  description = 'SWO, rules mode',
@@ -77,6 +77,26 @@ if not args.CW305:
                  PATTERN_TRIG = 0,
                  CAPTURE_NOW = 1,
                  RULES = 1,
+                 EVENTS = 30))
+
+    tests.append(dict(name  = 'swo_raw_fastread',
+                 frequency = 1,
+                 description = 'SWO, raw mode, fast FIFO read',
+                 TIMESTAMPS_DISABLED = 1,
+                 SWO_MODE = 1,
+                 CAPTURE_RAW = 1,
+                 PATTERN_TRIG = 0,
+                 RULES = 4,
+                 EVENTS = 30))
+
+    tests.append(dict(name  = 'raw_fastread',
+                 frequency = 1,
+                 description = 'Raw mode, fast FIFO read',
+                 TIMESTAMPS_DISABLED = 1,
+                 SWO_MODE = 0,
+                 CAPTURE_RAW = 1,
+                 PATTERN_TRIG = 0,
+                 RULES = 4,
                  EVENTS = 30))
 
 

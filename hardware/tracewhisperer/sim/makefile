@@ -7,6 +7,7 @@ CAPTURE_RAW=0
 CAPTURE_NOW = 0
 PATTERN_TRIG = 0
 SWO_MODE = 0
+TIMESTAMPS_DISABLED = 0
 TIMEOUT= 100000
 DUMP=0
 
@@ -30,6 +31,7 @@ compile:
 	-P tb.pPATTERN_TRIG=$(PATTERN_TRIG) \
 	-P tb.pTIMEOUT=$(TIMEOUT) \
         -P tb.pCAPTURE_NOW=$(CAPTURE_NOW) \
+        -P tb.pTIMESTAMPS_DISABLED=$(TIMESTAMPS_DISABLED) \
 
 nofifo:
 	iverilog -ccmdfile_nofifo \
