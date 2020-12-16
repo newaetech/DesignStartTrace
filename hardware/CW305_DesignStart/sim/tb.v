@@ -265,7 +265,10 @@ module tb();
       `ifdef CW305
          fast_fifo_mode = 0;
       `else
-         fast_fifo_mode = $urandom % 2;
+         if (pTIMESTAMPS_DISABLED)
+            fast_fifo_mode = 1;
+         else
+            fast_fifo_mode = $urandom % 2;
       `endif
       if (fast_fifo_mode)
          $display("Using fast FIFO read mode");
