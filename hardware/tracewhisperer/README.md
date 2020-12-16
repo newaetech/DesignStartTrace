@@ -35,15 +35,26 @@ note:
 To learn more, refer to the [DesignStartTrace README](../../README.md).
 
 ## Trace Port Connections
-Five pins must be connected from the trace target to the front side 20-pin
-connector of PhyWhisperer-USB in order to supply it with trace data:
+
+If using parallel trace, five pins must be connected from the trace target
+to the front side 20-pin connector of PhyWhisperer-USB in order to supply it
+with trace data:
 - trace clock: to CK pin
 - trace data[3]: to D7 pin
 - trace data[2]: to D6 pin
 - trace data[1]: to D5 pin
 - trace data[0]: to D4 pin
 
+If using SWO, three pins must be connected:
+- SWDIO/TMS to D0 pin
+- SWCLK/TCLK to D1 pin
+- SWO/TDO to D2 pin
+
 Additionally, if the target-generated trigger is to be used to trigger trace
 collection, then the target trigger must be connected to the "PC" pin of the
 ChipWhisperer connector on the side of PhyWhisperer-USB.
+
+## Implementation Details
+[This page](FIFO_reads.md) has low-level details on how captured trace data
+is stored and retrieved from the FPGA.
 
