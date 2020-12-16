@@ -432,6 +432,8 @@ module tb();
 
       end
 
+      usb_cen = 1'b1; // fast FIFO read mode left this low
+
       #(pUSB_CLOCK_PERIOD*10);
       $display("All expected events processed. Waiting for trace generator to be done...");
       wait (trace_generator_done);
