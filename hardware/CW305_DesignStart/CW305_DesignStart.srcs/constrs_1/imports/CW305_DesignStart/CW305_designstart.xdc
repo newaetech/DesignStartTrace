@@ -13,17 +13,17 @@ create_clock -period 10.000 -name usb_clk -waveform {0.000 5.000} [get_nets USB_
 create_generated_clock -name trigger_clk -master cpu_clk [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
 
 
-set_clock_groups -asynchronous \
-                 -group [get_clocks usb_clk] \
-                 -group [get_clocks trigger_clk]
-
-set_clock_groups -asynchronous \
-                 -group [get_clocks usb_clk] \
-                 -group [get_clocks pll_clk1]
-
-set_clock_groups -asynchronous \
-                 -group [get_clocks trigger_clk] \
-                 -group [get_clocks pll_clk1]
+#set_clock_groups -asynchronous \
+#                 -group [get_clocks usb_clk] \
+#                 -group [get_clocks trigger_clk]
+#
+#set_clock_groups -asynchronous \
+#                 -group [get_clocks usb_clk] \
+#                 -group [get_clocks pll_clk1]
+#
+#set_clock_groups -asynchronous \
+#                 -group [get_clocks trigger_clk] \
+#                 -group [get_clocks pll_clk1]
 
 
 # DUT input clock from PLL_CLK1:
@@ -34,7 +34,7 @@ set_property PACKAGE_PIN N14 [get_ports tio_clkin]
 set_property PACKAGE_PIN M16 [get_ports ext_clock]
 
 # SW4 button on board:
-set_property PACKAGE_PIN R1 [get_ports resetn]
+set_property PACKAGE_PIN R1 [get_ports resetn_pin]
 
 # JTAG:
 set_property PULLUP true [get_ports nTRST]
@@ -53,7 +53,7 @@ set_input_delay -clock [get_clocks slow_out_clk] -add_delay 0.500 [get_ports uar
 set_output_delay -clock [get_clocks slow_out_clk] -add_delay 0.500 [get_ports uart_txd]
 
 # Reset
-set_input_delay -clock [get_clocks cpu_clk] -add_delay 0.500 [get_ports resetn*]
+set_input_delay -clock [get_clocks cpu_clk] -add_delay 0.500 [get_ports resetn_pin*]
 
 # *****************************************************************************
 
@@ -159,6 +159,45 @@ set_property CONFIG_VOLTAGE 3.3 [current_design]
 # Bitstream generation
 # --------------------------------------------------
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
+
+
+# quasi-static control signals:
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_reverse_tracedata*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_timestamps_disable_reg/C] -to [all_registers]
+
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_mask*_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_pattern*_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_pattern_trig_enable_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_soft_trig_enable_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_pattern_enable_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_fe_capture_trace/synchronized_reg/C] -to [get_pins U_trace_top/U_reg_trace/read_data_reg*/D]
+set_false_path -from [get_pins U_trace_top/U_fe_capture_trace/synchronized_reg/C] -to [get_pins U_trace_top/U_reg_main/read_data_reg*/D]
+set_false_path -from [get_pins U_trace_top/U_fe_capture_trace/O_matched_data_reg*/C] -to [get_pins U_trace_top/U_reg_trace/read_data_reg*/D]
+set_false_path -from [get_pins U_trace_top/U_fe_capture_trace/O_trace_count*_reg*/C] -to [get_pins U_trace_top/U_reg_trace/read_data_reg*/D]
+
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_counter_quick_start_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_trigger_delay_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_trigger_width_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_num_triggers_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_trigger_enable_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_capture_len_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_count_writes_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_width_reg*/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_capture_raw_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_trace/O_record_syncs_reg/C] -to [all_registers]
+
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_reset_reg/C] -to [all_registers]
+
+# CDC related exceptions:
+set_false_path -to [get_pins U_trace_top/U_fifo/fifo_full_pipe_reg[0]/D]
+set_false_path -to [get_pins U_trace_top/U_fifo/fifo_overflow_blocked_pipe_reg[0]/D]
+set_false_path -to [get_pins U_trace_top/reg_arm_pipe_reg[0]/D]
+set_false_path -to [get_pins U_trace_top/U_fe_capture_main/arm_pipe_reg[0]/D]
+set_false_path -from [get_pins U_trace_top/*/*_cdc/dst_req_reg/C] -to [get_pins U_trace_top/*/*_cdc/ack_pipe_reg[0]/D]
+set_false_path -from [get_pins U_trace_top/*/*_cdc/src_req_reg/C] -to [get_pins U_trace_top/*/*_cdc/req_pipe_reg[0]/D]
+
+
 
 # --------------------------------------------------
 # Remaining input delays

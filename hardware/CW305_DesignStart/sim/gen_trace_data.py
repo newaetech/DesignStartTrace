@@ -35,6 +35,7 @@ parser.add_argument("--raw", type=int, default=0)
 parser.add_argument("--patterntrig", type=int, default=0)
 parser.add_argument("--capturenow", type=int, default=0)
 parser.add_argument("--swo_mode", type=int, default=0)
+parser.add_argument("--cw305", type=int, default=0)
 args = parser.parse_args()
 
 rawmode = args.raw
@@ -165,6 +166,9 @@ def random_frame(n=1, minlen=2, maxlen=15):
                     if first_event and args.swo_mode:
                         adjust = 2
                         first_event = False
+                    elif first_event and args.cw305:
+                        adjust = 1
+                        first_event = False
                     else:
                         adjust = 0
                     matchtimes.write('%016x\n' % ((((nibble << 4) + lastnib) << 56) + (time-last_time+adjust)*multiplier))
@@ -232,6 +236,9 @@ def match_frame(rule=0):
             if first_event and args.swo_mode:
                 adjust = 2
                 first_event = False
+            elif first_event and args.cw305:
+                adjust = 1
+                first_event = False
             else:
                 adjust = 0
             matchtimes.write('%016x\n' % ((x << 56) + (time-last_time+adjust)*multiplier))
@@ -246,6 +253,9 @@ def match_frame(rule=0):
         rule = 2**rule;
         if first_event and args.swo_mode:
             adjust = 2
+            first_event = False
+        elif first_event and args.cw305:
+            adjust = 1
             first_event = False
         else:
             adjust = 0

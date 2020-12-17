@@ -14,7 +14,7 @@ all: testcase compile run
 
 testcase:
 	python3 gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
-	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG) --swo_mode $(SWO_MODE) --capturenow $(CAPTURE_NOW)
+	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG) --swo_mode $(SWO_MODE) --cw305 1 --capturenow $(CAPTURE_NOW)
 
 compile:
 	iverilog -ccmdfile \

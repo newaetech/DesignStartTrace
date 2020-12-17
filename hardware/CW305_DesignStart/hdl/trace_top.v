@@ -45,6 +45,7 @@ module trace_top #(
   output wire trace_clk_out,
   input  wire usb_clk,
   input  wire reset_pin,
+  output wire fpga_reset,
 
   `ifdef __ICARUS__
   input wire  I_trigger_clk, // for simulation only
@@ -111,6 +112,7 @@ module trace_top #(
    assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
    assign cmdfifo_din = USB_Data;
    assign trace_clk_out = trace_clk;
+   assign fpga_reset = reset;
 
    //always @(posedge usb_clk)
    //   cmdfifo_dout_reg <= cmdfifo_dout_pre;
@@ -141,7 +143,7 @@ module trace_top #(
          .reg_write        (reg_write), 
          .reg_addrvalid    (reg_addrvalid)
       );
-      assign trace_clk_premux = trace_clk_in;
+      assign trace_clk = trace_clk_in;
 
    `else // PhyWhisperer platform
       wire [pADDR_WIDTH-1:0]  reg_address;
@@ -174,23 +176,18 @@ module trace_top #(
             // Status and control signals
             .locked       (trace_clk_locked)
          );
+         BUFGMUX U_trace_clock_mux (
+            .I0            (trace_clk_premux),
+            .I1            (usb_clk),
+            .S             (swo_enable),
+            .O             (trace_clk)
+         );
       `else
          assign trace_clk_locked = 1'b1;
          assign trace_clk_premux = I_trace_clk;
+         assign trace_clk = swo_enable? usb_clk : trace_clk_premux;
       `endif
 
-   `endif
-
-   // when using SWO, use the USB clock as the "trace clock":
-   `ifndef __ICARUS__
-      BUFGMUX U_trace_clock_mux (
-         .I0            (trace_clk_premux),
-         .I1            (usb_clk),
-         .S             (swo_enable),
-         .O             (trace_clk)
-      );
-   `else
-      assign trace_clk = swo_enable? usb_clk : trace_clk_premux;
    `endif
 
 
@@ -585,32 +582,30 @@ module trace_top #(
    );
 
 
-   uart_core U_uart_rx (
-      //.clk                      (trace_clk),
-      .clk                      (trigger_clk),
-      .reset_n                  (~reset),
-      // Configuration inputs
-      .bit_rate                 ({8'b0, swo_bitrate_div}),
-      .data_bits                (uart_data_bits),
-      .stop_bits                (uart_stop_bits),
-      // External data interface
-      .rxd                      (swo),
-      .txd                      (),
-      // UART Rx
-      .rxd_syn                  (swo_data_ready),
-      .rxd_data                 (swo_data_byte),
-      .rxd_ack                  (swo_ack),
-      .rxd_state                (uart_rx_state),
-      // UART Tx (unused)
-      .txd_syn                  (1'b0),
-      .txd_data                 (8'd0),
-      .txd_ack                  ()
-   );
-
-
-
-   //always @(posedge trace_clk) swo_ack <= swo_data_ready;
-   always @(posedge trigger_clk) swo_ack <= swo_data_ready;
+   `ifndef CW305
+      uart_core U_uart_rx (
+         //.clk                      (trace_clk),
+         .clk                      (trigger_clk),
+         .reset_n                  (~reset),
+         // Configuration inputs
+         .bit_rate                 ({8'b0, swo_bitrate_div}),
+         .data_bits                (uart_data_bits),
+         .stop_bits                (uart_stop_bits),
+         // External data interface
+         .rxd                      (swo),
+         .txd                      (),
+         // UART Rx
+         .rxd_syn                  (swo_data_ready),
+         .rxd_data                 (swo_data_byte),
+         .rxd_ack                  (swo_ack),
+         .rxd_state                (uart_rx_state),
+         // UART Tx (unused)
+         .txd_syn                  (1'b0),
+         .txd_data                 (8'd0),
+         .txd_ack                  ()
+      );
+      always @(posedge trigger_clk) swo_ack <= swo_data_ready;
+   `endif
 
    `ifdef ILA_UART
        ila_uart I_ila_uart (

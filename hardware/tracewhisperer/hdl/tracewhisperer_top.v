@@ -139,6 +139,7 @@ module tracewhisperer_top #(
       .trace_clk_out    (trace_clk),
       .usb_clk          (clk_usb_buf),
       .reset_pin        (1'b0),
+      .fpga_reset       (), // unused
                                   
       .trace_data       (trace_data),
       .swo              (swo),

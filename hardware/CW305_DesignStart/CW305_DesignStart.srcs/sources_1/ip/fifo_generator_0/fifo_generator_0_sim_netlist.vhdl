@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
--- Date        : Tue Aug 18 15:13:28 2020
+-- Date        : Thu Dec 17 10:03:12 2020
 -- Host        : qed running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               W:/hardware/CW305_DesignStart/CW305_DesignStart.srcs/sources_1/ip/fifo_generator_0/fifo_generator_0_sim_netlist.vhdl
@@ -72,7 +72,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -214,7 +214,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -356,7 +356,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -498,7 +498,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -640,7 +640,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -782,7 +782,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -924,7 +924,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -1066,7 +1066,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -1208,7 +1208,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -1350,7 +1350,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -1493,7 +1493,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -1635,7 +1635,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -1777,7 +1777,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -1919,7 +1919,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -2061,7 +2061,7 @@ begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
       ALMOST_EMPTY_OFFSET => X"000A",
-      ALMOST_FULL_OFFSET => X"0007",
+      ALMOST_FULL_OFFSET => X"0008",
       DATA_WIDTH => 18,
       DO_REG => 1,
       EN_ECC_READ => false,
@@ -2210,7 +2210,7 @@ begin
       EN_ECC_WRITE => false,
       EN_SYN => false,
       FIFO_MODE => "FIFO36",
-      FIRST_WORD_FALL_THROUGH => false,
+      FIRST_WORD_FALL_THROUGH => true,
       INIT => X"000000000000000000",
       IS_RDCLK_INVERTED => '0',
       IS_RDEN_INVERTED => '0',
@@ -3551,9 +3551,9 @@ entity fifo_generator_0_fifo_generator_v13_2_4 is
   attribute C_POWER_SAVING_MODE : integer;
   attribute C_POWER_SAVING_MODE of fifo_generator_0_fifo_generator_v13_2_4 : entity is 0;
   attribute C_PRELOAD_LATENCY : integer;
-  attribute C_PRELOAD_LATENCY of fifo_generator_0_fifo_generator_v13_2_4 : entity is 1;
+  attribute C_PRELOAD_LATENCY of fifo_generator_0_fifo_generator_v13_2_4 : entity is 0;
   attribute C_PRELOAD_REGS : integer;
-  attribute C_PRELOAD_REGS of fifo_generator_0_fifo_generator_v13_2_4 : entity is 0;
+  attribute C_PRELOAD_REGS of fifo_generator_0_fifo_generator_v13_2_4 : entity is 1;
   attribute C_PRIM_FIFO_TYPE : string;
   attribute C_PRIM_FIFO_TYPE of fifo_generator_0_fifo_generator_v13_2_4 : entity is "2kx18";
   attribute C_PRIM_FIFO_TYPE_AXIS : string;
@@ -4674,9 +4674,9 @@ architecture STRUCTURE of fifo_generator_0 is
   attribute C_POWER_SAVING_MODE : integer;
   attribute C_POWER_SAVING_MODE of U0 : label is 0;
   attribute C_PRELOAD_LATENCY : integer;
-  attribute C_PRELOAD_LATENCY of U0 : label is 1;
+  attribute C_PRELOAD_LATENCY of U0 : label is 0;
   attribute C_PRELOAD_REGS : integer;
-  attribute C_PRELOAD_REGS of U0 : label is 0;
+  attribute C_PRELOAD_REGS of U0 : label is 1;
   attribute C_PRIM_FIFO_TYPE : string;
   attribute C_PRIM_FIFO_TYPE of U0 : label is "2kx18";
   attribute C_PRIM_FIFO_TYPE_AXIS : string;

@@ -170,7 +170,6 @@ set_false_path -from [get_pins U_trace_top/U_reg_trace/O_capture_raw_reg/C] -to 
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_record_syncs_reg/C] -to [all_registers]
 
 set_false_path -from [get_pins U_trace_top/U_reg_main/reg_reset_reg/C] -to [all_registers]
-set_false_path -from [get_pins U_trace_top/U_reg_main/reg_reset_select_reg/C] -to [all_registers]
 set_false_path -from [get_port target_trig_in] -to [all_registers]
 
 # CDC related exceptions:
