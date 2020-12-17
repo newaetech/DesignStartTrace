@@ -71,9 +71,8 @@ this platform and gain the power of trace.
 If your target cannot be implemented on the CW305 platform, the trace
 sniffing logic can also be implemented on the
 [PhyWhisperer-USB](https://rtfm.newae.com/Tools/PhyWhisperer/). This can
-support any target with a trace port, such as our [K82F
-target](https://rtfm.newae.com/Targets/UFO%20Targets/CW308T-K82/). Look to
-[hardware/tracewhisperer](hardware/tracewhisperer) for this port. This
+support any target with a parallel trace port or SWO pin. Look to
+[hardware/tracewhisperer](hardware/tracewhisperer) for this variant. This
 platform provides all the same capabilities of trace, but with some gotchas
 related to power trace noise which are discussed
 [here](hardware/tracewhisperer/trace_noise.md).
