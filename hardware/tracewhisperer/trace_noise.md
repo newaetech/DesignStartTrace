@@ -18,10 +18,11 @@ the exact same measurement is repeated, the trace packets are emitted with
 some variable timing offset (a few clock cycles) relative to a stable
 reference. This probably isn't good for side-channel attacks...
 
-To measure the effect of trace activity on side-channel attacks, we carried
-out the same CPA attack on an unprotected AES implementation for 5
-different levels of trace activity.  The table below shows the average
-remaining PGE (per key byte) for the given number of power traces.
+To measure the effect of parallel trace port activity on side-channel
+attacks, we carried out the same CPA attack on an unprotected AES
+implementation for 5 different levels of trace activity.  The table below
+shows the average remaining PGE (per key byte) for the given number of power
+traces.
 
 
 | Trace Activity             | 20 traces | 50 traces | 100 traces | 200 traces | 1k traces | 5k traces | 8k traces |
@@ -49,7 +50,8 @@ So even with **moderately** busy trace traffic which is not even close to
 saturating the trace bus, up to **2 orders of magnitude more traces** are
 required for a successful CPA attack.
 
-With SWO:
+When trace data is emitted via SWO instead, the effect is much less
+pronounced:
 
 | Trace Activity             | 20 traces | 50 traces | 100 traces | 200 traces | 500 traces |
 |----------------------------|-----------|-----------|------------|------------|------------|

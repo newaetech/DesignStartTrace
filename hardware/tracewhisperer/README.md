@@ -3,14 +3,17 @@
 TraceWhisperer is a trace sniffer, originally developed for the CW305
 DesignStart target, then ported to the PhyWhisperer-USB platform. The "trace"
 we're talking about here is Coresight processor trace data (ETM, DWT, ITM)
-that can be output by Arm Cortex processors via their parallel trace port.
-One target with this trace port is our [K82F
+that can be output by Arm Cortex processors via their parallel trace port or
+SWO pin.
+
+One target with the parallel trace port is our [K82F
 target](https://rtfm.newae.com/Targets/UFO%20Targets/CW308T-K82/), but it
 should be possible to use TraceWhisperer with any target that has a trace
-port. 
+port. Currently, TraceWhisperer supports 4-bit wide trace ports only, but
+adding support for other widths should be fairly easy.
 
-Currently, TraceWhisperer supports 4-bit wide trace ports only, but adding
-support for other widths should be fairly easy.
+The SWO pin is more common -- you'll find it on our STM32 targets -- but its
+bandwidth is much lower than the trace port.
 
 The trace sniffer features and capabilities with TraceWhisperer are
 basically the same as on the CW305 DesignStart platform. Some differences to
@@ -24,10 +27,10 @@ note:
   and so the trace port signals remain internal (not driving any external
   pins). On the PhyWhisperer, the trace data and clock come from an external
   chip, and this has two implications:
-    1. Activity on the trace pins adds significant noise to the side-channel
-       power measurements. See [this note](trace_noise.md) for more
-       information.
-    2. Since trace data is DDR, the trace clock received by PhyWhisperer
+    1. Activity on the trace pins (and, to a lesser degree, SWO) adds
+       significant noise to the side-channel power measurements. See [this
+       note](trace_noise.md) for more information.
+    2. Since parallel trace port data is DDR, the trace clock received by PhyWhisperer
        goes to a PLL which has a published minimum of 10 MHz, which means
        that the target clock must be at least 20 MHz.
 
