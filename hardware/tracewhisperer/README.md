@@ -58,6 +58,11 @@ collection, then the target trigger must be connected to the "PC" pin of the
 ChipWhisperer connector on the side of PhyWhisperer-USB.
 
 ## Implementation Details
+[This page](clocks.md) has details on internal clocking, which is needed to
+understand the time relationship between power traces and debug traces.
+
 [This page](FIFO_reads.md) has low-level details on how captured trace data
 is stored and retrieved from the FPGA.
+
+
 
