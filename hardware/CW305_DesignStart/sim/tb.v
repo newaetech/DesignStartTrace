@@ -229,6 +229,8 @@ module tb();
 
       write_byte(`MAIN_REG_SELECT, `REG_TIMESTAMPS_DISABLE, 0, pTIMESTAMPS_DISABLED);
 
+      write_byte(`MAIN_REG_SELECT, `REG_CAPTURE_WHILE_TRIG, 0, 0);
+
       if (pCAPTURE_NOW == 0)
          write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
       else

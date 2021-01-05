@@ -36,7 +36,7 @@ module trace_top #(
   parameter pTRIGGER_WIDTH_WIDTH = 17,
   parameter pNUM_TRIGGER_PULSES = 8,
   parameter pNUM_TRIGGER_WIDTH = 4,
-  parameter pCAPTURE_LEN_WIDTH = 24,
+  parameter pCAPTURE_LEN_WIDTH = 32,
   parameter pTIMESTAMP_FULL_WIDTH = 16,
   parameter pTIMESTAMP_SHORT_WIDTH = 8,
   parameter pUSERIO_WIDTH = 4
@@ -242,6 +242,7 @@ module trace_top #(
    wire [5:0] fifo_status;
    wire usb_drive_data;
    wire reg_arm;
+   wire capture_while_trig;
 
    wire [`FE_SELECT_WIDTH-1:0] fe_select;
    wire reg_main_selected;
@@ -406,6 +407,7 @@ module trace_top #(
       .O_counter_quick_start (counter_quick_start),
       .O_capture_now    (capture_now),
       .O_timestamps_disable (timestamps_disable),
+      .O_capture_while_trig (capture_while_trig),
       .I_capture_enable_pulse (capture_enable_pulse),
       .O_board_rev      (O_board_rev),
 
@@ -494,6 +496,9 @@ module trace_top #(
       .I_fifo_overflow_blocked  (fifo_overflow_blocked),
       .I_fifo_full              (fifo_full),
       .I_fifo_empty             (fifo_empty),
+
+      .I_target_trig            (m3_trig),
+      .I_capture_while_trig     (capture_while_trig),
 
       .O_capturing              (capturing),
       .I_capture_enable         (capture_enable)
