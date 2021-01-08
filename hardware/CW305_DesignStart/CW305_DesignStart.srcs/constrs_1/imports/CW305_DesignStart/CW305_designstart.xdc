@@ -183,6 +183,9 @@ set_false_path -from [get_pins U_trace_top/U_reg_main/reg_num_triggers_reg*/C] -
 set_false_path -from [get_pins U_trace_top/U_reg_main/reg_trigger_enable_reg/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_main/reg_capture_len_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_main/reg_count_writes_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_capture_while_trig_reg/C] -to [all_registers]
+set_false_path -from [get_pins U_trace_top/U_reg_main/reg_max_timestamp_reg*/C] -to [all_registers]
+
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_width_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_capture_raw_reg/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_record_syncs_reg/C] -to [all_registers]

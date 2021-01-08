@@ -8,6 +8,7 @@ CAPTURE_NOW = 0
 PATTERN_TRIG = 0
 SWO_MODE = 0
 TIMESTAMPS_DISABLED = 0
+MAX_TIMESTAMP = 65535
 TIMEOUT= 100000
 DUMP=0
 
@@ -32,6 +33,7 @@ compile:
 	-P tb.pTIMEOUT=$(TIMEOUT) \
         -P tb.pCAPTURE_NOW=$(CAPTURE_NOW) \
         -P tb.pTIMESTAMPS_DISABLED=$(TIMESTAMPS_DISABLED) \
+        -P tb.pMAX_TIMESTAMP=$(MAX_TIMESTAMP) \
 
 nofifo:
 	iverilog -ccmdfile_nofifo \

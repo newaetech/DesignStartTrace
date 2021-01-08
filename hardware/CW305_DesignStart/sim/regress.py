@@ -22,21 +22,21 @@ random.seed()
 # Define testcases:
 tests = []
 tests.append(dict(name  = 'fewrules',
-             frequency = 2,
+             frequency = 5,
              description = 'Few rules, lots of events, capture rules.',
              CAPTURE_RAW = 0,
              RULES = 2,
              EVENTS = 30))
 
 tests.append(dict(name  = 'manyrules',
-             frequency = 2,
+             frequency = 5,
              description = 'Many rules, lots of events, capture rules.',
              CAPTURE_RAW = 0,
              RULES = 8,
              EVENTS = 30))
 
 tests.append(dict(name  = 'swtrigger_raw',
-             frequency = 1,
+             frequency = 3,
              description = 'Lots of events, capture raw traces, triggered by sofware.',
              CAPTURE_RAW = 1,
              PATTERN_TRIG = 0,
@@ -44,16 +44,46 @@ tests.append(dict(name  = 'swtrigger_raw',
              EVENTS = 30))
 
 tests.append(dict(name  = 'patterntrigger_raw',
-             frequency = 1,
+             frequency = 3,
              description = 'Lots of events, capture raw trace, triggered by pattern.',
              CAPTURE_RAW = 1,
              PATTERN_TRIG = 1,
              RULES = 4,
              EVENTS = 30))
 
+tests.append(dict(name  = 'long_timestamps_raw',
+             frequency = 1,
+             description = 'Small max timestamp, capture raw traces, triggered by sofware.',
+             MAX_TIMESTAMP = 1024,
+             CAPTURE_RAW = 1,
+             PATTERN_TRIG = 0,
+             RULES = 1,
+             EVENTS = 30))
+
+tests.append(dict(name  = 'lots_long_timestamps_raw',
+             frequency = 1,
+             description = 'Very small max timestamp so that they occur successively, capture raw traces, triggered by sofware.',
+             MAX_TIMESTAMP = 256,
+             CAPTURE_RAW = 1,
+             PATTERN_TRIG = 0,
+             RULES = 1,
+             EVENTS = 30))
+
+
+tests.append(dict(name  = 'long_timestamps_rules',
+             frequency = 1,
+             description = 'Small max timestamp, capture rules, triggered by sofware.',
+             MAX_TIMESTAMP = 1024,
+             CAPTURE_RAW = 0,
+             PATTERN_TRIG = 0,
+             RULES = 4,
+             EVENTS = 30))
+
+
+
 if not args.CW305:
     tests.append(dict(name  = 'swo_raw_swtrig',
-                 frequency = 1,
+                 frequency = 3,
                  description = 'SWO, raw mode',
                  SWO_MODE = 1,
                  CAPTURE_RAW = 1,
@@ -62,7 +92,7 @@ if not args.CW305:
                  EVENTS = 30))
 
     tests.append(dict(name  = 'swo_rules_swtrig',
-                 frequency = 1,
+                 frequency = 3,
                  description = 'SWO, rules mode',
                  SWO_MODE = 1,
                  CAPTURE_RAW = 0,
@@ -71,7 +101,7 @@ if not args.CW305:
                  EVENTS = 30))
 
     tests.append(dict(name  = 'capture_now',
-                 frequency = 1,
+                 frequency = 2,
                  description = '...',
                  CAPTURE_RAW = 1,
                  PATTERN_TRIG = 0,
@@ -80,8 +110,8 @@ if not args.CW305:
                  EVENTS = 30))
 
     tests.append(dict(name  = 'swo_raw_fastread',
-                 frequency = 1,
-                 description = 'SWO, raw mode, fast FIFO read',
+                 frequency = 2,
+                 description = 'SWO, raw mode, fast FIFO read (timestamps disabled)',
                  TIMESTAMPS_DISABLED = 1,
                  SWO_MODE = 1,
                  CAPTURE_RAW = 1,
@@ -90,8 +120,8 @@ if not args.CW305:
                  EVENTS = 30))
 
     tests.append(dict(name  = 'raw_fastread',
-                 frequency = 1,
-                 description = 'Raw mode, fast FIFO read',
+                 frequency = 2,
+                 description = 'Raw mode, fast FIFO read (timestamps disabled)',
                  TIMESTAMPS_DISABLED = 1,
                  SWO_MODE = 0,
                  CAPTURE_RAW = 1,

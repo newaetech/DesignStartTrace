@@ -307,20 +307,21 @@ if patterntrig:
     else:
         last_event_time = time - 1
     for i in range(args.events):
-        sync_frame(random.randrange(0,10))
-        random_frame(random.randrange(0,15))
+        sync_frame(random.randrange(0,80))
+        random_frame(random.randrange(0,20))
         sync_frame(random.randrange(0,4))
     sync_frame(10)
 
 else:
     sw_trig()
+    sync_frame(100)
     sync_frame(random.randrange(2,4))
     random_frame(random.randrange(0,20))
     sync_frame(random.randrange(0,20))
     for i in range(args.events):
         rule = random.randrange(0, args.rules)
         match_frame(rule)
-        sync_frame(random.randrange(0,10))
+        sync_frame(random.randrange(0,80))
         random_frame(random.randrange(0,20))
         sync_frame(random.randrange(0,4))
     sync_frame(10)

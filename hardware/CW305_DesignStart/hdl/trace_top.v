@@ -243,6 +243,7 @@ module trace_top #(
    wire usb_drive_data;
    wire reg_arm;
    wire capture_while_trig;
+   wire [15:0] max_timestamp;
 
    wire [`FE_SELECT_WIDTH-1:0] fe_select;
    wire reg_main_selected;
@@ -408,6 +409,7 @@ module trace_top #(
       .O_capture_now    (capture_now),
       .O_timestamps_disable (timestamps_disable),
       .O_capture_while_trig (capture_while_trig),
+      .O_max_timestamp  (max_timestamp),
       .I_capture_enable_pulse (capture_enable_pulse),
       .O_board_rev      (O_board_rev),
 
@@ -483,6 +485,7 @@ module trace_top #(
       .I_capture_len            (capture_len),
       .I_count_writes           (count_writes),
       .I_counter_quick_start    (counter_quick_start),
+      .I_max_timestamp          (max_timestamp),
 
       .I_event                  (fe_event),
       .I_data_cmd               (fe_data_cmd),

@@ -45,6 +45,7 @@ module tb();
     parameter pSWO_MODE = 0;
     parameter pSWO_DIV = 15;
     parameter pTIMESTAMPS_DISABLED = 0;
+    parameter pMAX_TIMESTAMP = 'hFFFF;
     parameter pSEED = 1;
     parameter pTIMEOUT = 2560000;
     parameter pVERBOSE = 0;
@@ -122,6 +123,7 @@ module tb();
    int sync_counter;
    reg [63:0] sync_data;
    int slop;
+   reg [31:0] max_timestamp;
 
    wire trace_generator_done;
 
@@ -231,6 +233,11 @@ module tb();
 
       write_byte(`MAIN_REG_SELECT, `REG_CAPTURE_WHILE_TRIG, 0, 0);
 
+
+      max_timestamp = $urandom_range('h80, pMAX_TIMESTAMP);
+      $display("Setting max timestamp to %h", max_timestamp);
+      write_word(`MAIN_REG_SELECT, `REG_MAX_TIMESTAMP, max_timestamp);
+
       if (pCAPTURE_NOW == 0)
          write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
       else
@@ -302,11 +309,11 @@ module tb();
          //total_time = 0;
          read_fifo(fast_fifo_mode);
          while (command == `FE_FIFO_CMD_TIME) begin
-            total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN]; // note: no +1 here!
+            total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN];
             read_fifo(fast_fifo_mode);
          end
 
-         total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_SHORTTIME_LEN] + 1; // note: 
+         total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_SHORTTIME_LEN];
 
          if (pCAPTURE_RAW == 0) begin // rules mode
             expected_rule = matchdata[match_index][63:56];
