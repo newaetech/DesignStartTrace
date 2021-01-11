@@ -122,6 +122,11 @@ def sync_frame(n=1, synctype='rand'):
 
 def sw_trig():
     global last_event_time
+    global time
+    #if args.cw305:
+    #    actual_trigger_time = time
+    #else: # account for the fact that in this case, the trigger pin is delayed one clock cycle
+    #    actual_trigger_time = time - 1
     if capturenow:
         mem.write('\n// ** CAPTURE NOW TIME: %d **\n\n' % time)
     else:
@@ -165,12 +170,16 @@ def random_frame(n=1, minlen=2, maxlen=15):
                     inc_time(2)
                     if first_event and args.swo_mode:
                         adjust = 2
-                        first_event = False
+                        #first_event = False
                     elif first_event and args.cw305:
                         adjust = 1
-                        first_event = False
+                        #first_event = False
                     else:
                         adjust = 0
+                    if first_event:
+                        first_event = False
+                        if not args.cw305 and not args.swo_mode:
+                            adjust -= 1
                     matchtimes.write('%016x\n' % ((((nibble << 4) + lastnib) << 56) + (time-last_time+adjust)*multiplier))
                     last_time = time
                 else:
@@ -235,12 +244,16 @@ def match_frame(rule=0):
             inc_time(2)
             if first_event and args.swo_mode:
                 adjust = 2
-                first_event = False
+                #first_event = False
             elif first_event and args.cw305:
                 adjust = 1
-                first_event = False
+                #first_event = False
             else:
                 adjust = 0
+            if first_event:
+                first_event = False
+                if not args.cw305 and not args.swo_mode:
+                    adjust -= 1
             matchtimes.write('%016x\n' % ((x << 56) + (time-last_time+adjust)*multiplier))
             last_time = time
     mem.write('\n\n')
@@ -253,12 +266,17 @@ def match_frame(rule=0):
         rule = 2**rule;
         if first_event and args.swo_mode:
             adjust = 2
-            first_event = False
+            #first_event = False
         elif first_event and args.cw305:
             adjust = 1
-            first_event = False
+            #first_event = False
         else:
             adjust = 0
+        if first_event:
+            first_event = False
+            if not args.cw305 and not args.swo_mode:
+                adjust -= 1
+
         matchtimes.write('%016x\n' % ((rule << 56) + (time-last_event_time+adjust)*multiplier))
 
     last_event_time = time

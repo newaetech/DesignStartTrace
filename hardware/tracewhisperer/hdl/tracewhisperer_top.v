@@ -87,6 +87,7 @@ module tracewhisperer_top #(
   reg swo;
 
   reg [22:0] count;
+  reg target_trig_in_r;
 
   always @(posedge trace_clk) count <= count + 1;
 
@@ -128,6 +129,11 @@ module tracewhisperer_top #(
    `endif
 
 
+   always @(posedge trace_clk) begin
+      target_trig_in_r <= target_trig_in;
+   end
+
+
    trace_top #(
       .pBYTECNT_SIZE    (pBYTECNT_SIZE),
       .pADDR_WIDTH      (pADDR_WIDTH),
@@ -144,7 +150,7 @@ module tracewhisperer_top #(
       .trace_data       (trace_data),
       .swo              (swo),
       .O_trace_trig_out (trig_out),
-      .m3_trig          (target_trig_in),
+      .m3_trig          (target_trig_in_r),
 
       `ifdef __ICARUS__
       .I_trigger_clk    (I_trigger_clk),
