@@ -99,8 +99,9 @@ trace = TraceWhisperer(target, scope)
 and start having fun. This [example Jupyter
 notebook](jupyter/TraceWhisperer.ipynb) shows a bunch of examples. This
 notebook supports both CW305 and CW610 (PhyWhisperer) platforms. You'll need
-ChipWhisperer capture hardware, and either a CW305, or a CW610, CW308, and
-MK82F in order to run the notebook out-of-the-box.
+ChipWhisperer capture hardware, and either a CW305 or a CW610. The target
+may be the CWLITEARM; other targets with SWO and/or parallel trace ports
+(such as the CW308 K82F target) can also be used.
 
 Use `help(TraceWhisperer)` to see which methods are available.  At a low
 level, trace is configured on the sniffing side via configuration and status
@@ -117,6 +118,59 @@ Once you've gone through the example notebook, read [this note on
 triggering](triggering.md) to learn all the triggering options and
 possibilities that are added by trace.
 
+
+## Trace Jitter
+Debug trace data has some jitter: if the same operation is run multiple
+times on the target processor, and this operation generates the same debug
+trace data each time, there will be small differences in the timing of this
+trace data.
+
+This jitter can be observed by running the [example
+notebook](jupyter/TraceWhisperer.ipynb) and using trace as the trigger. To
+use trace for side-channel analysis effectively, this jitter must be
+understood and possibly dealt with.
+
+The observations that follow are just that, observations made during the
+development of this tooling; there is nothing in Arm's specifications which
+guarantees some permissible range for this jitter.
+
+### Jitter from Paralle Trace Port
+When there is no trace data to output, synchronization frames are produced
+continuously. These frames are 16 or 32 bits wide. It follows that with any
+trace port width less than 32 bits, jitter is unavoidable. In practice, up
+to 6 clock cycles of jitter have been observed with a 4-bit trace port.
+
+In many cases, this jitter can be corrected / eliminated in post-processing,
+e.g.  by re-aligning the power traces.
+
+### Jitter from SWO Pin
+When there is no trace data to output on the SWO pin, the link *can* be
+idle, as long as the `SYNCTAP` field of the `DWT.CTRL` register is set to 0
+(reference: ARM DDI 0403E.d, section C1.8.7). If these bits are not zero, a
+periodic synchronization frame is emitted every 16M, 64M, or 256M cycles. If
+a synchronization frame is being emitted when a trace event occurs, the
+observation of the trace event could be delayed by hundreds of clock cycles!
+Unless your application needs the synchronization frames, disable them to
+avoid this situation.
+
+The SWO baudrate sets a lower bound on jitter; for minimum jitter, set the
+`TPI.ACPR` register to 0: this makes the baud rate equal to the target clock
+rate. With this setting, it may be possible for there to be no jitter at
+all. In practice, 1-2 cycles of jitter is frequently observed, and this is
+likely because in SWO mode, debug trace acquisition is asynchronous to the
+target clock (the PhyWhisperer's SAM3U clock is used). The amount of jitter
+than can be expected will depend on the ratio of the PhyWhisperer and target
+clocks (1-2 cycles was observed with a 24 MHz target clock).
+
+Again, in many cases this jitter can be corrected / eliminated in
+post-processing, e.g.  by re-aligning the power traces.
+
+One final consideration is that for **very** long captures in SWO mode (i.e.
+millions of clock cycles), clock frequency drift between the PhyWhisperer's
+clock and the target's clock can have the effect of increasing the jitter
+over the lenght of the trace. For example, for a trace that is 20 million
+clock cycles long at 24 MHz, jitter is sometimes seen to increase linearly
+throughout the capture, starting a 2 cycles and ending at 8 cycles.
 
 ## Orbuculum
 Raw trace data has somewhat complex layers of formatting. Fortunately,
