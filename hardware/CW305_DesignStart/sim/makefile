@@ -4,15 +4,18 @@ SEED=1
 RULES=8
 EVENTS=3
 CAPTURE_RAW=0
+CAPTURE_NOW = 0
 PATTERN_TRIG = 0
-TIMEOUT=50000
+SWO_MODE = 0
+MAX_TIMESTAMP = 65535
+TIMEOUT=100000
 DUMP=0
 
 all: testcase compile run
 
 testcase:
 	python3 gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
-	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG)
+	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG) --swo_mode $(SWO_MODE) --cw305 1 --capturenow $(CAPTURE_NOW)
 
 compile:
 	iverilog -ccmdfile \
@@ -26,6 +29,8 @@ compile:
 	-P tb.pCAPTURE_RAW=$(CAPTURE_RAW) \
 	-P tb.pPATTERN_TRIG=$(PATTERN_TRIG) \
 	-P tb.pTIMEOUT=$(TIMEOUT) \
+        -P tb.pCAPTURE_NOW=$(CAPTURE_NOW) \
+        -P tb.pMAX_TIMESTAMP=$(MAX_TIMESTAMP) \
 	-DCW305 \
 
 nofifo:

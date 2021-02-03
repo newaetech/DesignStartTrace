@@ -2262,11 +2262,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Tue Aug 18 19:12:21 UTC 2020</spirit:value>
+            <spirit:value>Thu Dec 17 15:02:14 UTC 2020</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:9b6c7d41</spirit:value>
+            <spirit:value>9:ddd28e78</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -2285,11 +2285,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Tue Aug 18 19:12:21 UTC 2020</spirit:value>
+            <spirit:value>Thu Dec 17 15:02:14 UTC 2020</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:9b6c7d41</spirit:value>
+            <spirit:value>9:ddd28e78</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -2303,11 +2303,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Tue Aug 18 19:12:21 UTC 2020</spirit:value>
+            <spirit:value>Thu Dec 17 15:02:14 UTC 2020</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:9b6c7d41</spirit:value>
+            <spirit:value>9:ddd28e78</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -2323,11 +2323,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Tue Aug 18 19:12:21 UTC 2020</spirit:value>
+            <spirit:value>Thu Dec 17 15:02:14 UTC 2020</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:9b6c7d41</spirit:value>
+            <spirit:value>9:ddd28e78</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -2342,11 +2342,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Tue Aug 18 19:12:21 UTC 2020</spirit:value>
+            <spirit:value>Thu Dec 17 15:02:14 UTC 2020</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:6bd3eb5a</spirit:value>
+            <spirit:value>9:5d946be2</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -2362,11 +2362,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Tue Aug 18 19:12:21 UTC 2020</spirit:value>
+            <spirit:value>Thu Dec 17 15:02:14 UTC 2020</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:6bd3eb5a</spirit:value>
+            <spirit:value>9:5d946be2</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -2380,11 +2380,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Tue Aug 18 19:12:21 UTC 2020</spirit:value>
+            <spirit:value>Thu Dec 17 15:02:14 UTC 2020</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:9b6c7d41</spirit:value>
+            <spirit:value>9:ddd28e78</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -2398,11 +2398,11 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>GENtimestamp</spirit:name>
-            <spirit:value>Tue Aug 18 19:13:28 UTC 2020</spirit:value>
+            <spirit:value>Thu Dec 17 15:03:12 UTC 2020</spirit:value>
           </spirit:parameter>
           <spirit:parameter>
             <spirit:name>outputProductCRC</spirit:name>
-            <spirit:value>9:9b6c7d41</spirit:value>
+            <spirit:value>9:ddd28e78</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -8333,11 +8333,11 @@
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_PRELOAD_LATENCY</spirit:name>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_PRELOAD_LATENCY">1</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_PRELOAD_LATENCY">0</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_PRELOAD_REGS</spirit:name>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_PRELOAD_REGS">0</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_PRELOAD_REGS">1</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="string">
         <spirit:name>C_PRIM_FIFO_TYPE</spirit:name>
@@ -9387,7 +9387,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Performance_Options</spirit:name>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Performance_Options" spirit:choiceRef="choice_pairs_5f1451ad" spirit:order="5">Standard_FIFO</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Performance_Options" spirit:choiceRef="choice_pairs_5f1451ad" spirit:order="5">First_Word_Fall_Through</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
@@ -9816,7 +9816,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Full_Threshold_Assert_Value</spirit:name>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.Full_Threshold_Assert_Value" spirit:order="41" spirit:minimum="30742" spirit:maximum="32776" spirit:rangeType="long">32776</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.Full_Threshold_Assert_Value" spirit:order="41" spirit:minimum="30744" spirit:maximum="32776" spirit:rangeType="long">32776</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
@@ -9827,7 +9827,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Full_Threshold_Negate_Value</spirit:name>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.Full_Threshold_Negate_Value" spirit:order="42" spirit:minimum="30739" spirit:maximum="32775" spirit:rangeType="long">32775</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.Full_Threshold_Negate_Value" spirit:order="42" spirit:minimum="30740" spirit:maximum="32775" spirit:rangeType="long">32775</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
@@ -9849,7 +9849,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Empty_Threshold_Assert_Value</spirit:name>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.Empty_Threshold_Assert_Value" spirit:order="44" spirit:minimum="5" spirit:maximum="2042" spirit:rangeType="long">128</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.Empty_Threshold_Assert_Value" spirit:order="44" spirit:minimum="6" spirit:maximum="2042" spirit:rangeType="long">128</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
@@ -9860,7 +9860,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Empty_Threshold_Negate_Value</spirit:name>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.Empty_Threshold_Negate_Value" spirit:order="45" spirit:minimum="129" spirit:maximum="2044" spirit:rangeType="long">129</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.Empty_Threshold_Negate_Value" spirit:order="45" spirit:minimum="129" spirit:maximum="2045" spirit:rangeType="long">129</spirit:value>
       <spirit:vendorExtensions>
         <xilinx:parameterInfo>
           <xilinx:enablement>
@@ -11275,6 +11275,7 @@
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.Full_Threshold_Negate_Value" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.Input_Depth" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.Output_Depth" xilinx:valueSource="user"/>
+        <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.Performance_Options" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.Programmable_Empty_Type" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.Programmable_Full_Type" xilinx:valueSource="user"/>
         <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.Read_Data_Count_Width" xilinx:valueSource="user"/>

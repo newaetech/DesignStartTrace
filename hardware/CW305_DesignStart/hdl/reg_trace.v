@@ -33,6 +33,7 @@ module reg_trace #(
 
 // Interface to cw305_usb_reg_fe:
    input  wire                                  usb_clk,
+   input  wire                                  uart_clk,
    //input  wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address,     // Address of register
    input  wire [7:0]                            reg_address,  // Address of register
    input  wire [pBYTECNT_SIZE-1:0]              reg_bytecnt,  // Current byte count
@@ -52,7 +53,6 @@ module reg_trace #(
 
    output reg  [pMATCH_RULES-1:0]               O_pattern_enable,
    output reg  [pMATCH_RULES-1:0]               O_pattern_trig_enable,
-   output reg                                   O_trace_reset_sync,
    output reg  [2:0]                            O_trace_width,
    output reg                                   O_soft_trig_passthru,
    output reg                                   O_soft_trig_enable,
@@ -88,6 +88,14 @@ module reg_trace #(
 
    input  wire [pBUFFER_SIZE-1:0]               I_matched_data,
 
+   output reg                                   O_swo_enable,
+   output reg  [7:0]                            O_swo_bitrate_div,
+   output reg  [1:0]                            O_uart_stop_bits,
+   output reg  [3:0]                            O_uart_data_bits,
+
+   output reg                                   O_reverse_tracedata,
+   output wire                                  O_reset_sync,
+
    output wire                                  selected
 
 );
@@ -95,8 +103,10 @@ module reg_trace #(
 
    wire [63:0] name = {8'h65, 8'h63, 8'h61, 8'h72, 8'h54, 8'h6d, 8'h72, 8'h41}; // ASCII for 'ArmTrace'
    reg  [7:0] reg_read_data;
-   wire [7:0] rev = 8'h00;
+   wire [7:0] rev = 8'h01;
    wire [63:0] trace_count;
+   reg  reset_sync;
+   reg  reset_sync_r;
 
    assign selected = reg_addrvalid & reg_address[7:6] == `TRACE_REG_SELECT;
    wire [5:0] address = reg_address[5:0];
@@ -115,7 +125,6 @@ module reg_trace #(
 
             `REG_PATTERN_ENABLE:        reg_read_data = O_pattern_enable;
             `REG_PATTERN_TRIG_ENABLE:   reg_read_data = O_pattern_trig_enable;
-            `REG_TRACE_RESET_SYNC:      reg_read_data = O_trace_reset_sync;
             `REG_TRACE_WIDTH:           reg_read_data = O_trace_width;
             `REG_SOFT_TRIG_PASSTHRU:    reg_read_data = O_soft_trig_passthru;
             `REG_SOFT_TRIG_ENABLE:      reg_read_data = O_soft_trig_enable;
@@ -145,6 +154,13 @@ module reg_trace #(
 
             `REG_RECORD_SYNCS:          reg_read_data = O_record_syncs;
             `REG_MATCHED_DATA:          reg_read_data = I_matched_data[reg_bytecnt*8 +: 8];
+
+            `REG_SWO_ENABLE:            reg_read_data = O_swo_enable;
+            `REG_SWO_BITRATE_DIV:       reg_read_data = O_swo_bitrate_div;
+            `REG_UART_STOP_BITS:        reg_read_data = O_uart_stop_bits;
+            `REG_UART_DATA_BITS:        reg_read_data = O_uart_data_bits;
+
+            `REG_REVERSE_TRACEDATA:     reg_read_data = O_reverse_tracedata;
 
             default:                    reg_read_data = 0;
 
@@ -178,11 +194,10 @@ module reg_trace #(
          O_clksettings <= 0;
          O_pattern_enable <= 0;
          O_pattern_trig_enable <= 0;
-         O_trace_reset_sync <= 0;
          O_trace_width <= 4;    // default to 4-lane operation, matching default FW setting
          O_soft_trig_passthru <= 1;
-         O_soft_trig_enable <= 0;
-         O_capture_raw <= 0;
+         O_soft_trig_enable <= 1;
+         O_capture_raw <= 1;
          O_trace_pattern0 <= 0;
          O_trace_pattern1 <= 0;
          O_trace_pattern2 <= 0;
@@ -199,6 +214,14 @@ module reg_trace #(
          O_trace_mask5 <= {pBUFFER_SIZE{1'b1}};
          O_trace_mask6 <= {pBUFFER_SIZE{1'b1}};
          O_trace_mask7 <= {pBUFFER_SIZE{1'b1}};
+         O_swo_bitrate_div <= 7;
+         O_swo_enable <= 0;
+         O_uart_stop_bits <= 1;
+         O_uart_data_bits <= 8;
+         O_record_syncs <= 0;
+         O_reverse_tracedata <= 1; // TODO: change default to 0 later
+         reset_sync <= 0;
+         reset_sync_r <= 0;
       end
 
       else begin
@@ -208,7 +231,6 @@ module reg_trace #(
 
                `REG_PATTERN_ENABLE:     O_pattern_enable <= write_data[pMATCH_RULES-1:0];
                `REG_PATTERN_TRIG_ENABLE:O_pattern_trig_enable <= write_data[pMATCH_RULES-1:0];
-               `REG_TRACE_RESET_SYNC:   O_trace_reset_sync <= write_data[0];
                `REG_TRACE_WIDTH:        O_trace_width <= write_data[2:0];
                `REG_SOFT_TRIG_PASSTHRU: O_soft_trig_passthru <= write_data[0];
                `REG_SOFT_TRIG_ENABLE:   O_soft_trig_enable <= write_data[0];
@@ -232,10 +254,26 @@ module reg_trace #(
                `REG_TRACE_MASK5:        O_trace_mask5[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_MASK6:        O_trace_mask6[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_MASK7:        O_trace_mask7[reg_bytecnt*8 +: 8] <= write_data;
+               `REG_SWO_ENABLE:         O_swo_enable <= write_data;
+               `REG_SWO_BITRATE_DIV:    O_swo_bitrate_div <= write_data;
+               `REG_UART_STOP_BITS:     O_uart_stop_bits <= write_data;
+               `REG_UART_DATA_BITS:     O_uart_data_bits <= write_data;
+               `REG_REVERSE_TRACEDATA:  O_reverse_tracedata <= write_data;
+
             endcase
          end
+
+         // RESYNC register is special:
+         if (selected && reg_write && (address == `REG_TRACE_RESET_SYNC))
+            reset_sync <= 1'b1;
+         else 
+            reset_sync <= 1'b0;
+         reset_sync_r <= reset_sync;
+
       end
    end
+
+   assign O_reset_sync = reset_sync & ~reset_sync_r;
 
                /* TODO: CDC on inputs?
                `REG_MATCHING_PATTERN:   I_matching_pattern <= write_data[pMATCH_RULES-1:0];

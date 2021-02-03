@@ -33,7 +33,7 @@ module CW305_designstart_top #(
   parameter pMATCH_RULES = 8
 )(
   // clocks and resets:
-  input  wire resetn,
+  input  wire resetn_pin,
   input  wire tio_clkin,
   input  wire pll_clk1,
   output wire ext_clock,
@@ -41,6 +41,7 @@ module CW305_designstart_top #(
   // for simulation only:
   `ifdef __ICARUS__
   input wire  I_trigger_clk,
+  output wire trace_generator_done,
   `endif
 
   // debug:
@@ -99,7 +100,8 @@ module CW305_designstart_top #(
   wire trace_trig_out;
   wire soft_trig_passthru;
 
-  wire reset = !resetn;
+  wire reset_pin = !resetn_pin;
+  wire fpga_reset;
 
   wire arm;
   wire capturing;
@@ -109,10 +111,8 @@ module CW305_designstart_top #(
 
   reg [22:0] count;
 
-  always @(posedge ext_clock or negedge resetn) begin
-     if (!resetn)
-        count <= 23'b0;
-     else if (trig_out == 1'b0) // disable counter during capture to minimize noise
+  always @(posedge ext_clock) begin
+     if (trig_out == 1'b0) // disable counter during capture to minimize noise
         count <= count + 1;
   end
 
@@ -139,7 +139,7 @@ module CW305_designstart_top #(
         .nTDOEN                 (nTDOEN),
         .SWV                    (swv),
         .nTRST                  (nTRST),
-        .reset                  (resetn),
+        .reset                  (~fpga_reset),
         .sys_clock              (sys_clock),
         .ext_clock              (ext_clock),
         .gpio_rtl_0_tri_o       (m3_trig_out),
@@ -192,11 +192,16 @@ module CW305_designstart_top #(
   `else 
      // in simulation we simply emulate the trace pins instead:
      assign ext_clock = sys_clock;
-     tb_trace_generator U_tb_trace_generator
-          (.clk                    (sys_clock),
-           .reset                  (reset),
+     tb_trace_generator #(
+           .pSWO_MODE              (0)
+     ) U_tb_trace_generator
+          (.trace_clk              (sys_clock),
+           .swo_clk                (1'b0),
+           .reset                  (fpga_reset),
            .TRACEDATA              (TRACEDATA),
-           .trig_out               (m3_trig_out)
+           .trig_out               (m3_trig_out),
+           .done                   (trace_generator_done),
+           .swo                    ()
           );
   `endif
 
@@ -274,7 +279,8 @@ module CW305_designstart_top #(
       .trace_clk_in     (ext_clock),
       .trace_clk_out    (),
       .usb_clk          (clk_usb_buf),
-      .reset            (reset    ),
+      .reset_pin        (reset_pin),
+      .fpga_reset       (fpga_reset),
                                   
       .trace_data       (TRACEDATA),
       .O_trace_trig_out (trace_trig_out),
@@ -285,18 +291,25 @@ module CW305_designstart_top #(
       .I_trigger_clk    (I_trigger_clk),
       .I_trace_clk      (1'b0),
       `endif
-                                  
+
       .USB_Data         (USB_Data ),
       .USB_Addr         (USB_Addr ),
       .USB_nRD          (USB_nRD  ),
       .USB_nWE          (USB_nWE  ),
       .USB_nCS          (USB_nCS  ),
-      .USB_SPARE1       (1'b0     ),
+      .O_data_available ( ), // unused
+      .I_fast_fifo_rdn  (1'b1), // unused
 
       .O_board_rev      (),     // used for PhyWhisperer platform only
 
       .arm              (arm),
       .capturing        (capturing),
+
+      // unused for CW305:
+      .swo              (1'b0),
+      .userio_d         (4'b0),
+      .O_userio_pwdriven (),
+      .O_userio_drive_data (),
 
       .trace_clk_locked (),
       .synchronized     ()

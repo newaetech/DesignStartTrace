@@ -37,10 +37,10 @@ module cw305_usb_reg_fe #(
    input  wire [pADDR_WIDTH-1:0] usb_addr,
    input  wire         usb_rdn,
    input  wire         usb_wrn,
-   input  wire         usb_alen,        // unused here
    input  wire         usb_cen,
 
  /* Interface to registers */
+   input  wire         I_drive_data,
    output wire [pADDR_WIDTH-1:pBYTECNT_SIZE]   reg_address,  // Address of register
    output wire [pBYTECNT_SIZE-1:0]  reg_bytecnt,  // Current byte count
    output wire [7:0]   reg_datao,    // Data to write
@@ -94,7 +94,7 @@ module cw305_usb_reg_fe #(
            isoutreg[pREG_RDDLY_LEN-1:1] <= isoutreg[pREG_RDDLY_LEN-2:0];
        end
    end
-   assign usb_isout = (|isoutreg) | (~usb_rdn_r);
+   assign usb_isout = (|isoutreg) | (~usb_rdn_r) | I_drive_data;
 
 
    assign reg_datao = usb_din;

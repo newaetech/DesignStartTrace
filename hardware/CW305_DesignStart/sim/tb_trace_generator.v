@@ -27,35 +27,123 @@ either expressed or implied, of NewAE Technology Inc.
 `default_nettype none
 
 module tb_trace_generator (
-  input  wire clk,
+  input  wire trace_clk,
+  input  wire swo_clk,
   input  wire reset,
   output reg  [3:0] TRACEDATA,
-  output reg  trig_out
+  output wire swo,
+  output reg  trig_out,
+  output reg  done
 );
 
-reg [15:0] i;
+parameter pSWO_MODE = 0;
+parameter pSWO_DIV = 16'd15;
+
+reg [31:0] i;
 reg [3:0] tracedata [0:32767];
 reg [63:0] trigtime [0:1];
+reg [3:0] TRACEDATA_r;
+reg swo_txin_trace;
+reg swo_txin_trace_r;
+reg  swo_txin;
+wire [7:0] swo_tx_datain;
 
 initial begin
    $readmemh("tracedata.mem", tracedata);
    $readmemh("swtrigtime.mem", trigtime);
 end
 
-always @(posedge clk) begin
-   if (reset) begin
-      i <= 0;
-      TRACEDATA <= 0;
-   end
-   else begin
-      i <= i + 1;
-      TRACEDATA <= tracedata[i];
-      if (i == trigtime[0])
-         trig_out <= 1'b1;
+int command;
+int num_nibbles;
+int j;
+int tot_nibbles;
+
+initial begin
+   done = 0;
+   i = 0;
+   TRACEDATA = 0;
+   swo_txin_trace = 0;
+   trig_out = 0;
+   tot_nibbles = 0;
+   @ (negedge reset);
+   @ (posedge trace_clk);
+   command = 0;
+   while (command != 2) begin
+      command = tracedata[i];
+      i = i + 1;
+      num_nibbles = tracedata[i];
+      i = i + 1;
+      num_nibbles += (tracedata[i] << 4);
+      i = i + 1;
+      //$display("Got command: %d, nibbles: %d, i: %d", command, num_nibbles, i);
+      if (command == 0) begin
+         for (j = 0; j < num_nibbles; j = j + 1)  begin
+            @ (posedge trace_clk);
+            TRACEDATA_r = TRACEDATA;
+            TRACEDATA = tracedata[i+j];
+            if (j[0])
+               swo_txin_trace = 1'b1;
+            else
+               swo_txin_trace = 1'b0;
+         end
+         i = i + num_nibbles;
+         tot_nibbles = tot_nibbles + num_nibbles;
+      end
+      else if (command == 1) begin
+         repeat (num_nibbles) @ (posedge trace_clk);
+         swo_txin_trace = 1'b0;
+         tot_nibbles = tot_nibbles + num_nibbles;
+      end
+      else if (command == 2) begin
+         $display("Info: done processing tracedata.mem.");
+         done = 1;
+      end
+      else begin
+         $display("ERROR: unexpected command %d (i=%d)", command, i);
+         @ (posedge trace_clk);
+      end
+
+      if (tot_nibbles == trigtime[0])
+         #1 trig_out = 1;
       else
-         trig_out <= 1'b0;
+         trig_out = 0;
    end
 end
+
+
+always @(posedge swo_clk) begin
+   swo_txin_trace_r <= swo_txin_trace;
+   if (swo_txin_trace & ~swo_txin_trace_r)
+      swo_txin <= 1'b1;
+   else
+      swo_txin <= 1'b0;
+
+end
+
+
+assign swo_tx_datain = {TRACEDATA, TRACEDATA_r};
+
+uart_core U_uart_tx (
+   .clk                      (swo_clk),
+   .reset_n                  (~reset),
+   // Configuration inputs
+   .bit_rate                 (pSWO_DIV),
+   .data_bits                (4'd8),
+   .stop_bits                (2'd1),
+   // External data interface
+   .rxd                      (1'b1),
+   .txd                      (swo),
+   // UART Rx
+   .rxd_syn                  (),
+   .rxd_data                 (),
+   .rxd_ack                  (1'b0),
+   .rxd_state                (),
+   // UART Tx (unused)
+   .txd_syn                  (swo_txin),
+   .txd_data                 (swo_tx_datain),
+   .txd_ack                  ()
+);
+
 
 endmodule
 `default_nettype wire

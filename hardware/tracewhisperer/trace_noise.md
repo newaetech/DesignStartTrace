@@ -18,10 +18,11 @@ the exact same measurement is repeated, the trace packets are emitted with
 some variable timing offset (a few clock cycles) relative to a stable
 reference. This probably isn't good for side-channel attacks...
 
-To measure the effect of trace activity on side-channel attacks, we carried
-out the same CPA attack on an unprotected AES implementation for 5
-different levels of trace activity.  The table below shows the average
-remaining PGE (per key byte) for the given number of power traces.
+To measure the effect of parallel trace port activity on side-channel
+attacks, we carried out the same CPA attack on an unprotected AES
+implementation for 5 different levels of trace activity.  The table below
+shows the average remaining PGE (per key byte) for the given number of power
+traces.
 
 
 | Trace Activity             | 20 traces | 50 traces | 100 traces | 200 traces | 1k traces | 5k traces | 8k traces |
@@ -49,6 +50,32 @@ So even with **moderately** busy trace traffic which is not even close to
 saturating the trace bus, up to **2 orders of magnitude more traces** are
 required for a successful CPA attack.
 
+## SWO Trace Noise
+When trace data is emitted via SWO instead, the effect is much less
+pronounced:
+
+| Trace Activity             | 20 traces | 50 traces | 100 traces | 200 traces | 500 traces |
+|----------------------------|-----------|-----------|------------|------------|------------|
+| none                       | 0.8       | 0         | -          | -          | -          |
+| isync frames               | 16        | 0.06      | 0          | -          | -          |
+| PC samples every 64 cycles | 114       | 40        | 29         | 2          | 0          |
+
+Note that due to the lower bandwidth of the SWO link, the periodic PC
+sampling fully saturates the link, so this represents the worst case
+scenario as far as SWO trace noise is concerned.
+
+We hypothesize that trace noise has much less impact in SWO mode for the
+following reasons:
+
+- fewer pins are toggling (1 versus 5);
+- the parallel trace pins may have larger, more power-hungry drivers, in
+  order to sustain higher data rates;
+- there is less jitter on SWO (we observe small amounts of jitter due to
+  asynchronous sampling, but it's possible that there is no jitter at all);
+  the large jitter from the parallel trace port may be obscuring the leakage
+  which makes the CPA attack possible.
+
+
 ## Avoiding Trace Noise
 That is the bad news... the good news is that when trace sniffing is done on
 the CW305 platform (where the soft-core Cortex M3 co-located on the same
@@ -63,11 +90,11 @@ Again, we quantify the effect of trace noise by running a CPA attack on an
 unprotected AES implementation; in this case, we see no significant
 different in the number of traces required for a successful attack.
 
-Finally, note that if the CW308 + PhyWhisperer platform must be used, and
-the tracing noise is problematic, the noise can easily be "removed" by
-running the target operation twice: first with debug tracing enabled, then
-with debug tracing disabled to capture the power trace. (This assumes that
-the *exact* same operation can be repeated twice and that the target behaves
+Finally, note that if the PhyWhisperer platform must be used, and the
+tracing noise is problematic, the noise can easily be "removed" by running
+the target operation twice: first with debug tracing enabled, then with
+debug tracing disabled to capture the power trace. (This assumes that the
+*exact* same operation can be repeated twice and that the target behaves
 identically on repeated runs.)
 
 

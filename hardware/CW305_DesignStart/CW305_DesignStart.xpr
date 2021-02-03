@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="40" Path="C:/Users/jp/GitHub/DesignStartTrace/hardware/CW305_DesignStart/CW305_DesignStart.xpr">
+<Project Version="7" Minor="40" Path="W:/hardware/CW305_DesignStart/CW305_DesignStart.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="0fac3cabe8ef4d9e8dd96a55313436c0"/>
@@ -41,13 +41,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="90"/>
-    <Option Name="WTModelSimExportSim" Val="90"/>
-    <Option Name="WTQuestaExportSim" Val="90"/>
-    <Option Name="WTIesExportSim" Val="90"/>
-    <Option Name="WTVcsExportSim" Val="90"/>
-    <Option Name="WTRivieraExportSim" Val="90"/>
-    <Option Name="WTActivehdlExportSim" Val="90"/>
+    <Option Name="WTXSimExportSim" Val="91"/>
+    <Option Name="WTModelSimExportSim" Val="91"/>
+    <Option Name="WTQuestaExportSim" Val="91"/>
+    <Option Name="WTIesExportSim" Val="91"/>
+    <Option Name="WTVcsExportSim" Val="91"/>
+    <Option Name="WTRivieraExportSim" Val="91"/>
+    <Option Name="WTActivehdlExportSim" Val="91"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -172,12 +172,25 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/../uart/uart_core.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/hdl/cdc_bus.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
         <Option Name="TopModule" Val="CW305_designstart_top"/>
         <Option Name="VerilogDir" Val="$PPRDIR/../phywhisperer/software/phywhisperer/firmware"/>
         <Define Name="CW305"/>
-        <Define Name="ILA_REG"/>
       </Config>
     </FileSet>
     <FileSet Name="constrs_1" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
@@ -186,7 +199,6 @@
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/CW305_designstart.xdc"/>
           <Attr Name="ImportTime" Val="1590546366"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
         </FileInfo>
       </File>
@@ -432,10 +444,10 @@
         <Step Id="synth_design">
           <Option Id="ResourceSharing">2</Option>
           <Option Id="RepFanoutThreshold">400</Option>
-          <Option Id="NoCombineLuts">1</Option>
-          <Option Id="ShregMinSize">5</Option>
           <Option Id="KeepEquivalentRegisters">1</Option>
+          <Option Id="NoCombineLuts">1</Option>
           <Option Id="FsmExtraction">1</Option>
+          <Option Id="ShregMinSize">5</Option>
         </Step>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>

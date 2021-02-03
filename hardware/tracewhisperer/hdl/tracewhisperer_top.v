@@ -30,11 +30,10 @@ module tracewhisperer_top #(
   parameter pBYTECNT_SIZE = 7,
   parameter pADDR_WIDTH = 8,
   parameter pBUFFER_SIZE = 64,
-  parameter pMATCH_RULES = 8
+  parameter pMATCH_RULES = 8,
+  parameter pUSERIO_WIDTH = 4
 )(
   // clocks and resets:
-  input  wire reset,
-
   // for simulation only:
   `ifdef __ICARUS__
   input wire  I_trigger_clk,
@@ -46,22 +45,25 @@ module tracewhisperer_top #(
   output wire mcx_trig,
 
   // host USB:
-  input wire          USB_clk,
-  inout wire [7:0]    USB_Data,
-  input wire [pADDR_WIDTH-1:0] USB_Addr,
-  input wire          USB_nRD,
-  input wire          USB_nWE,
-  input wire          USB_nCS,
-  input wire          USB_SPARE1,
+  input  wire          USB_clk,
+  inout  wire [7:0]    USB_Data,
+  input  wire [pADDR_WIDTH-1:0] USB_Addr,
+  input  wire          USB_nRD,
+  input  wire          USB_nWE,
+  input  wire          USB_nCS,
+  output wire          USB_SPARE0,
+  input  wire          USB_SPARE1,
 
   // trace:
-  input wire          TRCENA,
-  input wire          TRACECLOCK,
-  input wire [3:0]    TRACEDATA,
-  input wire          TRACEDATA_alt,
+  input  wire          TRCENA,
+  input  wire          TRACECLOCK,
+  input  wire [3:0]    TRACEDATA,
 
   // target trigger:
-  input wire          target_trig_in,
+  input  wire          target_trig_in,
+
+  // 20-pin user header connector
+  inout  wire [pUSERIO_WIDTH-1:0] userio_d,
 
   // debug:
   output wire         trace_clk_locked,
@@ -70,27 +72,24 @@ module tracewhisperer_top #(
   // leds:
   output wire led1,
   output wire led2,
-  output wire led3,
-
-  output wire reset_dbg // TODO-debug only
+  output wire led3
 );
 
   wire arm;
   wire capturing;
   wire trace_clk;
   wire [3:0] board_rev;
+  wire reverse_tracedata;
   reg  [3:0] trace_data;
 
+  wire [pUSERIO_WIDTH-1:0] userio_pwdriven;
+  wire [pUSERIO_WIDTH-1:0] userio_drive_data;
+  reg swo;
+
   reg [22:0] count;
+  reg target_trig_in_r;
 
-  assign reset_dbg = reset;
-
-  always @(posedge trace_clk) begin
-     if (reset)
-        count <= 23'b0;
-     else if (trig_out == 1'b0) // disable counter during capture to minimize noise
-        count <= count + 1;
-  end
+  always @(posedge trace_clk) count <= count + 1;
 
   assign led1 = count[22];              // clock alive; actually routes to PD pin of 20-pin CW connector
   assign led3 = arm;                    // "Armed" LED
@@ -98,11 +97,23 @@ module tracewhisperer_top #(
 
   assign mcx_trig = trig_out;
 
+  // front panel header has different pin mapping in pre-production boards
   always @(*) begin
      case (board_rev)
-        3: trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], TRACEDATA_alt};
-        4: trace_data = TRACEDATA;
-        default: trace_data = TRACEDATA;
+        3: begin
+              if (reverse_tracedata)
+                 trace_data = {userio_d[3], TRACEDATA[2], TRACEDATA[1], TRACEDATA[3]};
+              else
+                 trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
+              swo = userio_d[1];
+           end
+        default: begin // catches production board rev (4)
+              if (reverse_tracedata)
+                 trace_data = {TRACEDATA[0], TRACEDATA[1], TRACEDATA[2], TRACEDATA[3]};
+              else
+                 trace_data = TRACEDATA;
+              swo = userio_d[2];
+           end
      endcase
   end
 
@@ -118,20 +129,28 @@ module tracewhisperer_top #(
    `endif
 
 
+   always @(posedge trace_clk) begin
+      target_trig_in_r <= target_trig_in;
+   end
+
+
    trace_top #(
       .pBYTECNT_SIZE    (pBYTECNT_SIZE),
       .pADDR_WIDTH      (pADDR_WIDTH),
       .pBUFFER_SIZE     (pBUFFER_SIZE),
-      .pMATCH_RULES     (pMATCH_RULES)
+      .pMATCH_RULES     (pMATCH_RULES),
+      .pUSERIO_WIDTH    (pUSERIO_WIDTH)
    ) U_trace_top (
       .trace_clk_in     (TRACECLOCK),
       .trace_clk_out    (trace_clk),
       .usb_clk          (clk_usb_buf),
-      .reset            (reset    ),
+      .reset_pin        (1'b0),
+      .fpga_reset       (), // unused
                                   
       .trace_data       (trace_data),
+      .swo              (swo),
       .O_trace_trig_out (trig_out),
-      .m3_trig          (target_trig_in),
+      .m3_trig          (target_trig_in_r),
 
       `ifdef __ICARUS__
       .I_trigger_clk    (I_trigger_clk),
@@ -143,9 +162,15 @@ module tracewhisperer_top #(
       .USB_nRD          (USB_nRD  ),
       .USB_nWE          (USB_nWE  ),
       .USB_nCS          (USB_nCS  ),
-      .USB_SPARE1       (USB_SPARE1 ),
+      .O_data_available (USB_SPARE0 ),
+      .I_fast_fifo_rdn  (USB_SPARE1 ),
 
       .O_board_rev      (board_rev),
+      .O_reverse_tracedata (reverse_tracedata),
+
+      .userio_d         (userio_d),
+      .O_userio_pwdriven (userio_pwdriven),
+      .O_userio_drive_data (userio_drive_data),
 
       .arm              (arm),
       .capturing        (capturing),
@@ -153,6 +178,17 @@ module tracewhisperer_top #(
       .trace_clk_locked (trace_clk_locked),
       .synchronized     (synchronized)
    );
+
+   userio #(
+      .pWIDTH                   (pUSERIO_WIDTH)
+   ) U_userio (
+      .usb_clk                  (1'b0),
+      .userio_d                 (userio_d),
+      .userio_clk               (1'b0),
+      .I_userio_pwdriven        (userio_pwdriven),
+      .I_userio_drive_data      (userio_drive_data)
+   );
+
 
 
 endmodule
