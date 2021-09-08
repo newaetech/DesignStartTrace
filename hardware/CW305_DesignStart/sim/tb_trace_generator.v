@@ -27,17 +27,20 @@ either expressed or implied, of NewAE Technology Inc.
 `default_nettype none
 
 module tb_trace_generator (
-  input  wire trace_clk,
+  input  wire target_clk,
   input  wire swo_clk,
   input  wire reset,
   output reg  [3:0] TRACEDATA,
+  output reg [7:0] trace_data_sdr,
   output wire swo,
   output reg  trig_out,
-  output reg  done
+  output reg  done,
+  output int  errors
 );
 
 parameter pSWO_MODE = 0;
 parameter pSWO_DIV = 16'd15;
+
 
 reg [31:0] i;
 reg [3:0] tracedata [0:32767];
@@ -65,8 +68,9 @@ initial begin
    swo_txin_trace = 0;
    trig_out = 0;
    tot_nibbles = 0;
+   errors = 0;
    @ (negedge reset);
-   @ (posedge trace_clk);
+   @ (posedge target_clk);
    command = 0;
    while (command != 2) begin
       command = tracedata[i];
@@ -77,10 +81,18 @@ initial begin
       i = i + 1;
       //$display("Got command: %d, nibbles: %d, i: %d", command, num_nibbles, i);
       if (command == 0) begin
-         for (j = 0; j < num_nibbles; j = j + 1)  begin
-            @ (posedge trace_clk);
+         if (num_nibbles %2) begin
+             errors += 1;
+             $display("TRACE GENERATOR ERROR: odd number of nibbles, this shouldn't happen");
+         end
+         for (j = 0; j < num_nibbles; j = j + 2)  begin
+            @ (posedge target_clk);
             TRACEDATA_r = TRACEDATA;
             TRACEDATA = tracedata[i+j];
+            trace_data_sdr = {tracedata[i+j+1], tracedata[i+j]};
+            @ (posedge target_clk);
+            TRACEDATA_r = TRACEDATA;
+            TRACEDATA = tracedata[i+j+1];
             if (j[0])
                swo_txin_trace = 1'b1;
             else
@@ -90,7 +102,7 @@ initial begin
          tot_nibbles = tot_nibbles + num_nibbles;
       end
       else if (command == 1) begin
-         repeat (num_nibbles) @ (posedge trace_clk);
+         repeat (num_nibbles) @ (posedge target_clk);
          swo_txin_trace = 1'b0;
          tot_nibbles = tot_nibbles + num_nibbles;
       end
@@ -100,7 +112,7 @@ initial begin
       end
       else begin
          $display("ERROR: unexpected command %d (i=%d)", command, i);
-         @ (posedge trace_clk);
+         @ (posedge target_clk);
       end
 
       if (tot_nibbles == trigtime[0])

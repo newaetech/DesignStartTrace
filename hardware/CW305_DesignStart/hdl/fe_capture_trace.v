@@ -34,7 +34,7 @@ module fe_capture_trace #(
 
     /* FRONT END CONNECTIONS */
     input  wire trace_clk,
-    input  wire [3:0] trace_data,
+    input  wire [7:0] trace_data,
 
     /* SWO */
     input  wire I_swo_data_ready,
@@ -210,12 +210,16 @@ module fe_capture_trace #(
          end
       end
       else begin // parallel trace port
+         //buffer <= {buffer[pBUFFER_SIZE-9:0], trace_data[0], trace_data[1], trace_data[2], trace_data[3], trace_data[4], trace_data[5], trace_data[6], trace_data[7] };
          if (I_trace_width == 3'd4)
             buffer <= {buffer[pBUFFER_SIZE-5:0], trace_data[0], trace_data[1], trace_data[2], trace_data[3]};
+            //buffer <= {buffer[pBUFFER_SIZE-9:0], trace_data[0], trace_data[1], trace_data[2], trace_data[3], trace_data[4], trace_data[5], trace_data[6], trace_data[7] };
          else if (I_trace_width == 3'd2)
             buffer <= {buffer[pBUFFER_SIZE-3:0], trace_data[0], trace_data[1]};
+            //buffer <= {buffer[pBUFFER_SIZE-5:0], trace_data[0], trace_data[1], trace_data[4], trace_data[5]};
          else
             buffer <= {buffer[pBUFFER_SIZE-2:0], trace_data[0]};
+            //buffer <= {buffer[pBUFFER_SIZE-3:0], trace_data[0], trace_data[4]};
       end
    end
 
@@ -263,9 +267,15 @@ module fe_capture_trace #(
    // I_trace_width = 4, every 4 cycles when I_trace_width is 2, and every 8
    // cycles when I_trace_width is 1.
    assign valid_buffer = synchronized && ( I_swo_enable?  swo_data_ready_traceclk_r :
+                                       //
                                            (I_trace_width == 1)? (valid_count % 8 == 0) :
                                            (I_trace_width == 2)? (valid_count % 4 == 0) :
                                            (I_trace_width == 4)? (valid_count % 2 == 0) : 1'b0);
+                                       /*
+                                           (I_trace_width == 1)? (valid_count % 4 == 0) :
+                                           (I_trace_width == 2)? (valid_count % 2 == 0) :
+                                           (I_trace_width == 4)? 1'b1 : 1'b0);
+                                       */
 
    /* NOTE-TODO: These below are to accomodate any mix of short and long sync frames, which leads to
    a VERY large number of combinations; these lists are likely not exhaustive. Decided instead 
@@ -460,7 +470,7 @@ module fe_capture_trace #(
           .clk          (trace_clk),            // input wire clk
           .probe0       (recording),            // input wire [0:0]  probe0  
           .probe1       (O_event),              // input wire [0:0]  probe1 
-          .probe2       (trace_data),           // input wire [3:0]  probe2 
+          .probe2       (trace_data),           // input wire [7:0]  probe2 
           .probe3       (I_trace_width),        // input wire [2:0]  probe3 
           .probe4       (synchronized),         // input wire [0:0]  probe4 
           .probe5       (valid_buffer),         // input wire [0:0]  probe5 

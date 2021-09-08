@@ -71,6 +71,8 @@ module tb();
     reg trigger_clk;
     wire tio_clkin;
     wire trig_out;
+    wire target_clk;
+    wire trace_clk;
 
     wire led1;
     wire led2;
@@ -84,6 +86,7 @@ module tb();
 
     int seed;
     int errors;
+    int trace_generator_errors;
     int warnings;
     int i;
     int match_index;
@@ -92,7 +95,7 @@ module tb();
     
     reg [31:0] write_data;
 
-    wire trace_clk = pll_clk1;  // shorthand for testbench
+    assign target_clk = pll_clk1;  // shorthand for testbench
 
    reg [63:0] matchdata[0:2047];
    int cycle;
@@ -447,6 +450,7 @@ module tb();
       $display("All expected events processed. Waiting for trace generator to be done...");
       wait (trace_generator_done);
       $display("Trace generator done.");
+      errors += trace_generator_errors;
       if (errors)
          $display("SIMULATION FAILED (%0d errors, %0d warnings).", errors, warnings);
       else
@@ -608,6 +612,7 @@ module tb();
 
    `else
       wire [3:0] TRACEDATA;
+      wire [7:0] trace_data_sdr;
       wire m3_trig_out;
 
       tracewhisperer_top #(
@@ -632,9 +637,9 @@ module tb();
 
           // trace
           .TRCENA             (1'b1),
-          .I_trace_clk        (trace_clk),
+          .target_clk         (target_clk),
           .TRACEDATA          (TRACEDATA),
-          .TRACECLOCK         (1'b0),
+          .TRACECLOCK         (trace_clk),
 
           // userio (SWO)
           .userio_d           (userio_d),
@@ -643,7 +648,8 @@ module tb();
           .trig_out           (trig_out),          // output to CW
           .target_trig_in     (m3_trig_out),       // input from target
 
-          .I_trigger_clk      (trigger_clk)
+          .I_trigger_clk      (trigger_clk),
+          .I_trace_sdr        (trace_data_sdr)
 
       );
 
@@ -651,13 +657,15 @@ module tb();
             .pSWO_MODE              (pSWO_MODE),
             .pSWO_DIV               (pSWO_DIV)
       ) U_tb_trace_generator
-           (.trace_clk              (trace_clk),
+           (.target_clk             (target_clk),
             .swo_clk                (trigger_clk),
             .reset                  (reset),
+            .trace_data_sdr         (trace_data_sdr),
             .TRACEDATA              (TRACEDATA),
             .swo                    (swo),
             .trig_out               (m3_trig_out),
-            .done                   (trace_generator_done)
+            .done                   (trace_generator_done),
+            .errors                 (trace_generator_errors)
            );
 
    `endif

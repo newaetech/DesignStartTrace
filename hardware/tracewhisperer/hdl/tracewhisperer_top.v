@@ -37,7 +37,8 @@ module tracewhisperer_top #(
   // for simulation only:
   `ifdef __ICARUS__
   input wire  I_trigger_clk,
-  input wire  I_trace_clk,
+  input wire  target_clk,
+  input wire  [7:0] I_trace_sdr,
   `endif
 
   // CW trigger:
@@ -80,11 +81,11 @@ module tracewhisperer_top #(
   wire trace_clk;
   wire [3:0] board_rev;
   wire reverse_tracedata;
-  reg  [3:0] trace_data;
+  wire [3:0] trace_data;
 
   wire [pUSERIO_WIDTH-1:0] userio_pwdriven;
   wire [pUSERIO_WIDTH-1:0] userio_drive_data;
-  reg swo;
+  wire swo;
 
   reg [22:0] count;
   reg target_trig_in_r;
@@ -98,6 +99,7 @@ module tracewhisperer_top #(
   assign mcx_trig = trig_out;
 
   // front panel header has different pin mapping in pre-production boards
+  /*
   always @(*) begin
      case (board_rev)
         3: begin
@@ -116,6 +118,11 @@ module tracewhisperer_top #(
            end
      endcase
   end
+  */
+ // TODO-temp!fix!
+  assign trace_data = TRACEDATA;
+  //assign trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
+  assign swo = userio_d[2];
 
 
   wire clk_usb_buf;
@@ -152,9 +159,11 @@ module tracewhisperer_top #(
       .O_trace_trig_out (trig_out),
       .m3_trig          (target_trig_in_r),
 
+      .target_clk       (target_clk),
+
       `ifdef __ICARUS__
       .I_trigger_clk    (I_trigger_clk),
-      .I_trace_clk      (I_trace_clk),
+      .I_trace_sdr      (I_trace_sdr),
       `endif
                                   
       .USB_Data         (USB_Data ),

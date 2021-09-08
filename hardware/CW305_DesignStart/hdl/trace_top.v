@@ -47,9 +47,12 @@ module trace_top #(
   input  wire reset_pin,
   output wire fpga_reset,
 
+  input wire  target_clk,
+
   `ifdef __ICARUS__
-  input wire  I_trigger_clk, // for simulation only
-  input wire  I_trace_clk, // for simulation only
+  // for simulation only:
+  input wire  I_trigger_clk,
+  input wire [7:0] I_trace_sdr,
   `endif
 
   // trace:
@@ -107,6 +110,38 @@ module trace_top #(
    wire         trace_clk_premux;
 
    wire reset;
+
+   wire [7:0] trace_data_sdr;
+
+   //
+   `ifdef __ICARUS__
+       // TODO!
+      //assign trace_data_sdr = I_trace_sdr;
+      assign trace_data_sdr = {4'b0, trace_data};
+   `else
+   genvar i;
+   generate 
+      for (i = 0; i < 4; i = i + 1) begin: gen_adc_data
+         IDDR #(
+            //DDR_CLK_EDGE     ("OPPOSITE_EDGE"),
+            .DDR_CLK_EDGE     ("SAME_EDGE_PIPELINED"),
+            .INIT_Q1          (0),
+            .INIT_Q2          (0),
+            .SRTYPE           ("SYNC")
+         ) U_trace_data_iddr (
+            .Q1               (trace_data_sdr[i]),
+            .Q2               (trace_data_sdr[i+4]),
+            .D                (trace_data[i]),
+            .CE               (1'b1),
+            .C                (trace_clk_in),
+            .S                (1'b0),
+            .R                (1'b0)
+         );
+      end
+   endgenerate
+   `endif
+   //
+
 
 
    assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
@@ -169,6 +204,7 @@ module trace_top #(
       );
 
       `ifndef __ICARUS__
+         /*
           clk_wiz_1 U_trace_clock (
             .reset        (reset),
             .clk_in1      (trace_clk_in),
@@ -176,15 +212,17 @@ module trace_top #(
             // Status and control signals
             .locked       (trace_clk_locked)
          );
+         */
          BUFGMUX U_trace_clock_mux (
-            .I0            (trace_clk_premux),
+            .I0            (trace_clk_in),
             .I1            (usb_clk),
             .S             (swo_enable),
             .O             (trace_clk)
          );
+         assign trace_clk_locked = 1'b1;
       `else
          assign trace_clk_locked = 1'b1;
-         assign trace_clk_premux = I_trace_clk;
+         assign trace_clk_premux = target_clk;
          assign trace_clk = swo_enable? usb_clk : trace_clk_premux;
       `endif
 
@@ -520,7 +558,7 @@ module trace_top #(
 
    /* FRONT END CONNECTIONS */
       .trace_clk                (trace_clk),
-      .trace_data               (trace_data),
+      .trace_data               (trace_data_sdr),
 
    /* SWO */
       .I_swo_data_ready         (swo_data_ready),
