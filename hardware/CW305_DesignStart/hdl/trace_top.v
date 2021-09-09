@@ -42,7 +42,7 @@ module trace_top #(
   parameter pUSERIO_WIDTH = 4
 )(
   input  wire trace_clk_in,
-  output wire trace_clk_out,
+  output wire fe_clk,
   input  wire usb_clk,
   input  wire reset_pin,
   output wire fpga_reset,
@@ -84,7 +84,6 @@ module trace_top #(
   output wire capturing,
 
   // Debug:
-  output wire trace_clk_locked,
   output wire synchronized
 );
 
@@ -106,18 +105,16 @@ module trace_top #(
    wire         reg_write;
    wire         reg_addrvalid;
 
-   wire         trace_clk;
-   wire         trace_clk_premux;
+   wire         trace_clock_sel;
 
    wire reset;
 
+   wire [7:0] trace_data_iddr;
    wire [7:0] trace_data_sdr;
 
    //
    `ifdef __ICARUS__
-       // TODO!
-      //assign trace_data_sdr = I_trace_sdr;
-      assign trace_data_sdr = {4'b0, trace_data};
+      assign trace_data_iddr = I_trace_sdr;
    `else
    genvar i;
    generate 
@@ -140,13 +137,11 @@ module trace_top #(
       end
    endgenerate
    `endif
-   //
 
-
+   assign trace_data_sdr = trace_clock_sel? trace_data_iddr : {4'b0, trace_data};
 
    assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
    assign cmdfifo_din = USB_Data;
-   assign trace_clk_out = trace_clk;
    assign fpga_reset = reset;
 
    //always @(posedge usb_clk)
@@ -178,7 +173,7 @@ module trace_top #(
          .reg_write        (reg_write), 
          .reg_addrvalid    (reg_addrvalid)
       );
-      assign trace_clk = trace_clk_in;
+      assign fe_clk = trace_clk_in;
 
    `else // PhyWhisperer platform
       wire [pADDR_WIDTH-1:0]  reg_address;
@@ -213,17 +208,23 @@ module trace_top #(
             .locked       (trace_clk_locked)
          );
          */
-         BUFGMUX U_trace_clock_mux (
-            .I0            (trace_clk_in),
+         BUFGMUX U_fe_clock_mux1 (
+            .I0            (target_clk),
+            .I1            (trace_clk_in),
+            .S             (trace_clock_sel),
+            .O             (fe_clk_pre)
+         );
+
+         BUFGMUX U_fe_clock_mux2 (
+            .I0            (fe_clk_pre),
             .I1            (usb_clk),
             .S             (swo_enable),
-            .O             (trace_clk)
+            .O             (fe_clk)
          );
-         assign trace_clk_locked = 1'b1;
       `else
-         assign trace_clk_locked = 1'b1;
-         assign trace_clk_premux = target_clk;
-         assign trace_clk = swo_enable? usb_clk : trace_clk_premux;
+         assign fe_clk = swo_enable?      usb_clk :
+                         trace_clock_sel? trace_clk_in : 
+                                          target_clk;
       `endif
 
    `endif
@@ -350,6 +351,7 @@ module trace_top #(
       .reg_addrvalid            (reg_addrvalid),
 
       .O_clksettings            (clksettings),
+      .O_trace_clock_sel        (trace_clock_sel),
 
       .I_synchronized           (synchronized    ),
 
@@ -436,7 +438,7 @@ module trace_top #(
       .I_usb_cen        (USB_nCS),
       .O_usb_drive_data (usb_drive_data),
 
-      .fe_clk           (trace_clk),
+      .fe_clk           (fe_clk),
       .O_arm            (arm),
       .O_reg_arm        (reg_arm),
       .O_arm_pulse      (arm_pulse),
@@ -451,7 +453,7 @@ module trace_top #(
       .I_capture_enable_pulse (capture_enable_pulse),
       .O_board_rev      (O_board_rev),
 
-      .I_locked1        (trace_clk_locked),
+      .I_locked1        (1'b0),
       .I_locked2        (trigger_clk_locked),
 
       // Trigger:
@@ -476,7 +478,7 @@ module trace_top #(
    fifo U_fifo (
       .reset_i                  (reset),
       .cwusb_clk                (usb_clk),
-      .fe_clk                   (trace_clk),
+      .fe_clk                   (fe_clk),
 
       .O_fifo_full              (fifo_full),
       .O_fifo_overflow_blocked  (fifo_overflow_blocked),
@@ -497,7 +499,7 @@ module trace_top #(
    `endif
 
    // CDC on reg_arm for fifo:
-   always @(posedge trace_clk) begin
+   always @(posedge fe_clk) begin
       if (reset) begin
          reg_arm_feclk <= 0;
          reg_arm_pipe <= 0;
@@ -515,7 +517,8 @@ module trace_top #(
    ) U_fe_capture_main (
       .reset_i                  (reset), 
       .cwusb_clk                (usb_clk),
-      .fe_clk                   (trace_clk), 
+      .fe_clk                   (fe_clk), 
+      .trace_clock_sel          (trace_clock_sel),
 
       .I_timestamps_disable     (timestamps_disable),
       .I_arm                    (arm),
@@ -557,8 +560,9 @@ module trace_top #(
       .swo_clk                  (trigger_clk),
 
    /* FRONT END CONNECTIONS */
-      .trace_clk                (trace_clk),
+      .fe_clk                   (fe_clk),
       .trace_data               (trace_data_sdr),
+      .trace_clock_sel          (trace_clock_sel),
 
    /* SWO */
       .I_swo_data_ready         (swo_data_ready),
@@ -670,7 +674,7 @@ module trace_top #(
    `ifndef __ICARUS__
        clk_wiz_0 U_trigger_clock (
          .reset        (reset),
-         .clk_in1      (trace_clk),
+         .clk_in1      (fe_clk),
          .clk_out1     (trigger_clk),
          // Dynamic phase shift ports
          .psclk        (usb_clk),
@@ -697,7 +701,7 @@ module trace_top #(
    ) U_trigger (
       .reset_i          (reset),
       .trigger_clk      (trigger_clk),
-      .fe_clk           (trace_clk),
+      .fe_clk           (fe_clk),
       .O_trigger        (O_trace_trig_out),
       .I_capture_delay  (18'b0),    // TODO- not needed?
       .I_trigger_delay  (trigger_delay),

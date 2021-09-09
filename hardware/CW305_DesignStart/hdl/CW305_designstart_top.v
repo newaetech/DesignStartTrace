@@ -277,7 +277,7 @@ module CW305_designstart_top #(
       .pMATCH_RULES     (8)
    ) U_trace_top (
       .trace_clk_in     (ext_clock),
-      .trace_clk_out    (),
+      .fe_clk           (),
       .usb_clk          (clk_usb_buf),
       .reset_pin        (reset_pin),
       .fpga_reset       (fpga_reset),
@@ -311,7 +311,6 @@ module CW305_designstart_top #(
       .O_userio_pwdriven (),
       .O_userio_drive_data (),
 
-      .trace_clk_locked (),
       .synchronized     ()
    );
 

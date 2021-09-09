@@ -26,6 +26,7 @@ tests.append(dict(name  = 'fewrules',
              description = 'Few rules, lots of events, capture rules.',
              CAPTURE_RAW = 0,
              RULES = 2,
+             TIMEOUT= 10000, # temp
              EVENTS = 30))
 
 tests.append(dict(name  = 'manyrules',
@@ -39,6 +40,8 @@ tests.append(dict(name  = 'swtrigger_raw',
              frequency = 3,
              description = 'Lots of events, capture raw traces, triggered by sofware.',
              CAPTURE_RAW = 1,
+             #TIMEOUT= 10000, # temp
+             TRACE_CLOCK_SEL = [0, 1],
              PATTERN_TRIG = 0,
              RULES = 1,
              EVENTS = 30))
@@ -194,7 +197,13 @@ for test in tests:
             elif i % test[key]:
                run_test = False
          else:
-            makeargs.append("%s=%s" % (key, test[key]))
+            if type(test[key]) == list:
+               value = random.randint(test[key][0], test[key][1])
+            else:
+               value = test[key]
+            makeargs.append("%s=%s" % (key, value))
+
+
       if (args.seed):
          seed = args.seed
       else:

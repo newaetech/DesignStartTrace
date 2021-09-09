@@ -47,6 +47,7 @@ module reg_trace #(
 
 // Interface to top level:
    output reg  [4:0]                            O_clksettings,
+   output reg                                   O_trace_clock_sel,
 
 // Interface to trace_trigger:
    input  wire                                  I_synchronized,
@@ -161,6 +162,7 @@ module reg_trace #(
             `REG_UART_DATA_BITS:        reg_read_data = O_uart_data_bits;
 
             `REG_REVERSE_TRACEDATA:     reg_read_data = O_reverse_tracedata;
+            `REG_TRACE_CLOCK_SEL:       reg_read_data = O_trace_clock_sel;
 
             default:                    reg_read_data = 0;
 
@@ -220,6 +222,7 @@ module reg_trace #(
          O_uart_data_bits <= 8;
          O_record_syncs <= 0;
          O_reverse_tracedata <= 1; // TODO: change default to 0 later
+         O_trace_clock_sel <= 0;
          reset_sync <= 0;
          reset_sync_r <= 0;
       end
@@ -254,11 +257,12 @@ module reg_trace #(
                `REG_TRACE_MASK5:        O_trace_mask5[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_MASK6:        O_trace_mask6[reg_bytecnt*8 +: 8] <= write_data;
                `REG_TRACE_MASK7:        O_trace_mask7[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_SWO_ENABLE:         O_swo_enable <= write_data;
+               `REG_SWO_ENABLE:         O_swo_enable <= write_data[0];
                `REG_SWO_BITRATE_DIV:    O_swo_bitrate_div <= write_data;
-               `REG_UART_STOP_BITS:     O_uart_stop_bits <= write_data;
-               `REG_UART_DATA_BITS:     O_uart_data_bits <= write_data;
-               `REG_REVERSE_TRACEDATA:  O_reverse_tracedata <= write_data;
+               `REG_UART_STOP_BITS:     O_uart_stop_bits <= write_data[1:0];
+               `REG_UART_DATA_BITS:     O_uart_data_bits <= write_data[3:0];
+               `REG_REVERSE_TRACEDATA:  O_reverse_tracedata <= write_data[0];
+               `REG_TRACE_CLOCK_SEL:    O_trace_clock_sel <= write_data[0];
 
             endcase
          end

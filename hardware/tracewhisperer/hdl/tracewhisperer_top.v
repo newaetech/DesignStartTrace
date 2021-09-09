@@ -67,7 +67,6 @@ module tracewhisperer_top #(
   inout  wire [pUSERIO_WIDTH-1:0] userio_d,
 
   // debug:
-  output wire         trace_clk_locked,
   output wire         synchronized,
 
   // leds:
@@ -78,7 +77,7 @@ module tracewhisperer_top #(
 
   wire arm;
   wire capturing;
-  wire trace_clk;
+  wire fe_clk;
   wire [3:0] board_rev;
   wire reverse_tracedata;
   wire [3:0] trace_data;
@@ -90,7 +89,7 @@ module tracewhisperer_top #(
   reg [22:0] count;
   reg target_trig_in_r;
 
-  always @(posedge trace_clk) count <= count + 1;
+  always @(posedge fe_clk) count <= count + 1;
 
   assign led1 = count[22];              // clock alive; actually routes to PD pin of 20-pin CW connector
   assign led3 = arm;                    // "Armed" LED
@@ -136,7 +135,7 @@ module tracewhisperer_top #(
    `endif
 
 
-   always @(posedge trace_clk) begin
+   always @(posedge fe_clk) begin
       target_trig_in_r <= target_trig_in;
    end
 
@@ -149,7 +148,7 @@ module tracewhisperer_top #(
       .pUSERIO_WIDTH    (pUSERIO_WIDTH)
    ) U_trace_top (
       .trace_clk_in     (TRACECLOCK),
-      .trace_clk_out    (trace_clk),
+      .fe_clk           (fe_clk),
       .usb_clk          (clk_usb_buf),
       .reset_pin        (1'b0),
       .fpga_reset       (), // unused
@@ -184,7 +183,6 @@ module tracewhisperer_top #(
       .arm              (arm),
       .capturing        (capturing),
 
-      .trace_clk_locked (trace_clk_locked),
       .synchronized     (synchronized)
    );
 

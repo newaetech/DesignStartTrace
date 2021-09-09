@@ -33,8 +33,10 @@ module fe_capture_trace #(
     input  wire swo_clk,
 
     /* FRONT END CONNECTIONS */
-    input  wire trace_clk,
+    input  wire fe_clk,
     input  wire [7:0] trace_data,
+    input  wire trace_clock_sel,    // 0: using target clock, 4 bit of trace data per cycle
+                                    // 1: using trace clock, 8 bits of trace data per cycle
 
     /* SWO */
     input  wire I_swo_data_ready,
@@ -109,7 +111,7 @@ module fe_capture_trace #(
    reg  [2:0] valid_count;
    reg  word_count;
    reg  [2:0] trace_width_r;
-   wire valid_buffer;   
+   reg valid_buffer;   
    wire revbuffer_all_syncframes;
    wire revbuffer_stop_syncframes;
    reg recording;
@@ -165,7 +167,7 @@ module fe_capture_trace #(
       .reset_i       (reset),
       .src_clk       (usb_clk),
       .src_pulse     (I_reset_sync_arm || I_reset_sync_reg),
-      .dst_clk       (trace_clk),
+      .dst_clk       (fe_clk),
       .dst_pulse     (reset_sync)
    );
 
@@ -174,7 +176,7 @@ module fe_capture_trace #(
       .reset_i       (reset),
       .src_clk       (usb_clk),
       .src_pulse     (I_capture_now),
-      .dst_clk       (trace_clk),
+      .dst_clk       (fe_clk),
       .dst_pulse     (capture_now_pulse)
    );
 
@@ -186,7 +188,7 @@ module fe_capture_trace #(
       .src_clk       (swo_clk),
       .src_pulse     (I_swo_data_ready),
       .src_data      (I_swo_data),
-      .dst_clk       (trace_clk),
+      .dst_clk       (fe_clk),
       .dst_pulse     (swo_data_ready_traceclk),
       .dst_data      (swo_data_reg)
    );
@@ -199,8 +201,9 @@ module fe_capture_trace #(
                             swo_data_reg[5],
                             swo_data_reg[6],
                             swo_data_reg[7]};
+
    // shift trace data into buffer:
-   always @(posedge trace_clk) begin
+   always @(posedge fe_clk) begin
       if (reset)
          buffer <= 0;
       else if (I_swo_enable) begin
@@ -210,16 +213,15 @@ module fe_capture_trace #(
          end
       end
       else begin // parallel trace port
-         //buffer <= {buffer[pBUFFER_SIZE-9:0], trace_data[0], trace_data[1], trace_data[2], trace_data[3], trace_data[4], trace_data[5], trace_data[6], trace_data[7] };
          if (I_trace_width == 3'd4)
-            buffer <= {buffer[pBUFFER_SIZE-5:0], trace_data[0], trace_data[1], trace_data[2], trace_data[3]};
-            //buffer <= {buffer[pBUFFER_SIZE-9:0], trace_data[0], trace_data[1], trace_data[2], trace_data[3], trace_data[4], trace_data[5], trace_data[6], trace_data[7] };
+            buffer <= trace_clock_sel? {buffer[pBUFFER_SIZE-9:0], trace_data[0], trace_data[1], trace_data[2], trace_data[3], trace_data[4], trace_data[5], trace_data[6], trace_data[7] } :
+                                       {buffer[pBUFFER_SIZE-5:0], trace_data[0], trace_data[1], trace_data[2], trace_data[3]};
          else if (I_trace_width == 3'd2)
-            buffer <= {buffer[pBUFFER_SIZE-3:0], trace_data[0], trace_data[1]};
-            //buffer <= {buffer[pBUFFER_SIZE-5:0], trace_data[0], trace_data[1], trace_data[4], trace_data[5]};
+            buffer <= trace_clock_sel? {buffer[pBUFFER_SIZE-5:0], trace_data[0], trace_data[1], trace_data[4], trace_data[5]} :
+                                       {buffer[pBUFFER_SIZE-3:0], trace_data[0], trace_data[1]};
          else
-            buffer <= {buffer[pBUFFER_SIZE-2:0], trace_data[0]};
-            //buffer <= {buffer[pBUFFER_SIZE-3:0], trace_data[0], trace_data[4]};
+            buffer <= trace_clock_sel? {buffer[pBUFFER_SIZE-3:0], trace_data[0], trace_data[4]} :
+                                       {buffer[pBUFFER_SIZE-2:0], trace_data[0]};
       end
    end
 
@@ -232,7 +234,7 @@ module fe_capture_trace #(
    endgenerate 
 
    // Use sync packets to synchronize ourselves:
-   always @(posedge trace_clk) begin
+   always @(posedge fe_clk) begin
       if (reset) begin
          synchronized <= 1'b0;
          valid_count <= 4'b0;
@@ -265,17 +267,27 @@ module fe_capture_trace #(
 
    // valid_buffer is high when the buffer is byte-aligned: every 2 cycles when
    // I_trace_width = 4, every 4 cycles when I_trace_width is 2, and every 8
-   // cycles when I_trace_width is 1.
-   assign valid_buffer = synchronized && ( I_swo_enable?  swo_data_ready_traceclk_r :
-                                       //
-                                           (I_trace_width == 1)? (valid_count % 8 == 0) :
-                                           (I_trace_width == 2)? (valid_count % 4 == 0) :
-                                           (I_trace_width == 4)? (valid_count % 2 == 0) : 1'b0);
-                                       /*
-                                           (I_trace_width == 1)? (valid_count % 4 == 0) :
-                                           (I_trace_width == 2)? (valid_count % 2 == 0) :
-                                           (I_trace_width == 4)? 1'b1 : 1'b0);
-                                       */
+   // cycles when I_trace_width is 1 (divide stated number of cycles by 2 when
+   // using the target clock)
+   always @(*) begin
+       if (synchronized) begin
+           if (I_swo_enable)
+               valid_buffer = swo_data_ready_traceclk_r;
+           else if (trace_clock_sel) begin
+               valid_buffer = (I_trace_width == 1)? (valid_count % 4 == 0) :
+                              (I_trace_width == 2)? (valid_count % 2 == 0) :
+                              (I_trace_width == 4)? 1'b1 : 1'b0;
+           end
+           else begin
+               valid_buffer = (I_trace_width == 1)? (valid_count % 8 == 0) :
+                              (I_trace_width == 2)? (valid_count % 4 == 0) :
+                              (I_trace_width == 4)? (valid_count % 2 == 0) : 1'b0;
+           end
+       end
+       else
+           valid_buffer = 0;
+   end
+
 
    /* NOTE-TODO: These below are to accomodate any mix of short and long sync frames, which leads to
    a VERY large number of combinations; these lists are likely not exhaustive. Decided instead 
@@ -339,7 +351,7 @@ module fe_capture_trace #(
    // data for capture, and stop once the buffer is full of sync frames again.
    // NOTE: if pBUFFER_SIZE changes, this needs to change too. Can't think of a
    // better way to do this short of more complex parsing logic.
-   always @(posedge trace_clk) begin
+   always @(posedge fe_clk) begin
       if (reset) begin
          recording <= 1'b0;
          //prepare_to_stop <= 1'b0;
@@ -384,7 +396,7 @@ module fe_capture_trace #(
 
     // Some addditional delay is required in case a long timestamp needs to be issued.
     // TODO: look if this can be reduced?
-    always @ (posedge trace_clk) begin
+    always @ (posedge fe_clk) begin
        if (reset) begin
           match_bits_r <= 0;
           m3_trig_r <= 0;
@@ -406,7 +418,7 @@ module fe_capture_trace #(
 
    // FIFO write logic.
    // note: could maybe get away with combinatorial logic here?
-   always @(posedge trace_clk) begin
+   always @(posedge fe_clk) begin
       if (reset) begin
          O_fifo_wr <= 1'b0;
          O_fifo_data <= 0;
@@ -426,9 +438,13 @@ module fe_capture_trace #(
                   O_fifo_data[`FE_FIFO_TIME_START +: `FE_FIFO_SHORTTIME_LEN] <= I_fifo_time[`FE_FIFO_SHORTTIME_LEN-1:0];
                   if (I_swo_enable)
                      O_fifo_data[`FE_FIFO_DATA_START +: `FE_FIFO_DATA_LEN] <= revbuffer[55-:`FE_FIFO_DATA_LEN];
-                  else
-                     // TODO: will need to adjust line below for different trace widths
-                     O_fifo_data[`FE_FIFO_DATA_START +: `FE_FIFO_DATA_LEN] <= revbuffer[43-:`FE_FIFO_DATA_LEN];
+                  else begin
+                     // TODO: will need to adjust line below for different trace widths; for now assume 4-bit width
+                     if (trace_clock_sel)
+                        O_fifo_data[`FE_FIFO_DATA_START +: `FE_FIFO_DATA_LEN] <= revbuffer[31-:`FE_FIFO_DATA_LEN];
+                     else
+                        O_fifo_data[`FE_FIFO_DATA_START +: `FE_FIFO_DATA_LEN] <= revbuffer[43-:`FE_FIFO_DATA_LEN];
+                  end
                end
                `FE_FIFO_CMD_TIME: begin
                   O_fifo_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN] <= I_fifo_time;
@@ -441,7 +457,7 @@ module fe_capture_trace #(
    end
 
    // count rule matches:
-   always @(posedge trace_clk) begin
+   always @(posedge fe_clk) begin
       if (reset) begin
          O_trace_count0 <= 0;
          O_trace_count1 <= 0;
@@ -467,7 +483,7 @@ module fe_capture_trace #(
 
    `ifdef ILA_TRACE
        ila_trace1 I_trace_ila (
-          .clk          (trace_clk),            // input wire clk
+          .clk          (fe_clk),               // input wire clk
           .probe0       (recording),            // input wire [0:0]  probe0  
           .probe1       (O_event),              // input wire [0:0]  probe1 
           .probe2       (trace_data),           // input wire [7:0]  probe2 
