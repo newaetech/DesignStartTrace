@@ -32,6 +32,8 @@ parser.add_argument("--seed", type=int, default=1)
 parser.add_argument("--events", type=int, default=1)
 parser.add_argument("--rules", type=int, default=1)
 parser.add_argument("--raw", type=int, default=0)
+parser.add_argument("--longcorner", type=int, default=0)
+parser.add_argument("--traceclock", type=int, default=0)
 parser.add_argument("--patterntrig", type=int, default=0)
 parser.add_argument("--capturenow", type=int, default=0)
 parser.add_argument("--swo_mode", type=int, default=0)
@@ -41,6 +43,8 @@ args = parser.parse_args()
 rawmode = args.raw
 patterntrig = args.patterntrig
 capturenow = args.capturenow
+longcorner = args.longcorner
+traceclock = args.traceclock
 
 random.seed(args.seed)
 
@@ -321,9 +325,12 @@ recording = True
 if patterntrig:
     match_frame(trig_rule)
     if rawmode:
-        last_event_time = time - 3
+        offset = 3
     else:
-        last_event_time = time - 1
+        offset = 1
+    if traceclock:
+        offset += 1
+    last_event_time = time - offset
     for i in range(args.events):
         sync_frame(random.randrange(0,80))
         random_frame(random.randrange(0,20))
@@ -339,7 +346,13 @@ else:
     for i in range(args.events):
         rule = random.randrange(0, args.rules)
         match_frame(rule)
-        sync_frame(random.randrange(0,80))
+        if longcorner:
+            # range is carefully selected along with MAX_TIMESTAMP in the long_corner testcase
+            # to make those long corner events more likely. Testbench will issue a warning if
+            # long corner events aren't observed.
+            sync_frame(random.randrange(130,138))
+        else:
+            sync_frame(random.randrange(0,80))
         random_frame(random.randrange(0,20))
         sync_frame(random.randrange(0,4))
     sync_frame(10)

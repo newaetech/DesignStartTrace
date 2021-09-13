@@ -1,23 +1,20 @@
 [*]
 [*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Wed Sep  8 18:07:40 2021
+[*] Fri Sep 10 02:57:40 2021
 [*]
 [dumpfile] "/mnt/c/Users/jp/GitHub/DesignStartTrace/hardware/tracewhisperer/sim/results/tb.fst"
-[dumpfile_mtime] "Wed Sep  8 16:38:30 2021"
-[dumpfile_size] 1393480
+[dumpfile_mtime] "Fri Sep 10 02:56:26 2021"
+[dumpfile_size] 901557
 [savefile] "/mnt/c/Users/jp/GitHub/DesignStartTrace/hardware/tracewhisperer/sim/tb.gtkw"
-[timestart] 142718000
+[timestart] 1093980000
 [size] 3840 2131
 [pos] -1 -1
-*-18.881872 146118000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-21.697151 1117620000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb.
 [treeopen] tb.U_dut.
 [treeopen] tb.U_dut.U_trace_top.
 [treeopen] tb.U_dut.U_trace_top.U_fe_capture_main.
 [treeopen] tb.U_dut.U_trace_top.U_fe_capture_trace.
-[treeopen] tb.U_dut.U_trace_top.U_fifo.
-[treeopen] tb.U_dut.U_trace_top.U_reg_main.
-[treeopen] tb.U_dut.U_trace_top.U_trigger.
 [treeopen] tb.U_dut.U_trace_top.U_uart_rx.
 [treeopen] tb.U_tb_trace_generator.
 [treeopen] tb.U_tb_trace_generator.U_uart_tx.
@@ -32,6 +29,8 @@ tb.pll_clk1
 tb.tio_clkin
 tb.usb_clk
 tb.U_dut.U_trace_top.trigger_clk
+@420
+tb.errors
 @1000200
 -clocks
 @c00200
@@ -63,7 +62,7 @@ tb.usb_spare1
 tb.U_dut.U_trace_top.U_usb_reg_main.cwusb_isout
 @1401200
 -reg_top
-@800200
+@c00200
 -trace_generator
 @28
 tb.setup_done
@@ -115,7 +114,7 @@ tb.U_tb_trace_generator.tot_nibbles
 -TB SWO gen
 @1001200
 -group_end
-@1000200
+@1401200
 -trace_generator
 @c00200
 -trace_reg
@@ -140,7 +139,7 @@ tb.U_dut.U_trace_top.U_reg_trace.O_soft_trig_enable
 tb.U_dut.U_trace_top.U_reg_trace.O_soft_trig_passthru
 @1401200
 -trace_reg
-@800200
+@c00200
 -FIFO
 @28
 tb.U_dut.U_trace_top.U_fifo.fe_clk
@@ -158,7 +157,7 @@ tb.U_dut.U_trace_top.U_fifo.I_fifo_read
 tb.U_dut.U_trace_top.I_fast_fifo_rdn
 tb.U_dut.U_trace_top.O_data_available
 tb.U_dut.U_trace_top.U_fifo.O_fifo_empty
-@1000200
+@1401200
 -FIFO
 @c00200
 -reg_main
@@ -203,10 +202,11 @@ tb.U_dut.U_trace_top.U_reg_main.fast_fifo_rd
 -reg_main
 @800200
 -fe_capture_trace
+@28
+tb.U_dut.U_trace_top.U_fe_capture_trace.fe_clk
 @22
 tb.U_dut.U_trace_top.U_fe_capture_trace.trace_data[7:0]
 @28
-tb.U_dut.U_trace_top.U_fe_capture_trace.trace_clk
 tb.U_dut.U_trace_top.U_fe_capture_trace.synchronized
 tb.U_dut.U_trace_top.U_fe_capture_trace.recording
 tb.U_dut.U_trace_top.U_fe_capture_trace.capturing_r
@@ -223,13 +223,13 @@ tb.U_dut.U_trace_top.U_fe_capture_trace.valid_buffer
 tb.U_dut.U_trace_top.U_fe_capture_trace.valid_count[2:0]
 @28
 tb.U_dut.U_trace_top.U_fe_capture_trace.O_event
+tb.U_dut.U_trace_top.U_fe_capture_trace.match
 @22
 tb.U_dut.U_trace_top.U_fe_capture_trace.match_bits[7:0]
 tb.U_dut.U_trace_top.U_fe_capture_trace.match_bits_r[7:0]
 tb.U_dut.U_trace_top.U_fe_capture_trace.match_rule[7:0]
-@29
-tb.U_dut.U_trace_top.U_fe_capture_trace.I_fifo_wr
 @28
+tb.U_dut.U_trace_top.U_fe_capture_trace.I_fifo_wr
 tb.U_dut.U_trace_top.U_fe_capture_trace.O_fifo_wr
 @22
 tb.U_dut.U_trace_top.U_fe_capture_trace.O_fifo_data[17:0]
@@ -257,9 +257,10 @@ tb.U_dut.U_trace_top.U_fe_capture_trace.swo_data_reg[7:0]
 -SWO
 @1000200
 -fe_capture_trace
-@c00200
+@800200
 -fe_capture_main
 @28
+tb.U_dut.U_trace_top.U_fe_capture_main.long_corner
 tb.U_dut.U_trace_top.U_fe_capture_main.I_arm
 tb.U_dut.U_trace_top.U_fe_capture_main.I_reg_arm
 tb.U_dut.U_trace_top.U_fe_capture_main.I_capture_enable
@@ -272,6 +273,8 @@ tb.U_dut.U_trace_top.U_fe_capture_main.state_data
 tb.U_dut.U_trace_top.U_fe_capture_main.state_time
 tb.U_dut.U_trace_top.U_fe_capture_main.ctr_running
 tb.U_dut.U_trace_top.U_fe_capture_main.I_counter_quick_start
+@24
+tb.U_dut.U_trace_top.U_fe_capture_main.I_max_short_timestamp[15:0]
 @c00024
 tb.U_dut.U_trace_top.U_fe_capture_main.timestamp_ctr[15:0]
 @28
@@ -293,7 +296,7 @@ tb.U_dut.U_trace_top.U_fe_capture_main.timestamp_ctr[15:0]
 (15)tb.U_dut.U_trace_top.U_fe_capture_main.timestamp_ctr[15:0]
 @1401200
 -group_end
-@22
+@24
 tb.U_dut.U_trace_top.U_fe_capture_main.timestamp[15:0]
 @28
 tb.U_dut.U_trace_top.U_fe_capture_main.state_r[1:0]
@@ -301,14 +304,22 @@ tb.U_dut.U_trace_top.U_fe_capture_main.state_r2[1:0]
 @22
 tb.U_dut.U_trace_top.U_fe_capture_main.timestamp_reg[15:0]
 tb.U_dut.U_trace_top.U_fe_capture_main.O_fifo_time[15:0]
+@24
+tb.U_dut.U_trace_top.U_fe_capture_main.I_max_timestamp[15:0]
 @28
+tb.U_dut.U_trace_top.U_fe_capture_main.short_timestamp
+tb.U_dut.U_trace_top.U_fe_capture_main.short_timestamp_pre
 tb.U_dut.U_trace_top.U_fe_capture_main.long_timestamp
 tb.U_dut.U_trace_top.U_fe_capture_main.long_timestamp_r
+@29
 tb.U_dut.U_trace_top.U_fe_capture_main.long_corner
+@28
 tb.U_dut.U_trace_top.U_fe_capture_main.O_capturing
 tb.U_dut.U_trace_top.U_fe_capture_main.O_fifo_wr
+tb.U_dut.U_trace_top.U_fe_capture_main.I_data_cmd[1:0]
+tb.U_dut.U_trace_top.U_fe_capture_main.O_fifo_command[1:0]
 tb.U_dut.U_trace_top.U_fe_capture_main.O_fifo_flush
-@1401200
+@1000200
 -fe_capture_main
 @28
 tb.U_dut.U_trace_top.U_trigger.O_capture_enable_pulse
@@ -351,7 +362,6 @@ tb.U_dut.U_trace_top.U_reg_main.fpga_reset
 @c00200
 -trig_debug
 @28
-tb.U_dut.U_trace_top.U_fe_capture_trace.trace_clk
 tb.U_dut.U_trace_top.U_fe_capture_trace.m3_trig
 tb.U_dut.U_trace_top.U_fe_capture_trace.m3_trig_r
 tb.U_dut.U_trace_top.U_fe_capture_trace.O_trigger_match

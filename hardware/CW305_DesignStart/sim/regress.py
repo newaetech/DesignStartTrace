@@ -17,8 +17,6 @@ parser.add_argument("--dump", help="Enable waveform dumping.", action='store_tru
 parser.add_argument("--CW305", help="Run CW305 tests only.", action='store_true')
 args = parser.parse_args()
 
-random.seed()
-
 # Define testcases:
 tests = []
 tests.append(dict(name  = 'fewrules',
@@ -26,7 +24,7 @@ tests.append(dict(name  = 'fewrules',
              description = 'Few rules, lots of events, capture rules.',
              CAPTURE_RAW = 0,
              RULES = 2,
-             TIMEOUT= 10000, # temp
+             TRACE_CLOCK_SEL = [0, 1],
              EVENTS = 30))
 
 tests.append(dict(name  = 'manyrules',
@@ -40,7 +38,6 @@ tests.append(dict(name  = 'swtrigger_raw',
              frequency = 3,
              description = 'Lots of events, capture raw traces, triggered by sofware.',
              CAPTURE_RAW = 1,
-             #TIMEOUT= 10000, # temp
              TRACE_CLOCK_SEL = [0, 1],
              PATTERN_TRIG = 0,
              RULES = 1,
@@ -51,6 +48,7 @@ tests.append(dict(name  = 'patterntrigger_raw',
              description = 'Lots of events, capture raw trace, triggered by pattern.',
              CAPTURE_RAW = 1,
              PATTERN_TRIG = 1,
+             TRACE_CLOCK_SEL = [0, 1],
              RULES = 4,
              EVENTS = 30))
 
@@ -60,17 +58,30 @@ tests.append(dict(name  = 'long_timestamps_raw',
              MAX_TIMESTAMP = 1024,
              CAPTURE_RAW = 1,
              PATTERN_TRIG = 0,
+             TRACE_CLOCK_SEL = [0, 1],
              RULES = 1,
              EVENTS = 30))
 
 tests.append(dict(name  = 'lots_long_timestamps_raw',
              frequency = 1,
              description = 'Very small max timestamp so that they occur successively, capture raw traces, triggered by sofware.',
-             MAX_TIMESTAMP = 256,
+             MAX_TIMESTAMP = 600,
              CAPTURE_RAW = 1,
              PATTERN_TRIG = 0,
+             TRACE_CLOCK_SEL = [0, 1],
              RULES = 1,
              EVENTS = 30))
+
+tests.append(dict(name  = 'long_corner',
+             frequency = 1,
+             description = 'Corner case: event coincident with a long timestamp.',
+             MAX_TIMESTAMP = 528,
+             CAPTURE_RAW = 1,
+             PATTERN_TRIG = 0,
+             TRACE_CLOCK_SEL = [0, 1],
+             RULES = 1,
+             LONGCORNER = 1,
+             EVENTS = 15))
 
 
 tests.append(dict(name  = 'long_timestamps_rules',
@@ -79,6 +90,7 @@ tests.append(dict(name  = 'long_timestamps_rules',
              MAX_TIMESTAMP = 1024,
              CAPTURE_RAW = 0,
              PATTERN_TRIG = 0,
+             TRACE_CLOCK_SEL = [0, 1],
              RULES = 4,
              EVENTS = 30))
 
@@ -86,7 +98,7 @@ tests.append(dict(name  = 'long_timestamps_rules',
 
 if not args.CW305:
     tests.append(dict(name  = 'swo_raw_swtrig',
-                 frequency = 3,
+                 frequency = 0,
                  description = 'SWO, raw mode',
                  SWO_MODE = 1,
                  CAPTURE_RAW = 1,
@@ -95,7 +107,7 @@ if not args.CW305:
                  EVENTS = 30))
 
     tests.append(dict(name  = 'swo_rules_swtrig',
-                 frequency = 3,
+                 frequency = 0,
                  description = 'SWO, rules mode',
                  SWO_MODE = 1,
                  CAPTURE_RAW = 0,
@@ -109,11 +121,12 @@ if not args.CW305:
                  CAPTURE_RAW = 1,
                  PATTERN_TRIG = 0,
                  CAPTURE_NOW = 1,
+                 TRACE_CLOCK_SEL = [0, 1],
                  RULES = 1,
                  EVENTS = 30))
 
     tests.append(dict(name  = 'swo_raw_fastread',
-                 frequency = 2,
+                 frequency = 0,
                  description = 'SWO, raw mode, fast FIFO read (timestamps disabled)',
                  TIMESTAMPS_DISABLED = 1,
                  SWO_MODE = 1,
@@ -129,6 +142,7 @@ if not args.CW305:
                  SWO_MODE = 0,
                  CAPTURE_RAW = 1,
                  PATTERN_TRIG = 0,
+                 TRACE_CLOCK_SEL = [0, 1],
                  RULES = 4,
                  EVENTS = 30))
 
@@ -180,9 +194,18 @@ for test in tests:
       if test_regex.search(test['name']) == None:
           continue
    for i in range(args.runs):
+
+      # set the random seed first, so that both Python and Verilog randomizations are reproducible:
+      if (args.seed):
+         seed = args.seed
+      else:
+         seed = random.randint(0, 2**31-1)
+      random.seed(seed)
+
       run_test = True
       # build make command:
       makeargs = ['make', 'all', 'VERBOSE=0']
+      makeargs.append("SEED=%d" % seed)
       if args.dump:
          makeargs.append('DUMP=1')
       for key in test.keys():
@@ -203,12 +226,6 @@ for test in tests:
                value = test[key]
             makeargs.append("%s=%s" % (key, value))
 
-
-      if (args.seed):
-         seed = args.seed
-      else:
-         seed = random.randint(0, 2**31-1)
-      makeargs.append("SEED=%d" % seed)
 
       # run:
       if run_test:

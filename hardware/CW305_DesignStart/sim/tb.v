@@ -45,6 +45,7 @@ module tb();
     parameter pSWO_MODE = 0;
     parameter pSWO_DIV = 15;
     parameter pTRACE_CLOCK_SEL = 0;
+    parameter pLONGCORNER = 0;
     parameter pTIMESTAMPS_DISABLED = 0;
     parameter pMAX_TIMESTAMP = 'hFFFF;
     parameter pSEED = 1;
@@ -124,6 +125,7 @@ module tb();
    bit setup_done;
    bit in_sync;
    bit fast_fifo_mode;
+   bit long_corner_seen;
    int sync_counter;
    reg [63:0] sync_data;
    int slop;
@@ -243,7 +245,15 @@ module tb();
       write_byte(`MAIN_REG_SELECT, `REG_CAPTURE_WHILE_TRIG, 0, 0);
 
 
-      max_timestamp = $urandom_range('h80, pMAX_TIMESTAMP);
+      // don't make the max timestamp smaller than the short timestamp!
+      if (pMAX_TIMESTAMP < 'h200) begin
+          $display("pMAX_TIMESTAMP is too small!");
+          errors += 1;
+      end
+      max_timestamp = $urandom_range('h200, pMAX_TIMESTAMP);
+      if (pTRACE_CLOCK_SEL)
+          // must make max timestamp even:
+          max_timestamp[0] = 1'b0;
       $display("Setting max timestamp to %h", max_timestamp);
       write_word(`MAIN_REG_SELECT, `REG_MAX_TIMESTAMP, max_timestamp);
 
@@ -259,6 +269,14 @@ module tb();
 
       setup_done = 1;
 
+   end
+
+   // DIY code coverage:
+   initial begin
+       long_corner_seen = 0;
+       wait (setup_done);
+       wait (U_dut.U_trace_top.U_fe_capture_main.long_corner);
+       long_corner_seen = 1;
    end
 
    // maintain a cycle counter
@@ -323,8 +341,6 @@ module tb();
       total_time = 0;
       write_byte(`MAIN_REG_SELECT, `REG_FAST_FIFO_RD_EN, 0, {7'b0, fast_fifo_mode});
       while (matchdata[match_index] != 64'hFFFF_FFFF_FFFF_FFFF) begin
-         //$display("total_time=%0d on match_index=%0d, byte=%x", total_time, match_index, expected_byte);
-         //total_time = 0;
          read_fifo(fast_fifo_mode);
          while (command == `FE_FIFO_CMD_TIME) begin
             total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN];
@@ -466,6 +482,10 @@ module tb();
       wait (trace_generator_done);
       $display("Trace generator done.");
       errors += trace_generator_errors;
+      if (pLONGCORNER && long_corner_seen == 0) begin
+          warnings += 1;
+          $display("WARNING: no long corner observed (this can happen from time to time, but it shouldn't happen on every run!");
+      end
       if (errors)
          $display("SIMULATION FAILED (%0d errors, %0d warnings).", errors, warnings);
       else

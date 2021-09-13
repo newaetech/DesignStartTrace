@@ -8,6 +8,7 @@ CAPTURE_NOW = 0
 PATTERN_TRIG = 0
 SWO_MODE = 0
 TRACE_CLOCK_SEL = 0
+LONGCORNER = 0
 TIMESTAMPS_DISABLED = 0
 MAX_TIMESTAMP = 65535
 TIMEOUT= 100000
@@ -17,7 +18,8 @@ all: testcase compile run
 
 testcase:
 	python3 ../../CW305_DesignStart/sim/gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
-	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG) --swo_mode $(SWO_MODE) --capturenow $(CAPTURE_NOW)
+	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG) --swo_mode $(SWO_MODE) --capturenow $(CAPTURE_NOW) \
+	--longcorner $(LONGCORNER) --traceclock $(TRACE_CLOCK_SEL)
 
 compile:
 	iverilog -ccmdfile \
@@ -30,12 +32,13 @@ compile:
 	-P tb.pSEED=$(SEED) \
 	-P tb.pSWO_MODE=$(SWO_MODE) \
 	-P tb.pTRACE_CLOCK_SEL=$(TRACE_CLOCK_SEL) \
+	-P tb.pLONGCORNER=$(LONGCORNER) \
 	-P tb.pCAPTURE_RAW=$(CAPTURE_RAW) \
 	-P tb.pPATTERN_TRIG=$(PATTERN_TRIG) \
 	-P tb.pTIMEOUT=$(TIMEOUT) \
-        -P tb.pCAPTURE_NOW=$(CAPTURE_NOW) \
-        -P tb.pTIMESTAMPS_DISABLED=$(TIMESTAMPS_DISABLED) \
-        -P tb.pMAX_TIMESTAMP=$(MAX_TIMESTAMP) \
+	-P tb.pCAPTURE_NOW=$(CAPTURE_NOW) \
+	-P tb.pTIMESTAMPS_DISABLED=$(TIMESTAMPS_DISABLED) \
+	-P tb.pMAX_TIMESTAMP=$(MAX_TIMESTAMP) \
 
 nofifo:
 	iverilog -ccmdfile_nofifo \
