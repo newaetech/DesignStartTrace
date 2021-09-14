@@ -251,9 +251,6 @@ module tb();
           errors += 1;
       end
       max_timestamp = $urandom_range('h200, pMAX_TIMESTAMP);
-      if (pTRACE_CLOCK_SEL)
-          // must make max timestamp even:
-          max_timestamp[0] = 1'b0;
       $display("Setting max timestamp to %h", max_timestamp);
       write_word(`MAIN_REG_SELECT, `REG_MAX_TIMESTAMP, max_timestamp);
 
