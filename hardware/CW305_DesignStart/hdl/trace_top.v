@@ -49,9 +49,14 @@ module trace_top #(
 
   input wire  target_clk,
 
+  input wire  trigger_clk,
+  input wire  trigger_clk_locked,
+  output wire trigger_clk_psen,
+  output wire trigger_clk_psincdec,
+  input  wire trigger_clk_psdone,
+
   `ifdef __ICARUS__
   // for simulation only:
-  input wire  I_trigger_clk,
   input wire [7:0] I_trace_sdr,
   `endif
 
@@ -296,12 +301,6 @@ module trace_top #(
    wire [pALL_TRIGGER_WIDTH_WIDTHS-1:0] trigger_width;
    wire trigger_match;
 
-   wire psen;
-   wire psincdec;
-   wire psdone;
-   wire trigger_clk_locked;
-   wire trigger_clk;
-
    wire [pCAPTURE_LEN_WIDTH-1:0] capture_len;
    wire count_writes;
    wire counter_quick_start;
@@ -463,9 +462,9 @@ module trace_top #(
       .O_num_triggers   (num_triggers),
 
       // Trigger clock phase shift:
-      .O_psincdec       (psincdec),
-      .O_psen           (psen),
-      .I_psdone         (psdone),
+      .O_psincdec       (trigger_clk_psincdec),
+      .O_psen           (trigger_clk_psen),
+      .I_psdone         (trigger_clk_psdone),
 
       .selected         (reg_main_selected)
    );
@@ -670,25 +669,6 @@ module trace_top #(
        );
    `endif
 
-
-   `ifndef __ICARUS__
-       clk_wiz_0 U_trigger_clock (
-         .reset        (reset),
-         .clk_in1      (fe_clk),
-         .clk_out1     (trigger_clk),
-         // Dynamic phase shift ports
-         .psclk        (usb_clk),
-         .psen         (psen),
-         .psincdec     (psincdec),
-         .psdone       (psdone),
-         // Status and control signals
-         .locked       (trigger_clk_locked)
-      );
-   `else
-      assign trigger_clk_locked = 1'b1;
-      assign psdone = 1'b1;
-      assign trigger_clk = I_trigger_clk;
-   `endif
 
    pw_trigger #(
       .pCAPTURE_DELAY_WIDTH     (pCAPTURE_DELAY_WIDTH),

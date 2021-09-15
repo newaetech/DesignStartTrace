@@ -103,6 +103,12 @@ module CW305_designstart_top #(
   wire reset_pin = !resetn_pin;
   wire fpga_reset;
 
+  wire trigger_clk;
+  wire trigger_clk_locked;
+  wire trigger_clk_psen;
+  wire trigger_clk_psincdec;
+  wire trigger_clk_psdone;
+
   wire arm;
   wire capturing;
 
@@ -269,6 +275,25 @@ module CW305_designstart_top #(
            .I(USB_clk) );
    `endif
 
+   `ifdef __ICARUS__
+      assign trigger_clk = I_trigger_clk;
+      assign trigger_clk_locked = 1'b1;
+      assign trigger_clk_psdone = 1'b1;
+   `else
+       clk_wiz_0 U_trigger_clock (
+         .reset        (reset),
+         .clk_in1      (fe_clk),
+         .clk_out1     (trigger_clk),
+         // Dynamic phase shift ports
+         .psclk        (clk_usb_buf),
+         .psen         (trigger_clk_psen),
+         .psincdec     (trigger_clk_psincdec),
+         .psdone       (trigger_clk_psdone),
+         // Status and control signals
+         .locked       (trigger_clk_locked)
+      );
+   `endif
+
 
    trace_top #(
       .pBYTECNT_SIZE    (7),
@@ -282,14 +307,19 @@ module CW305_designstart_top #(
       .usb_clk          (clk_usb_buf),
       .reset_pin        (reset_pin),
       .fpga_reset       (fpga_reset),
-                                  
+
+      .trigger_clk          (trigger_clk),
+      .trigger_clk_locked   (trigger_clk_locked),
+      .trigger_clk_psen     (trigger_clk_psen    ),
+      .trigger_clk_psincdec (trigger_clk_psincdec),
+      .trigger_clk_psdone   (trigger_clk_psdone  ),
+
       .trace_data       (TRACEDATA),
       .O_trace_trig_out (trace_trig_out),
       .m3_trig          (m3_trig_out),
       .O_soft_trig_passthru (soft_trig_passthru),
 
       `ifdef __ICARUS__
-      .I_trigger_clk    (I_trigger_clk),
       .I_trace_sdr      (8'b0),
       `endif
 

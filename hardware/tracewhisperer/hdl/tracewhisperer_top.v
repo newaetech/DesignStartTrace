@@ -37,9 +37,10 @@ module tracewhisperer_top #(
   // for simulation only:
   `ifdef __ICARUS__
   input wire  I_trigger_clk,
-  input wire  target_clk,
   input wire  [7:0] I_trace_sdr,
   `endif
+
+  input wire  target_clk,
 
   // CW trigger:
   output wire trig_out,
@@ -85,6 +86,12 @@ module tracewhisperer_top #(
   wire [pUSERIO_WIDTH-1:0] userio_pwdriven;
   wire [pUSERIO_WIDTH-1:0] userio_drive_data;
   wire swo;
+
+  wire trigger_clk;
+  wire trigger_clk_locked;
+  wire trigger_clk_psen;
+  wire trigger_clk_psincdec;
+  wire trigger_clk_psdone;
 
   reg [22:0] count;
   reg target_trig_in_r;
@@ -134,6 +141,25 @@ module tracewhisperer_top #(
            .I(USB_clk) );
    `endif
 
+   `ifdef __ICARUS__
+      assign trigger_clk = I_trigger_clk;
+      assign trigger_clk_locked = 1'b1;
+      assign trigger_clk_psdone = 1'b1;
+   `else
+       clk_wiz_0 U_trigger_clock (
+         .reset        (reset),
+         .clk_in1      (fe_clk),
+         .clk_out1     (trigger_clk),
+         // Dynamic phase shift ports
+         .psclk        (clk_usb_buf),
+         .psen         (trigger_clk_psen),
+         .psincdec     (trigger_clk_psincdec),
+         .psdone       (trigger_clk_psdone),
+         // Status and control signals
+         .locked       (trigger_clk_locked)
+      );
+   `endif
+
 
    always @(posedge fe_clk) begin
       target_trig_in_r <= target_trig_in;
@@ -160,8 +186,13 @@ module tracewhisperer_top #(
 
       .target_clk       (target_clk),
 
+      .trigger_clk          (trigger_clk),
+      .trigger_clk_locked   (trigger_clk_locked),
+      .trigger_clk_psen     (trigger_clk_psen    ),
+      .trigger_clk_psincdec (trigger_clk_psincdec),
+      .trigger_clk_psdone   (trigger_clk_psdone  ),
+
       `ifdef __ICARUS__
-      .I_trigger_clk    (I_trigger_clk),
       .I_trace_sdr      (I_trace_sdr),
       `endif
                                   
