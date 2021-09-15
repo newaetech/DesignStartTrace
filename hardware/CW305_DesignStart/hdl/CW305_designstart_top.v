@@ -195,7 +195,7 @@ module CW305_designstart_top #(
      tb_trace_generator #(
            .pSWO_MODE              (0)
      ) U_tb_trace_generator
-          (.trace_clk              (sys_clock),
+          (.target_clk             (sys_clock),
            .swo_clk                (1'b0),
            .reset                  (fpga_reset),
            .TRACEDATA              (TRACEDATA),
@@ -276,7 +276,8 @@ module CW305_designstart_top #(
       .pBUFFER_SIZE     (64),
       .pMATCH_RULES     (8)
    ) U_trace_top (
-      .trace_clk_in     (ext_clock),
+      .trace_clk_in     (1'b0),
+      .target_clk       (ext_clock),
       .fe_clk           (),
       .usb_clk          (clk_usb_buf),
       .reset_pin        (reset_pin),
@@ -289,7 +290,7 @@ module CW305_designstart_top #(
 
       `ifdef __ICARUS__
       .I_trigger_clk    (I_trigger_clk),
-      .I_trace_clk      (1'b0),
+      .I_trace_sdr      (8'b0),
       `endif
 
       .USB_Data         (USB_Data ),

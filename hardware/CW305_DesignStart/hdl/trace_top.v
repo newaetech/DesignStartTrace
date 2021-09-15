@@ -173,7 +173,7 @@ module trace_top #(
          .reg_write        (reg_write), 
          .reg_addrvalid    (reg_addrvalid)
       );
-      assign fe_clk = trace_clk_in;
+      assign fe_clk = target_clk;
 
    `else // PhyWhisperer platform
       wire [pADDR_WIDTH-1:0]  reg_address;
