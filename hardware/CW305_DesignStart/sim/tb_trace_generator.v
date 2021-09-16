@@ -90,13 +90,11 @@ initial begin
             TRACEDATA_r = TRACEDATA;
             TRACEDATA = tracedata[i+j];
             trace_data_sdr = {tracedata[i+j+1], tracedata[i+j]};
+            swo_txin_trace = 1'b0;
             @ (posedge target_clk);
             TRACEDATA_r = TRACEDATA;
             TRACEDATA = tracedata[i+j+1];
-            if (j[0])
-               swo_txin_trace = 1'b1;
-            else
-               swo_txin_trace = 1'b0;
+            swo_txin_trace = 1'b1;
          end
          i = i + num_nibbles;
          tot_nibbles = tot_nibbles + num_nibbles;
@@ -145,12 +143,12 @@ uart_core U_uart_tx (
    // External data interface
    .rxd                      (1'b1),
    .txd                      (swo),
-   // UART Rx
+   // UART Rx (unused)
    .rxd_syn                  (),
    .rxd_data                 (),
    .rxd_ack                  (1'b0),
    .rxd_state                (),
-   // UART Tx (unused)
+   // UART Tx
    .txd_syn                  (swo_txin),
    .txd_data                 (swo_tx_datain),
    .txd_ack                  ()

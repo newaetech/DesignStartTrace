@@ -45,6 +45,7 @@ module tb();
     parameter pSWO_MODE = 0;
     parameter pSWO_DIV = 15;
     parameter pTRACE_CLOCK_SEL = 0;
+    parameter pUSB_CLOCK_SEL = 0;
     parameter pLONGCORNER = 0;
     parameter pTIMESTAMPS_DISABLED = 0;
     parameter pMAX_TIMESTAMP = 'hFFFF;
@@ -151,6 +152,7 @@ module tb();
       $display("Running with seed=%0d", seed);
       $urandom(seed);
       $display("pTRACE_CLOCK_SEL    = %1d", pTRACE_CLOCK_SEL);
+      $display("pUSB_CLOCK_SEL      = %1d", pUSB_CLOCK_SEL);
       $display("pSWO_MODE           = %1d", pSWO_MODE);
       $display("pPATTERN_TRIG       = %1d", pPATTERN_TRIG);
       $display("pCAPTURE_RAW        = %1d", pCAPTURE_RAW);
@@ -259,10 +261,12 @@ module tb();
       else
          write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h3);
 
-      if (pTRACE_CLOCK_SEL)
-         write_byte(`TRACE_REG_SELECT, `REG_TRACE_CLOCK_SEL, 0, 8'h1);
+      if (pUSB_CLOCK_SEL)
+         write_byte(`TRACE_REG_SELECT, `REG_FE_CLOCK_SEL, 0, 8'h2);
+      else if (pTRACE_CLOCK_SEL)
+         write_byte(`TRACE_REG_SELECT, `REG_FE_CLOCK_SEL, 0, 8'h1);
       else
-         write_byte(`TRACE_REG_SELECT, `REG_TRACE_CLOCK_SEL, 0, 8'h0);
+         write_byte(`TRACE_REG_SELECT, `REG_FE_CLOCK_SEL, 0, 8'h0);
 
       setup_done = 1;
 

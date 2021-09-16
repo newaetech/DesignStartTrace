@@ -98,21 +98,27 @@ tests.append(dict(name  = 'long_timestamps_rules',
 
 if not args.CW305:
     tests.append(dict(name  = 'swo_raw_swtrig',
-                 frequency = 0,
+                 frequency = 3,
                  description = 'SWO, raw mode',
                  SWO_MODE = 1,
                  CAPTURE_RAW = 1,
                  PATTERN_TRIG = 0,
                  RULES = 4,
+                 #TIMEOUT = 10000, # TODO-temp
+                 USB_CLOCK_SEL = 1, # TODO-temp
+                 TRACE_CLOCK_SEL = 0, # TODO-temp
                  EVENTS = 30))
 
     tests.append(dict(name  = 'swo_rules_swtrig',
-                 frequency = 0,
+                 frequency = 3,
                  description = 'SWO, rules mode',
                  SWO_MODE = 1,
                  CAPTURE_RAW = 0,
                  PATTERN_TRIG = 0,
                  RULES = 8,
+                 #TIMEOUT = 10000, # TODO-temp
+                 USB_CLOCK_SEL = 1, # TODO-temp
+                 TRACE_CLOCK_SEL = 0, # TODO-temp
                  EVENTS = 30))
 
     tests.append(dict(name  = 'capture_now',
@@ -126,13 +132,16 @@ if not args.CW305:
                  EVENTS = 30))
 
     tests.append(dict(name  = 'swo_raw_fastread',
-                 frequency = 0,
+                 frequency = 2,
                  description = 'SWO, raw mode, fast FIFO read (timestamps disabled)',
                  TIMESTAMPS_DISABLED = 1,
                  SWO_MODE = 1,
                  CAPTURE_RAW = 1,
                  PATTERN_TRIG = 0,
                  RULES = 4,
+                 #TIMEOUT = 10000, # TODO-temp
+                 USB_CLOCK_SEL = 1, # TODO-temp
+                 TRACE_CLOCK_SEL = 0, # TODO-temp
                  EVENTS = 30))
 
     tests.append(dict(name  = 'raw_fastread',

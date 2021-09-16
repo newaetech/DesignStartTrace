@@ -110,6 +110,7 @@ module trace_top #(
    wire         reg_write;
    wire         reg_addrvalid;
 
+   wire [1:0]   fe_clk_sel;
    wire         trace_clock_sel;
 
    wire reset;
@@ -204,35 +205,28 @@ module trace_top #(
       );
 
       `ifndef __ICARUS__
-         /*
-          clk_wiz_1 U_trace_clock (
-            .reset        (reset),
-            .clk_in1      (trace_clk_in),
-            .clk_out1     (trace_clk_premux),
-            // Status and control signals
-            .locked       (trace_clk_locked)
-         );
-         */
          BUFGMUX U_fe_clock_mux1 (
             .I0            (target_clk),
             .I1            (trace_clk_in),
-            .S             (trace_clock_sel),
+            .S             (fe_clk_sel[0]),
             .O             (fe_clk_pre)
          );
 
          BUFGMUX U_fe_clock_mux2 (
             .I0            (fe_clk_pre),
             .I1            (usb_clk),
-            .S             (swo_enable),
+            .S             (fe_clk_sel[1]),
             .O             (fe_clk)
          );
       `else
-         assign fe_clk = swo_enable?      usb_clk :
-                         trace_clock_sel? trace_clk_in : 
-                                          target_clk;
+         assign fe_clk = fe_clk_sel[1]?  usb_clk :
+                         fe_clk_sel[0]?  trace_clk_in : 
+                                         target_clk;
       `endif
 
    `endif
+
+   assign trace_clock_sel = fe_clk_sel == 2'b01;
 
 
    wire [4:0] clksettings; // TODO-later
@@ -350,7 +344,7 @@ module trace_top #(
       .reg_addrvalid            (reg_addrvalid),
 
       .O_clksettings            (clksettings),
-      .O_trace_clock_sel        (trace_clock_sel),
+      .O_fe_clk_sel             (fe_clk_sel),
 
       .I_synchronized           (synchronized    ),
 
