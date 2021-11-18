@@ -35,7 +35,8 @@ module tb_trace_generator (
   output wire swo,
   output reg  trig_out,
   output reg  done,
-  output int  errors
+  output int  errors,
+  input  wire setup_done
 );
 
 parameter pSWO_MODE = 0;
@@ -133,6 +134,22 @@ end
 
 assign swo_tx_datain = {TRACEDATA, TRACEDATA_r};
 
+wire txd_ack;
+reg swo_txin_r;
+always @(posedge swo_clk)
+    swo_txin_r <= swo_txin;
+
+initial begin
+    if (pSWO_MODE) begin
+        wait (setup_done);
+        wait (swo_txin_r ^ txd_ack);
+        errors += 1;
+        $display("TRACE GENERATOR ERROR: tripping over ourselves on SWO generation. Bad combination of clock rates?");
+    end
+end
+
+
+
 uart_core U_uart_tx (
    .clk                      (swo_clk),
    .reset_n                  (~reset),
@@ -151,7 +168,7 @@ uart_core U_uart_tx (
    // UART Tx
    .txd_syn                  (swo_txin),
    .txd_data                 (swo_tx_datain),
-   .txd_ack                  ()
+   .txd_ack                  (txd_ack)
 );
 
 

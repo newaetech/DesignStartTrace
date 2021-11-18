@@ -37,6 +37,8 @@ parser.add_argument("--traceclock", type=int, default=0)
 parser.add_argument("--patterntrig", type=int, default=0)
 parser.add_argument("--capturenow", type=int, default=0)
 parser.add_argument("--swo_mode", type=int, default=0)
+parser.add_argument("--usb_clock_period", type=int, default=0)
+parser.add_argument("--pll_clock_period", type=int, default=0)
 parser.add_argument("--cw305", type=int, default=0)
 args = parser.parse_args()
 
@@ -45,6 +47,8 @@ patterntrig = args.patterntrig
 capturenow = args.capturenow
 longcorner = args.longcorner
 traceclock = args.traceclock
+usb_clock_period = args.usb_clock_period
+pll_clock_period = args.pll_clock_period
 
 random.seed(args.seed)
 
@@ -58,7 +62,8 @@ nibble_index = 0
 match_index = 0
 
 if args.swo_mode:
-    multiplier = 4 # TODO: make this ratio of trace_clk : usb_clk
+    #multiplier = 14 # TODO: make this ratio of trace_clk : usb_clk
+    multiplier = pll_clock_period / usb_clock_period
 else:
     multiplier = 1
 
@@ -184,7 +189,7 @@ def random_frame(n=1, minlen=2, maxlen=15):
                         first_event = False
                         if not args.cw305 and not args.swo_mode:
                             adjust -= 1
-                    matchtimes.write('%016x\n' % ((((nibble << 4) + lastnib) << 56) + (time-last_time+adjust)*multiplier))
+                    matchtimes.write('%016x\n' % ((((nibble << 4) + lastnib) << 56) + int((time-last_time+adjust)*multiplier)))
                     last_time = time
                 else:
                     lastnib = nibble
@@ -258,7 +263,7 @@ def match_frame(rule=0):
                 first_event = False
                 if not args.cw305 and not args.swo_mode:
                     adjust -= 1
-            matchtimes.write('%016x\n' % ((x << 56) + (time-last_time+adjust)*multiplier))
+            matchtimes.write('%016x\n' % ((x << 56) + int((time-last_time+adjust)*multiplier)))
             last_time = time
     mem.write('\n\n')
     nibble_index += len(pattern)*2 + 3
@@ -281,7 +286,7 @@ def match_frame(rule=0):
             if not args.cw305 and not args.swo_mode:
                 adjust -= 1
 
-        matchtimes.write('%016x\n' % ((rule << 56) + (time-last_event_time+adjust)*multiplier))
+        matchtimes.write('%016x\n' % ((rule << 56) + int((time-last_event_time+adjust)*multiplier)))
 
     last_event_time = time
 

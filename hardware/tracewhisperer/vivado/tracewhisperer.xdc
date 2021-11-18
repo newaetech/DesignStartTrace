@@ -10,7 +10,7 @@ create_generated_clock -name trace_clk_from_usb -master_clock [get_clocks usb_cl
 create_generated_clock -name trigger_clk_from_usb -master_clock [get_clocks trace_clk_from_usb] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
 create_generated_clock -name trigger_clk_from_trace -master_clock [get_clocks trace_clk_from_trace] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
 
-create_generated_clock -name trace_clk [get_pins U_trace_top/U_trace_clock/inst/mmcm_adv_inst/CLKOUT0]
+#create_generated_clock -name trace_clk [get_pins U_trace_top/U_trace_clock/inst/mmcm_adv_inst/CLKOUT0]
 
 set_clock_groups -physically_exclusive \
                  -group {trace_clk_from_trace trigger_clk_from_trace} \

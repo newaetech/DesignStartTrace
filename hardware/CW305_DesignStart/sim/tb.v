@@ -35,15 +35,14 @@ either expressed or implied, of NewAE Technology Inc.
 module tb();
     parameter pADDR_WIDTH = 21;
     parameter pBYTECNT_SIZE = 7;
-    //parameter pUSB_CLOCK_PERIOD = 10;
-    parameter pUSB_CLOCK_PERIOD = 42;
+    parameter pUSB_CLOCK_PERIOD = 12;
     parameter pPLL_CLOCK_PERIOD = 168;
-    parameter pTRIGGER_CLOCK_PERIOD = 2;
+    parameter pTRIGGER_CLOCK_PERIOD = 6;
     parameter pCAPTURE_RAW = 0;
     parameter pCAPTURE_NOW = 0;
     parameter pPATTERN_TRIG = 0;
     parameter pSWO_MODE = 0;
-    parameter pSWO_DIV = 15;
+    parameter pSWO_DIV = 4;
     parameter pTRACE_CLOCK_SEL = 0;
     parameter pUSB_CLOCK_SEL = 0;
     parameter pLONGCORNER = 0;
@@ -154,6 +153,8 @@ module tb();
       $display("pTRACE_CLOCK_SEL    = %1d", pTRACE_CLOCK_SEL);
       $display("pUSB_CLOCK_SEL      = %1d", pUSB_CLOCK_SEL);
       $display("pSWO_MODE           = %1d", pSWO_MODE);
+      $display("pSWO_DIV            = %1d", pSWO_DIV);
+      $display("pUSB_CLOCK_PERIOD   = %1d", pUSB_CLOCK_PERIOD);
       $display("pPATTERN_TRIG       = %1d", pPATTERN_TRIG);
       $display("pCAPTURE_RAW        = %1d", pCAPTURE_RAW);
       
@@ -295,7 +296,7 @@ module tb();
 
    // timeout thread:
    initial begin
-      #(pUSB_CLOCK_PERIOD*pTIMEOUT);
+      #(pPLL_CLOCK_PERIOD*pTIMEOUT);
       errors += 1;
       $display("ERROR: global timeout");
       $display("SIMULATION FAILED (%0d errors).", errors);
@@ -365,7 +366,8 @@ module tb();
                $display("Correct rule on match event %0d", match_index);
             // now check timestamp -- exact in the case of trace, some slop allowed for SWO
             if (pSWO_MODE)
-               slop = 5; // TODO: tie this into clock ratios?
+               //slop = 5; // TODO: tie this into clock ratios?
+               slop = 24; // TODO: tie this into clock ratios?
             else
                slop = 0;
             // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:
@@ -418,7 +420,8 @@ module tb();
 
             else begin
                if (pSWO_MODE)
-                  slop = 2; // TODO: tie this into clock ratios?
+                  //slop = 2; // TODO: tie this into clock ratios?
+                  slop = 24; // TODO: tie this into clock ratios?
                else
                   slop = 0;
                // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:
@@ -701,7 +704,8 @@ module tb();
             .swo                    (swo),
             .trig_out               (m3_trig_out),
             .done                   (trace_generator_done),
-            .errors                 (trace_generator_errors)
+            .errors                 (trace_generator_errors),
+            .setup_done             (setup_done)
            );
 
    `endif

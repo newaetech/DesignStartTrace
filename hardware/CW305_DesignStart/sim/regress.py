@@ -107,6 +107,8 @@ if not args.CW305:
                  #TIMEOUT = 10000, # TODO-temp
                  USB_CLOCK_SEL = 1, # TODO-temp
                  TRACE_CLOCK_SEL = 0, # TODO-temp
+                 SWO_DIV = [1, 4],
+                 USB_CLOCK_PERIOD = [6, 14, 2],
                  EVENTS = 30))
 
     tests.append(dict(name  = 'swo_rules_swtrig',
@@ -230,7 +232,12 @@ for test in tests:
                run_test = False
          else:
             if type(test[key]) == list:
-               value = random.randint(test[key][0], test[key][1])
+                if len(test[key]) == 2:
+                   value = random.randint(test[key][0], test[key][1])
+                elif len(test[key]) == 3:
+                   value = random.randrange(test[key][0], test[key][1], test[key][2])
+                else:
+                   raise ValueError
             else:
                value = test[key]
             makeargs.append("%s=%s" % (key, value))
