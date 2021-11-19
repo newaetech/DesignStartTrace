@@ -187,6 +187,7 @@ module tb();
 
       write_byte(`MAIN_REG_SELECT, `REG_RESET_REG, 0, 8'h1);
       reset = 1;
+      #(pUSB_CLOCK_PERIOD*10);
       write_byte(`MAIN_REG_SELECT, `REG_RESET_REG, 0, 8'h0);
       reset = 0;
 
