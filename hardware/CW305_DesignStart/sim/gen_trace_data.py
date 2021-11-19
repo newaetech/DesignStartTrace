@@ -26,6 +26,7 @@
 
 import random
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int, default=1)
@@ -40,6 +41,7 @@ parser.add_argument("--swo_mode", type=int, default=0)
 parser.add_argument("--usb_clock_period", type=int, default=0)
 parser.add_argument("--pll_clock_period", type=int, default=0)
 parser.add_argument("--cw305", type=int, default=0)
+parser.add_argument("--rundir", type=str, default='rundir')
 args = parser.parse_args()
 
 rawmode = args.raw
@@ -49,6 +51,7 @@ longcorner = args.longcorner
 traceclock = args.traceclock
 usb_clock_period = args.usb_clock_period
 pll_clock_period = args.pll_clock_period
+rundir = args.rundir
 
 random.seed(args.seed)
 
@@ -297,10 +300,12 @@ def inc_time(nibbles):
 
 
 # open output files that will be read by the Verilog testbench:
-mem = open('tracedata.mem', 'w+')
-regs = open('registers.v', 'w+')
-matchtimes = open('matchtimes.mem', 'w+')
-trig = open('swtrigtime.mem', 'w+')
+if not os.path.isdir(rundir):
+    os.mkdir(rundir)
+mem = open('%s/tracedata.mem' % rundir, 'w+')
+regs = open('%s/registers.v' % rundir, 'w+')
+matchtimes = open('%s/matchtimes.mem' % rundir, 'w+')
+trig = open('%s/swtrigtime.mem' % rundir, 'w+')
 
 # generate match rules:
 if patterntrig:

@@ -1,4 +1,6 @@
 LOGFILE=make.log
+EXEFILE=a.out
+RUNDIR=rundir
 WAVEFORMAT=fst
 SEED=1
 RULES=8
@@ -24,13 +26,14 @@ testcase:
 	python3 ../../CW305_DesignStart/sim/gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
 	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG) --swo_mode $(SWO_MODE) --capturenow $(CAPTURE_NOW) \
 	--longcorner $(LONGCORNER) --traceclock $(TRACE_CLOCK_SEL) --usb_clock_period $(USB_CLOCK_PERIOD) \
-	--pll_clock_period $(PLL_CLOCK_PERIOD)
+	--pll_clock_period $(PLL_CLOCK_PERIOD) --rundir $(RUNDIR)
 
 compile:
 	iverilog -ccmdfile \
 	-g2005-sv \
 	-Wportbind \
 	-Wselect-range \
+	-I$(RUNDIR) \
 	-I../../CW305_DesignStart/hdl \
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-P tb.pDUMP=$(DUMP) \
@@ -48,6 +51,7 @@ compile:
 	-P tb.pCAPTURE_NOW=$(CAPTURE_NOW) \
 	-P tb.pTIMESTAMPS_DISABLED=$(TIMESTAMPS_DISABLED) \
 	-P tb.pMAX_TIMESTAMP=$(MAX_TIMESTAMP) \
+	-o $(RUNDIR)/$(EXEFILE) \
 
 nofifo:
 	iverilog -ccmdfile_nofifo \
@@ -69,7 +73,7 @@ nofifo_swo_only:
 
 
 run:
-	vvp -l$(LOGFILE) a.out -$(WAVEFORMAT)
+	cd $(RUNDIR) && vvp -l../$(LOGFILE) $(EXEFILE) -$(WAVEFORMAT)
 
 clean:
-	rm -f a.out
+	rm -f a.out run_*/*.vvp

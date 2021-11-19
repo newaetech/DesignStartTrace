@@ -5,6 +5,7 @@ import subprocess
 import random
 import re
 import time
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group()
@@ -165,6 +166,28 @@ def print_tests():
        print("%s: %s" % (test['name'], test['description']))
     quit()
 
+def check_pass_fail(logfile):
+    log = open(logfile, 'r')
+    passed = None
+    warnings = 0
+    errors = 0
+    for line in log:
+       pass_matches = pass_regex.search(line)
+       fail_matches = fail_regex.search(line)
+       if pass_matches:
+          passed = 1
+          warnings = int(pass_matches.group(1))
+          break
+       elif fail_matches:
+          passed = 0
+          errors = int(fail_matches.group(1))
+          break
+    log.close()
+    if passed is None:
+        print("*** parsing error on %s ***" % logfile)
+    return passed, warnings, errors
+
+
 if (args.list):
     print_tests()
     quit()
@@ -187,23 +210,25 @@ fail_regex = re.compile(r'^SIMULATION FAILED \((\d+) errors')
 seed_regex = re.compile(r'^Running with pSEED=(\d+)$')
 test_regex = re.compile(args.tests)
 
-passed = 0
-failed = 0
-
 # Check once that compile passes:
 outfile = open('regress.out', 'w')
-makeargs = ['make', 'compile']
-result = subprocess.run(makeargs, stdout=outfile, stderr=outfile)
-if result.returncode:
-   print ("Compilation failed (return code: %d), check regress.out." % result.returncode)
-   quit()
+#makeargs = ['make', 'all']
+#result = subprocess.run(makeargs, stdout=outfile, stderr=outfile)
+#if result.returncode:
+#   print ("Compilation failed (return code: %d), check regress.out." % result.returncode)
+#   quit()
+
 
 # Run tests:
 start_time = int(time.time())
+processes = []
+
+print("Dispatching jobs... ", end='')
 for test in tests:
    if args.tests:
       if test_regex.search(test['name']) == None:
           continue
+
    for i in range(args.runs):
 
       # set the random seed first, so that both Python and Verilog randomizations are reproducible:
@@ -222,7 +247,11 @@ for test in tests:
       for key in test.keys():
          if key == 'name':
             logfile = "results/%s%d.log" % (test[key], i) 
+            rundir = "run_%s%d" % (test[key], i) 
+            exefile = "run.vvp"
             makeargs.append("LOGFILE=%s" % logfile)
+            makeargs.append("EXEFILE=%s" % exefile)
+            makeargs.append("RUNDIR=%s" % rundir)
          elif key == 'description':
             pass
          elif key == 'frequency':
@@ -232,41 +261,66 @@ for test in tests:
                run_test = False
          else:
             if type(test[key]) == list:
-                if len(test[key]) == 2:
-                   value = random.randint(test[key][0], test[key][1])
-                elif len(test[key]) == 3:
-                   value = random.randrange(test[key][0], test[key][1], test[key][2])
-                else:
-                   raise ValueError
+               value = random.randint(test[key][0], test[key][1])
             else:
                value = test[key]
             makeargs.append("%s=%s" % (key, value))
 
-
       # run:
       if run_test:
-         print("Running %s... " % logfile, end='', flush=True)
-         subprocess.run(makeargs, stdout=outfile, stderr=outfile)
+         p = subprocess.Popen(makeargs, stdout=outfile, stderr=outfile)
+         processes.append((p,logfile,seed))
 
-         # check pass/fail:
-         log = open(logfile, 'r')
-         for line in log:
-            pass_matches = pass_regex.search(line)
-            fail_matches = fail_regex.search(line)
-            if pass_matches:
-               passed += 1
-               print("pass (%0d warnings)" % (int(pass_matches.group(1))))
-               break
-            elif fail_matches:
-               failed += 1
-               print("FAILED! %d errors, seed = %d" % (int(fail_matches.group(1)), seed))
-               break
+num_processes = len(processes)
+print("done. %d tests running." % num_processes)
+
+warns = []
+fails = []
+
+pbar       = tqdm(total=len(processes), desc='Tests finished')
+pbarpassed = tqdm(total=len(processes), desc='Tests passing ')
+
+oldfinished = 0
+finished = 0
+oldpass_count = 0
+fail_count = 0
+pass_count = 0
+while len(processes):
+    for p,l,s in processes:
+        if not p.poll() is None:
+            finished += 1
+            passed, warnings, errors = check_pass_fail(l)
+            pass_count += passed
+            if warnings:
+                warns.append("%s: %0d warnings" % (l, warnings))
+            if errors:
+                fail_count += 1
+                fails.append("%s: %d errors (seed=%d)" % (l, errors, s))
+            processes.remove((p,l,s))
+
+    pbar.update(finished - oldfinished)
+    pbarpassed.update(pass_count - oldpass_count)
+    oldfinished = finished
+    oldpass_count = pass_count
+    time.sleep(1)
+pbar.close()
+pbarpassed.close()
+
+# just to be sure:
+#exit_codes = [p.wait() for p,l,s in processes]
+
+# sanity check:
+assert num_processes == pass_count + fail_count
 
 
 # Summarize results:
 print('\n*** RESULTS SUMMARY ***')
-print('%d tests passing, %d tests failing.' % (passed, failed))
+print('%d tests passing, %d tests failing.' % (pass_count, fail_count))
 print('Elapsed time: %d seconds' % (int(time.time() - start_time)))
-
-
+if warns:
+    for w in warns:
+        print(w)
+if fails:
+    for f in fails:
+        print(f)
 

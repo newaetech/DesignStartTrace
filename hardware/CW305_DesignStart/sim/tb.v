@@ -159,7 +159,7 @@ module tb();
       $display("pCAPTURE_RAW        = %1d", pCAPTURE_RAW);
       
       if (pDUMP) begin
-         $dumpfile("results/tb.fst");
+         $dumpfile("tb.fst");
          $dumpvars(0, tb);
       end
       usb_clk = 1'b1;
