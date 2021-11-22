@@ -367,11 +367,10 @@ module tb();
                $display("Correct rule on match event %0d", match_index);
             // now check timestamp -- exact in the case of trace, some slop allowed for SWO
             if (pSWO_MODE)
-               //slop = 5; // TODO: tie this into clock ratios?
-               slop = 24; // TODO: tie this into clock ratios?
+               // rough way of accounting for pSWO_DIV:
+               slop = pPLL_CLOCK_PERIOD / pUSB_CLOCK_PERIOD * 2;
             else
                slop = 0;
-            // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:
             if ( (total_time > expected_time + slop) || (total_time < expected_time - slop) ) begin
                errors += 1;
                $display("ERROR on match event %0d at time %t: expected timestamp %0d, got %0d", match_index, $time, expected_time, total_time);
@@ -421,8 +420,8 @@ module tb();
 
             else begin
                if (pSWO_MODE)
-                  //slop = 2; // TODO: tie this into clock ratios?
-                  slop = 24; // TODO: tie this into clock ratios?
+                  // rough way of accounting for pSWO_DIV:
+                  slop = pPLL_CLOCK_PERIOD / pUSB_CLOCK_PERIOD * 2;
                else
                   slop = 0;
                // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:

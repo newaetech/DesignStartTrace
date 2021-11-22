@@ -122,6 +122,8 @@ if not args.CW305:
                  #TIMEOUT = 10000, # TODO-temp
                  USB_CLOCK_SEL = 1, # TODO-temp
                  TRACE_CLOCK_SEL = 0, # TODO-temp
+                 SWO_DIV = [1, 4],
+                 USB_CLOCK_PERIOD = [6, 14, 2],
                  EVENTS = 30))
 
     tests.append(dict(name  = 'capture_now',
@@ -145,6 +147,8 @@ if not args.CW305:
                  #TIMEOUT = 10000, # TODO-temp
                  USB_CLOCK_SEL = 1, # TODO-temp
                  TRACE_CLOCK_SEL = 0, # TODO-temp
+                 SWO_DIV = [1, 4],
+                 USB_CLOCK_PERIOD = [6, 14, 2],
                  EVENTS = 30))
 
     tests.append(dict(name  = 'raw_fastread',

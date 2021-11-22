@@ -65,7 +65,7 @@ nibble_index = 0
 match_index = 0
 
 if args.swo_mode:
-    #multiplier = 14 # TODO: make this ratio of trace_clk : usb_clk
+    # TODO: deal with USB_CLOCK_SEL=0 case
     multiplier = pll_clock_period / usb_clock_period
 else:
     multiplier = 1
@@ -182,10 +182,8 @@ def random_frame(n=1, minlen=2, maxlen=15):
                     inc_time(2)
                     if first_event and args.swo_mode:
                         adjust = 2
-                        #first_event = False
                     elif first_event and args.cw305:
                         adjust = 1
-                        #first_event = False
                     else:
                         adjust = 0
                     if first_event:
@@ -255,11 +253,9 @@ def match_frame(rule=0):
         if rawmode:
             inc_time(2)
             if first_event and args.swo_mode:
-                adjust = 2
-                #first_event = False
+                adjust = 1
             elif first_event and args.cw305:
                 adjust = 1
-                #first_event = False
             else:
                 adjust = 0
             if first_event:
@@ -277,11 +273,9 @@ def match_frame(rule=0):
         inc_time(len(rules[rule])*2)
         rule = 2**rule;
         if first_event and args.swo_mode:
-            adjust = 2
-            #first_event = False
+            adjust = 1
         elif first_event and args.cw305:
             adjust = 1
-            #first_event = False
         else:
             adjust = 0
         if first_event:
