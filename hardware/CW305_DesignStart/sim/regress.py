@@ -261,7 +261,12 @@ for test in tests:
                run_test = False
          else:
             if type(test[key]) == list:
-               value = random.randint(test[key][0], test[key][1])
+                if len(test[key]) == 2:
+                   value = random.randint(test[key][0], test[key][1])
+                elif len(test[key]) == 3:
+                   value = random.randrange(test[key][0], test[key][1], test[key][2])
+                else:
+                   raise ValueError
             else:
                value = test[key]
             makeargs.append("%s=%s" % (key, value))
