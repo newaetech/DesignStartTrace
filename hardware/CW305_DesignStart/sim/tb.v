@@ -36,7 +36,7 @@ module tb();
     parameter pADDR_WIDTH = 21;
     parameter pBYTECNT_SIZE = 7;
     parameter pUSB_CLOCK_PERIOD = 12;
-    parameter pPLL_CLOCK_PERIOD = 168;
+    parameter pTARGET_CLOCK_TRACE_PERIOD = 168;
     parameter pTRIGGER_CLOCK_PERIOD = 6;
     parameter pCAPTURE_RAW = 0;
     parameter pCAPTURE_NOW = 0;
@@ -69,12 +69,12 @@ module tb();
     reg l14_sel;
     reg pushbutton;
     reg reset;
-    reg pll_clk1;
     reg trigger_clk;
-    wire tio_clkin;
     wire trig_out;
+    reg  target_clk_trace = 1'b0;       // target clock for parallel trace mode
+    reg  target_clk_swo = 1'b0;         // target clock for SWO mode
+    reg  trace_clk = 1'b0;              // half-rate trace clock
     wire target_clk;
-    reg  trace_clk = 1'b0;
 
     wire led1;
     wire led2;
@@ -97,7 +97,7 @@ module tb();
     
     reg [31:0] write_data;
 
-    assign target_clk = pll_clk1;  // shorthand for testbench
+    assign target_clk = pSWO_MODE? target_clk_swo : target_clk_trace;
 
    reg [63:0] matchdata[0:2047];
    int cycle;
@@ -163,7 +163,8 @@ module tb();
          $dumpvars(0, tb);
       end
       usb_clk = 1'b1;
-      pll_clk1 = 1'b1;
+      target_clk_trace = 1'b1;
+      target_clk_swo = 1'b1;
 
       usb_wdata = 0;
       usb_addr = 0;
@@ -178,11 +179,10 @@ module tb();
       l14_sel = 0;
       pushbutton = 1;
       reset = 0;
-      pll_clk1 = 0;
+      target_clk_trace = 0;
+      target_clk_swo = 1'b1;
       trigger_clk = 0;
 
-      //#(pPLL_CLOCK_PERIOD*2) pushbutton = 0;
-      //#(pPLL_CLOCK_PERIOD*2) pushbutton = 1;
       #(pUSB_CLOCK_PERIOD*10);
 
       write_byte(`MAIN_REG_SELECT, `REG_RESET_REG, 0, 8'h1);
@@ -291,13 +291,13 @@ module tb();
    end
 
    // testbench generates data on target clock; synthesize the half-rate trace clock:
-   always @ (posedge target_clk)
+   always @ (posedge target_clk_trace)
        trace_clk <= ~trace_clk;
 
 
    // timeout thread:
    initial begin
-      #(pPLL_CLOCK_PERIOD*pTIMEOUT);
+      #(pTARGET_CLOCK_TRACE_PERIOD*pTIMEOUT);
       errors += 1;
       $display("ERROR: global timeout");
       $display("SIMULATION FAILED (%0d errors).", errors);
@@ -368,7 +368,7 @@ module tb();
             // now check timestamp -- exact in the case of trace, some slop allowed for SWO
             if (pSWO_MODE)
                // rough way of accounting for pSWO_DIV:
-               slop = pPLL_CLOCK_PERIOD / pUSB_CLOCK_PERIOD * 2;
+               slop = pTARGET_CLOCK_TRACE_PERIOD / pUSB_CLOCK_PERIOD * 2;
             else
                slop = 0;
             if ( (total_time > expected_time + slop) || (total_time < expected_time - slop) ) begin
@@ -421,7 +421,7 @@ module tb();
             else begin
                if (pSWO_MODE)
                   // rough way of accounting for pSWO_DIV:
-                  slop = pPLL_CLOCK_PERIOD / pUSB_CLOCK_PERIOD * 2;
+                  slop = pTARGET_CLOCK_TRACE_PERIOD / pUSB_CLOCK_PERIOD * 2;
                else
                   slop = 0;
                // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:
@@ -501,7 +501,6 @@ module tb();
    reg read_select;
 
    assign usb_data = read_select? 8'bz : usb_wdata;
-   assign tio_clkin = pll_clk1;
 
    assign userio_d[2] = swo;
 
@@ -598,7 +597,8 @@ module tb();
 
 
    always #(pUSB_CLOCK_PERIOD/2) usb_clk = !usb_clk;
-   always #(pPLL_CLOCK_PERIOD/2) pll_clk1 = !pll_clk1;
+   always #(pTARGET_CLOCK_TRACE_PERIOD/2) target_clk_trace = !target_clk_trace;
+   always #(pTARGET_CLOCK_TRACE_PERIOD/2) target_clk_swo = !target_clk_swo; // TODO- temporary!
    always #(pTRIGGER_CLOCK_PERIOD/2) trigger_clk = !trigger_clk;
 
    wire #1 usb_rdn_out = usb_rdn;
@@ -631,12 +631,12 @@ module tb();
           .led3               (led3      ),
 
           // PLL
-          .pll_clk1           (pll_clk1),
+          .pll_clk1           (target_clk_trace),
 
           // 20-Pin Connector
           //.tio_trigger        (tio_trigger),
           //.tio_clkout         (tio_clkout ),
-          .tio_clkin          (tio_clkin  ),
+          .tio_clkin          (target_clk_trace  ),
           .trig_out           (trig_out),
 
           .I_trigger_clk      (trigger_clk),
@@ -696,7 +696,7 @@ module tb();
             .pSWO_MODE              (pSWO_MODE),
             .pSWO_DIV               (pSWO_DIV)
       ) U_tb_trace_generator
-           (.target_clk             (target_clk),
+           (.target_clk_trace       (target_clk_trace),
             .swo_clk                (trigger_clk),
             .reset                  (reset),
             .trace_data_sdr         (trace_data_sdr),

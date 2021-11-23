@@ -27,7 +27,7 @@ either expressed or implied, of NewAE Technology Inc.
 `default_nettype none
 
 module tb_trace_generator (
-  input  wire target_clk,
+  input  wire target_clk_trace,
   input  wire swo_clk,
   input  wire reset,
   output reg  [3:0] TRACEDATA,
@@ -71,7 +71,7 @@ initial begin
    tot_nibbles = 0;
    errors = 0;
    @ (negedge reset);
-   @ (posedge target_clk);
+   @ (posedge target_clk_trace);
    command = 0;
    while (command != 2) begin
       command = tracedata[i];
@@ -87,12 +87,12 @@ initial begin
              $display("TRACE GENERATOR ERROR: odd number of nibbles, this shouldn't happen");
          end
          for (j = 0; j < num_nibbles; j = j + 2)  begin
-            @ (posedge target_clk);
+            @ (posedge target_clk_trace);
             TRACEDATA_r = TRACEDATA;
             TRACEDATA = tracedata[i+j];
             trace_data_sdr = {tracedata[i+j+1], tracedata[i+j]};
             swo_txin_trace = 1'b0;
-            @ (posedge target_clk);
+            @ (posedge target_clk_trace);
             TRACEDATA_r = TRACEDATA;
             TRACEDATA = tracedata[i+j+1];
             swo_txin_trace = 1'b1;
@@ -101,7 +101,7 @@ initial begin
          tot_nibbles = tot_nibbles + num_nibbles;
       end
       else if (command == 1) begin
-         repeat (num_nibbles) @ (posedge target_clk);
+         repeat (num_nibbles) @ (posedge target_clk_trace);
          swo_txin_trace = 1'b0;
          tot_nibbles = tot_nibbles + num_nibbles;
       end
@@ -111,7 +111,7 @@ initial begin
       end
       else begin
          $display("ERROR: unexpected command %d (i=%d)", command, i);
-         @ (posedge target_clk);
+         @ (posedge target_clk_trace);
       end
 
       if (tot_nibbles == trigtime[0])
