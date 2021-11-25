@@ -40,6 +40,8 @@ parser.add_argument("--capturenow", type=int, default=0)
 parser.add_argument("--swo_mode", type=int, default=0)
 parser.add_argument("--usb_clock_period", type=int, default=0)
 parser.add_argument("--target_clock_trace_period", type=int, default=0)
+parser.add_argument("--target_clock_swo_period", type=int, default=0)
+parser.add_argument("--usb_clock_sel", type=int, default=0)
 parser.add_argument("--cw305", type=int, default=0)
 parser.add_argument("--rundir", type=str, default='rundir')
 args = parser.parse_args()
@@ -51,6 +53,8 @@ longcorner = args.longcorner
 traceclock = args.traceclock
 usb_clock_period = args.usb_clock_period
 target_clock_trace_period = args.target_clock_trace_period
+target_clock_swo_period = args.target_clock_swo_period
+usb_clock_sel = args.usb_clock_sel
 rundir = args.rundir
 
 random.seed(args.seed)
@@ -65,8 +69,10 @@ nibble_index = 0
 match_index = 0
 
 if args.swo_mode:
-    # TODO: deal with USB_CLOCK_SEL=0 case
-    multiplier = target_clock_trace_period / usb_clock_period
+    if usb_clock_sel:
+        multiplier = target_clock_trace_period / usb_clock_period
+    else:
+        multiplier = target_clock_trace_period / target_clock_swo_period
 else:
     multiplier = 1
 

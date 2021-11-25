@@ -36,13 +36,10 @@ module tb();
     parameter pADDR_WIDTH = 21;
     parameter pBYTECNT_SIZE = 7;
     parameter pUSB_CLOCK_PERIOD = 12;
-    parameter pTARGET_CLOCK_TRACE_PERIOD = 168;
-    parameter pTRIGGER_CLOCK_PERIOD = 6;
     parameter pCAPTURE_RAW = 0;
     parameter pCAPTURE_NOW = 0;
     parameter pPATTERN_TRIG = 0;
     parameter pSWO_MODE = 0;
-    parameter pSWO_DIV = 4;
     parameter pTRACE_CLOCK_SEL = 0;
     parameter pUSB_CLOCK_SEL = 0;
     parameter pLONGCORNER = 0;
@@ -52,6 +49,11 @@ module tb();
     parameter pTIMEOUT = 2560000;
     parameter pVERBOSE = 0;
     parameter pDUMP = 0;
+    // clock periods below are interdependent and are intended to be calculated by regress.py:
+    parameter pSWO_DIV = 0;
+    parameter pTARGET_CLOCK_TRACE_PERIOD = 0;
+    parameter pTARGET_CLOCK_SWO_PERIOD = 0;     // this is tied to pTARGET_CLOCK_TRACE_PERIOD
+    parameter pTRIGGER_CLOCK_PERIOD = 0;        // this is tied to pSWO_MODE
 
     reg usb_clk;
     wire [7:0] usb_data;
@@ -150,13 +152,16 @@ module tb();
       match_index = 0;
       $display("Running with seed=%0d", seed);
       $urandom(seed);
-      $display("pTRACE_CLOCK_SEL    = %1d", pTRACE_CLOCK_SEL);
-      $display("pUSB_CLOCK_SEL      = %1d", pUSB_CLOCK_SEL);
-      $display("pSWO_MODE           = %1d", pSWO_MODE);
-      $display("pSWO_DIV            = %1d", pSWO_DIV);
-      $display("pUSB_CLOCK_PERIOD   = %1d", pUSB_CLOCK_PERIOD);
-      $display("pPATTERN_TRIG       = %1d", pPATTERN_TRIG);
-      $display("pCAPTURE_RAW        = %1d", pCAPTURE_RAW);
+      $display("pTRACE_CLOCK_SEL                = %1d", pTRACE_CLOCK_SEL);
+      $display("pUSB_CLOCK_SEL                  = %1d", pUSB_CLOCK_SEL);
+      $display("pSWO_MODE                       = %1d", pSWO_MODE);
+      $display("pSWO_DIV                        = %1d", pSWO_DIV);
+      $display("pUSB_CLOCK_PERIOD               = %1d", pUSB_CLOCK_PERIOD);
+      $display("pTARGET_CLOCK_TRACE_PERIOD      = %1d", pTARGET_CLOCK_TRACE_PERIOD);
+      $display("pTARGET_CLOCK_SWO_PERIOD        = %1d", pTARGET_CLOCK_SWO_PERIOD);
+      $display("pTRIGGER_CLOCK_PERIOD           = %1d", pTRIGGER_CLOCK_PERIOD);
+      $display("pPATTERN_TRIG                   = %1d", pPATTERN_TRIG);
+      $display("pCAPTURE_RAW                    = %1d", pCAPTURE_RAW);
       
       if (pDUMP) begin
          $dumpfile("tb.fst");
@@ -368,12 +373,12 @@ module tb();
             // now check timestamp -- exact in the case of trace, some slop allowed for SWO
             if (pSWO_MODE)
                // rough way of accounting for pSWO_DIV:
-               slop = pTARGET_CLOCK_TRACE_PERIOD / pUSB_CLOCK_PERIOD * 2;
+               slop = pTARGET_CLOCK_TRACE_PERIOD / (pUSB_CLOCK_SEL? pUSB_CLOCK_PERIOD : pTARGET_CLOCK_SWO_PERIOD) * 2;
             else
                slop = 0;
             if ( (total_time > expected_time + slop) || (total_time < expected_time - slop) ) begin
                errors += 1;
-               $display("ERROR on match event %0d at time %t: expected timestamp %0d, got %0d", match_index, $time, expected_time, total_time);
+               $display("ERROR on match event %0d at time %t: expected timestamp %0d, got %0d (slop: %0d)", match_index, $time, expected_time, total_time, slop);
             end
             match_index += 1;
             total_time = 0;
@@ -421,7 +426,7 @@ module tb();
             else begin
                if (pSWO_MODE)
                   // rough way of accounting for pSWO_DIV:
-                  slop = pTARGET_CLOCK_TRACE_PERIOD / pUSB_CLOCK_PERIOD * 2;
+                  slop = pTARGET_CLOCK_TRACE_PERIOD / (pUSB_CLOCK_SEL? pUSB_CLOCK_PERIOD : pTARGET_CLOCK_SWO_PERIOD) * 2;
                else
                   slop = 0;
                // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:
@@ -431,7 +436,7 @@ module tb();
                   end
                   else begin
                      errors += 1;
-                     $display("ERROR on match byte #%0d (byte=%0x) at time %t: expected timestamp %0d, got %0d", match_index, fifo_data, $time, expected_time, total_time);
+                     $display("ERROR on match byte #%0d (byte=%0x) at time %t: expected timestamp %0d, got %0d (slop=%0d)", match_index, fifo_data, $time, expected_time, total_time, slop);
                   end
                   total_time = 0;
                end
@@ -598,7 +603,7 @@ module tb();
 
    always #(pUSB_CLOCK_PERIOD/2) usb_clk = !usb_clk;
    always #(pTARGET_CLOCK_TRACE_PERIOD/2) target_clk_trace = !target_clk_trace;
-   always #(pTARGET_CLOCK_TRACE_PERIOD/2) target_clk_swo = !target_clk_swo; // TODO- temporary!
+   always #(pTARGET_CLOCK_SWO_PERIOD/2) target_clk_swo = !target_clk_swo;
    always #(pTRIGGER_CLOCK_PERIOD/2) trigger_clk = !trigger_clk;
 
    wire #1 usb_rdn_out = usb_rdn;

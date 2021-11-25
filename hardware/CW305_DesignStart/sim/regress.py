@@ -106,9 +106,9 @@ if not args.CW305:
                  PATTERN_TRIG = 0,
                  RULES = 4,
                  #TIMEOUT = 10000, # TODO-temp
-                 USB_CLOCK_SEL = 1, # TODO-temp
+                 USB_CLOCK_SEL = [0, 1],
                  TRACE_CLOCK_SEL = 0, # TODO-temp
-                 SWO_DIV = [1, 4],
+                 SWO_DIV = [1, 13],
                  USB_CLOCK_PERIOD = [6, 14, 2],
                  EVENTS = 30))
 
@@ -119,10 +119,9 @@ if not args.CW305:
                  CAPTURE_RAW = 0,
                  PATTERN_TRIG = 0,
                  RULES = 8,
-                 #TIMEOUT = 10000, # TODO-temp
-                 USB_CLOCK_SEL = 1, # TODO-temp
+                 USB_CLOCK_SEL = [0, 1],
                  TRACE_CLOCK_SEL = 0, # TODO-temp
-                 SWO_DIV = [1, 4],
+                 SWO_DIV = [1, 13],
                  USB_CLOCK_PERIOD = [6, 14, 2],
                  EVENTS = 30))
 
@@ -144,10 +143,9 @@ if not args.CW305:
                  CAPTURE_RAW = 1,
                  PATTERN_TRIG = 0,
                  RULES = 4,
-                 #TIMEOUT = 10000, # TODO-temp
-                 USB_CLOCK_SEL = 1, # TODO-temp
+                 USB_CLOCK_SEL = [0, 1],
                  TRACE_CLOCK_SEL = 0, # TODO-temp
-                 SWO_DIV = [1, 4],
+                 SWO_DIV = [1, 13],
                  USB_CLOCK_PERIOD = [6, 14, 2],
                  EVENTS = 30))
 
@@ -248,6 +246,12 @@ for test in tests:
       makeargs.append("SEED=%d" % seed)
       if args.dump:
          makeargs.append('DUMP=1')
+
+      # some required defaults for all testcases, used in calculation later:
+      TARGET_CLOCK_TRACE_PERIOD = 168
+      SWO_DIV = 1
+      USB_CLOCK_SEL = 0
+
       for key in test.keys():
          if key == 'name':
             logfile = "results/%s%d.log" % (test[key], i) 
@@ -273,7 +277,30 @@ for test in tests:
                    raise ValueError
             else:
                value = test[key]
+
+            # if these aren't specified by the testcase they will retain their previously defined default value
+            if key == 'SWO_DIV':
+               SWO_DIV = value
+            elif key == 'USB_CLOCK_SEL':
+               USB_CLOCK_SEL = value
+
             makeargs.append("%s=%s" % (key, value))
+
+      # Target clock arguments computed here because they're needed by both the
+      # Verilog testbench and gen_trace_data.py.
+      # In parallel trace mode, each tick of the target clock carries 4 trace bits; 
+      # In SWO mode, each tick carries 1 / (pSWO_DIV + 1) bits; 1.5 factor is extra margin for start/stop bits:
+      TARGET_CLOCK_SWO_PERIOD = int(TARGET_CLOCK_TRACE_PERIOD / (1.5*4))
+      TRIGGER_CLOCK_PERIOD = int(TARGET_CLOCK_TRACE_PERIOD / (1.5*4*(SWO_DIV+1)))
+      if TRIGGER_CLOCK_PERIOD % 2:
+          TRIGGER_CLOCK_PERIOD -= 1
+      if TRIGGER_CLOCK_PERIOD < 2:
+          raise ValueError("Required trigger clock is too fast; reduce SWO_DIV.")
+      makeargs.append("TARGET_CLOCK_SWO_PERIOD=%s" % TARGET_CLOCK_SWO_PERIOD)
+      makeargs.append("TARGET_CLOCK_TRACE_PERIOD=%s" % TARGET_CLOCK_TRACE_PERIOD)
+      makeargs.append("TRIGGER_CLOCK_PERIOD=%s" % TRIGGER_CLOCK_PERIOD)
+      makeargs.append("SWO_DIV=%s" % SWO_DIV)
+      makeargs.append("USB_CLOCK_SEL=%s" % USB_CLOCK_SEL)
 
       # run:
       if run_test:
