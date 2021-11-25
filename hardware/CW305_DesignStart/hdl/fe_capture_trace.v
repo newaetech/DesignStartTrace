@@ -343,8 +343,8 @@ module fe_capture_trace #(
                                       (revbuffer == 64'hffff7fffffff7fff) ||
                                       (revbuffer == 64'hffffff7fffffff7f) ||
                                       (revbuffer == 64'h7fff7fffffff7fff) ||
-                                      (revbuffer == 64'hff7fff7fffffff7f);
-
+                                      (revbuffer == 64'hff7fff7fffffff7f) ||
+                                      (revbuffer == 64'hffff7fff7fffffff);
 
    assign revbuffer_stop_syncframes = (revbuffer == 64'hff7f_ff7f_ff7f_ff7f) ||
                                       (revbuffer == 64'hff7f_ffff_ff7f_ffff);
