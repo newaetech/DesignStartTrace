@@ -29,6 +29,7 @@ module cdc_bus #(
    input  wire                          src_clk,
    input  wire                          src_pulse,
    input  wire [pDATA_WIDTH-1:0]        src_data,
+   output reg                           src_overflow,
    input  wire                          dst_clk,
    output reg                           dst_pulse,
    output wire [pDATA_WIDTH-1:0]        dst_data
@@ -44,8 +45,30 @@ module cdc_bus #(
    reg  src_ack;
    wire busy;
    reg  valid_data;
+   reg  src_pulse_r;
+   reg  src_outstanding;
 
    assign dst_data = dst_data_reg;
+
+   // monitor for too-slow CDC:
+   always @(posedge src_clk) begin
+       if (reset_i) begin
+           src_pulse_r <= 1'b0;
+           src_outstanding <= 1'b0;
+           src_overflow <= 1'b0;
+       end
+       else begin
+           src_pulse_r <= src_pulse;
+           if (src_pulse && ~src_pulse_r) begin
+               if (src_outstanding)
+                   src_overflow <= 1'b1;
+               else
+                   src_outstanding <= 1'b1;
+           end
+           else if (src_ack)
+               src_outstanding <= 1'b0;
+       end
+   end
 
    always @(posedge src_clk) begin
       if (reset_i) begin

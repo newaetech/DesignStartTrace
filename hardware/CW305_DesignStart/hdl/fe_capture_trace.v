@@ -41,6 +41,7 @@ module fe_capture_trace #(
     /* SWO */
     input  wire I_swo_data_ready,
     input  wire [7:0] I_swo_data,
+    output wire O_swo_cdc_overflow,
 
     /* GENERIC FRONT END CONNECTIONS */
     output wire O_event,
@@ -188,10 +189,12 @@ module fe_capture_trace #(
       .src_clk       (swo_clk),
       .src_pulse     (I_swo_data_ready),
       .src_data      (I_swo_data),
+      .src_overflow  (O_swo_cdc_overflow),
       .dst_clk       (fe_clk),
       .dst_pulse     (swo_data_ready_traceclk),
       .dst_data      (swo_data_reg)
    );
+
 
    wire [7:0] swo_buf_in = {swo_data_reg[0],
                             swo_data_reg[1],

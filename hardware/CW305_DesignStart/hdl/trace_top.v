@@ -314,6 +314,7 @@ module trace_top #(
    wire swo_enable;
    wire swo_data_ready;
    wire [7:0] swo_data_byte;
+   wire swo_cdc_fifo_overflow;
    reg swo_ack;
    wire [2:0] uart_rx_state;
    wire [3:0] uart_data_bits;
@@ -347,6 +348,7 @@ module trace_top #(
       .O_fe_clk_sel             (fe_clk_sel),
 
       .I_synchronized           (synchronized    ),
+      .I_swo_cdc_overflow       (swo_cdc_fifo_overflow),
 
       .O_pattern_enable         (pattern_enable  ),
       .O_pattern_trig_enable    (pattern_trig_enable),
@@ -560,6 +562,7 @@ module trace_top #(
    /* SWO */
       .I_swo_data_ready         (swo_data_ready),
       .I_swo_data               (swo_data_byte),
+      .O_swo_cdc_overflow       (swo_cdc_fifo_overflow),
 
    /* GENERIC FRONT END CONNECTIONS */
       .O_event                  (fe_event),
