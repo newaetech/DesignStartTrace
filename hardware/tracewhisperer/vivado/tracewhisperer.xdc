@@ -1,30 +1,28 @@
 set_property IOSTANDARD LVCMOS33 [get_ports *]
 
 create_clock -period 40.000 -name TRACECLOCK -waveform {0.000 20.000} [get_nets TRACECLOCK]
+create_clock -period 20.000 -name target_clk -waveform {0.000 10.000} [get_nets target_clk]
 create_clock -period 10.400 -name usb_clk -waveform {0.000 5.200} [get_nets USB_clk]
 
-create_generated_clock -name trace_clk_from_trace -source [get_pins U_trace_top/U_trace_clock_mux/I0] -combinational [get_pins U_trace_top/U_trace_clock_mux/O]
-create_generated_clock -name trace_clk_from_usb -master_clock [get_clocks usb_clk] -source [get_pins U_trace_top/U_trace_clock_mux/I1] -combinational [get_pins U_trace_top/U_trace_clock_mux/O] -add
-
-
-create_generated_clock -name trigger_clk_from_usb -master_clock [get_clocks trace_clk_from_usb] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
-create_generated_clock -name trigger_clk_from_trace -master_clock [get_clocks trace_clk_from_trace] [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
-
-#create_generated_clock -name trace_clk [get_pins U_trace_top/U_trace_clock/inst/mmcm_adv_inst/CLKOUT0]
-
-set_clock_groups -physically_exclusive \
-                 -group {trace_clk_from_trace trigger_clk_from_trace} \
-                 -group {trace_clk_from_usb trigger_clk_from_usb}
+create_generated_clock -name fe_clk -source [get_pins U_trace_top/U_fe_clock_mux2/I1] -combinational [get_pins U_trace_top/U_fe_clock_mux2/O]
+set_case_analysis 1 [get_pins U_trace_top/U_fe_clock_mux2/S]
 
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets target_clk_IBUF]
 
+set_clock_groups -asynchronous \
+                 -group [get_clocks TRACECLOCK ] \
+                 -group [get_clocks fe_clk ]
+
+set_clock_groups -asynchronous \
+                 -group [get_clocks TRACECLOCK ] \
+                 -group [get_clocks usb_clk ]
+
+set_clock_groups -asynchronous \
+                 -group [get_clocks target_clk ] \
+                 -group [get_clocks usb_clk ]
+
+
 set_property PACKAGE_PIN K3 [get_ports USB_SPARE0]
-
-
-# Master clock frequencies derived from clock wizard
-
-# virtual clock:
-create_clock -period 100.000 -name slow_out_clk
 
 
 # *****************************************************************************
@@ -89,9 +87,6 @@ set_property PACKAGE_PIN F1 [get_ports target_clk]
 # borrow PC pin:
 set_property PACKAGE_PIN M1 [get_ports target_trig_in]
 
-# borrow SCK pin:
-set_property PACKAGE_PIN M2 [get_ports trace_clk_locked]
-
 # borrow MOSI pin:
 set_property PACKAGE_PIN F2 [get_ports synchronized]
 
@@ -119,10 +114,10 @@ set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
 # --------------------------------------------------
 # Remaining input delays
 # --------------------------------------------------
-set_input_delay -clock [get_clocks trace_clk_from_trace] -add_delay 0.000 [get_ports {TRACEDATA[3]}]
-set_input_delay -clock [get_clocks trace_clk_from_trace] -add_delay 0.000 [get_ports {TRACEDATA[2]}]
-set_input_delay -clock [get_clocks trace_clk_from_trace] -add_delay 0.000 [get_ports {TRACEDATA[1]}]
-set_input_delay -clock [get_clocks trace_clk_from_trace] -add_delay 0.000 [get_ports {TRACEDATA[0]}]
+set_input_delay -clock [get_clocks fe_clk] -add_delay 0.000 [get_ports {TRACEDATA[3]}]
+set_input_delay -clock [get_clocks fe_clk] -add_delay 0.000 [get_ports {TRACEDATA[2]}]
+set_input_delay -clock [get_clocks fe_clk] -add_delay 0.000 [get_ports {TRACEDATA[1]}]
+set_input_delay -clock [get_clocks fe_clk] -add_delay 0.000 [get_ports {TRACEDATA[0]}]
 #set_false_path -from [get_ports {TRACEDATA[3]}]
 #set_false_path -from [get_ports {TRACEDATA[2]}]
 #set_false_path -from [get_ports {TRACEDATA[1]}]
@@ -153,7 +148,6 @@ set_false_path -from [get_pins U_trace_top/U_reg_main/reg_timestamps_disable_reg
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_mask*_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_pattern*_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_swo_enable_reg/C] -to [all_registers]
-set_false_path -from [get_pins U_trace_top/U_reg_trace/O_swo_enable_reg/C] -to [get_pins U_trace_top/U_trace_clock_mux/CE0]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_pattern_trig_enable_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_soft_trig_enable_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_pattern_enable_reg*/C] -to [all_registers]
