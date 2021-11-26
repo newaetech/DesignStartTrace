@@ -1,39 +1,45 @@
 [*]
 [*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Wed Sep 15 20:02:29 2021
+[*] Thu Nov 25 19:05:24 2021
 [*]
-[dumpfile] "/mnt/c/Users/jp/GitHub/DesignStartTrace/hardware/tracewhisperer/sim/results/tb.fst"
-[dumpfile_mtime] "Wed Sep 15 19:40:50 2021"
-[dumpfile_size] 348733
-[savefile] "/mnt/c/Users/jp/GitHub/DesignStartTrace/hardware/tracewhisperer/sim/tb.gtkw"
-[timestart] 62757700
-[size] 3840 2131
+[dumpfile] "/home/jpnewae/git/DesignStartTrace/hardware/tracewhisperer/sim/run_patterntrigger_raw0/tb.fst"
+[dumpfile_mtime] "Thu Nov 25 19:02:27 2021"
+[dumpfile_size] 1649683
+[savefile] "/home/jpnewae/git/DesignStartTrace/hardware/tracewhisperer/sim/tb.gtkw"
+[timestart] 0
+[size] 3840 2132
 [pos] -1 -1
-*-17.272358 63565000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-26.852438 63527000 63527000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb.
 [treeopen] tb.U_dut.
 [treeopen] tb.U_dut.U_trace_top.
 [treeopen] tb.U_dut.U_trace_top.U_fe_capture_main.
 [treeopen] tb.U_dut.U_trace_top.U_fe_capture_trace.
+[treeopen] tb.U_dut.U_trace_top.U_fe_capture_trace.U_swo_cdc.
+[treeopen] tb.U_dut.U_trace_top.U_fifo.
 [treeopen] tb.U_dut.U_trace_top.U_uart_rx.
 [treeopen] tb.U_tb_trace_generator.
 [treeopen] tb.U_tb_trace_generator.U_uart_tx.
 [sst_width] 406
 [signals_width] 606
 [sst_expanded] 1
-[sst_vpaned_height] 1005
+[sst_vpaned_height] 1004
 @800200
 -clocks
 @28
-tb.pll_clk1
-tb.tio_clkin
 tb.usb_clk
 tb.U_dut.U_trace_top.target_clk
+tb.target_clk_trace
+tb.target_clk_swo
+tb.trace_clk
 tb.U_dut.U_trace_top.trigger_clk
 @420
 tb.errors
 @28
 tb.U_dut.U_trace_top.fe_clk_sel[1:0]
+tb.U_dut.U_trace_top.fe_clk
+tb.U_dut.U_trace_top.U_fifo.U_fifo.rd_clk
+tb.U_dut.U_trace_top.U_fifo.U_fifo.wr_clk
 @1000200
 -clocks
 @c00200
@@ -69,7 +75,6 @@ tb.U_dut.U_trace_top.U_usb_reg_main.cwusb_isout
 -trace_generator
 @28
 tb.setup_done
-tb.U_tb_trace_generator.target_clk
 @800022
 tb.U_dut.TRACEDATA[3:0]
 @28
@@ -90,11 +95,10 @@ tb.U_tb_trace_generator.trace_data_sdr[7:0]
 (7)tb.U_tb_trace_generator.trace_data_sdr[7:0]
 @1001200
 -group_end
-@c00200
+@800200
 -TB SWO gen
 @28
 tb.U_tb_trace_generator.reset
-tb.U_tb_trace_generator.target_clk
 tb.U_tb_trace_generator.swo_clk
 tb.U_tb_trace_generator.swo_txin_trace
 tb.U_tb_trace_generator.U_uart_tx.txd_syn
@@ -131,7 +135,6 @@ tb.U_tb_trace_generator.U_uart_tx.etx_ctrl_reg[2:0]
 tb.U_tb_trace_generator.swo_txin_trace
 @1000200
 -UART
-@1401200
 -TB SWO gen
 @1001200
 -group_end
@@ -275,9 +278,7 @@ tb.U_dut.U_trace_top.U_fe_capture_trace.swo_data_ready_traceclk
 tb.U_dut.U_trace_top.U_fe_capture_trace.I_swo_data[7:0]
 tb.U_dut.U_trace_top.U_fe_capture_trace.swo_data_reg[7:0]
 @28
-tb.U_dut.U_trace_top.U_fe_capture_trace.U_swo_cdc.src_clk
-@29
-tb.U_dut.U_trace_top.U_fe_capture_trace.U_swo_cdc.dst_clk
+tb.U_dut.U_trace_top.U_fe_capture_trace.U_swo_cdc.src_overflow
 @1000200
 -SWO
 -fe_capture_trace
@@ -367,7 +368,7 @@ tb.U_dut.U_trace_top.U_trigger.capture_enable_start
 tb.U_dut.U_trace_top.m3_trig
 tb.U_dut.U_trace_top.O_trace_trig_out
 tb.U_dut.trig_out
-@800200
+@c00200
 -UART Rx
 @28
 tb.U_dut.swo
@@ -380,7 +381,7 @@ tb.U_dut.U_trace_top.U_uart_rx.rxd_syn
 tb.U_dut.U_trace_top.U_uart_rx.rxd_ack
 @22
 tb.U_dut.U_trace_top.U_uart_rx.rxd_data[7:0]
-@1000200
+@1401200
 -UART Rx
 @28
 tb.U_dut.U_trace_top.U_reg_main.fpga_reset
