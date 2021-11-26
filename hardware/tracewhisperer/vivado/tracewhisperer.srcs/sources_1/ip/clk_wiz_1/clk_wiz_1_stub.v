@@ -1,10 +1,10 @@
-// Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+// Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-// Date        : Thu Nov 12 20:52:28 2020
-// Host        : qed running 64-bit major release  (build 9200)
+// Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
+// Date        : Fri Nov 26 11:32:03 2021
+// Host        : red running 64-bit Ubuntu 18.04.6 LTS
 // Command     : write_verilog -force -mode synth_stub
-//               W:/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/clk_wiz_1/clk_wiz_1_stub.v
+//               /home/jpnewae/git/DesignStartTrace/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/clk_wiz_1/clk_wiz_1_stub.v
 // Design      : clk_wiz_1
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7s15ftgb196-2
