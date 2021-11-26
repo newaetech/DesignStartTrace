@@ -79,6 +79,7 @@ module tracewhisperer_top #(
   wire arm;
   wire capturing;
   wire fe_clk;
+  wire fpga_reset;
   wire [3:0] board_rev;
   wire reverse_tracedata;
   wire [3:0] trace_data;
@@ -147,7 +148,7 @@ module tracewhisperer_top #(
       assign trigger_clk_psdone = 1'b1;
    `else
        clk_wiz_0 U_trigger_clock (
-         .reset        (reset),
+         .reset        (fpga_reset),
          .clk_in1      (fe_clk),
          .clk_out1     (trigger_clk),
          // Dynamic phase shift ports
@@ -177,7 +178,7 @@ module tracewhisperer_top #(
       .fe_clk           (fe_clk),
       .usb_clk          (clk_usb_buf),
       .reset_pin        (1'b0),
-      .fpga_reset       (), // unused
+      .fpga_reset       (fpga_reset),
                                   
       .trace_data       (trace_data),
       .swo              (swo),

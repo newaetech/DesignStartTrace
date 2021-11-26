@@ -16,6 +16,7 @@ set_clock_groups -physically_exclusive \
                  -group {trace_clk_from_trace trigger_clk_from_trace} \
                  -group {trace_clk_from_usb trigger_clk_from_usb}
 
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets target_clk_IBUF]
 
 set_property PACKAGE_PIN K3 [get_ports USB_SPARE0]
 
@@ -81,6 +82,9 @@ set_property PACKAGE_PIN A4 [get_ports USB_SPARE1]
 
 # 20-pin connector:
 set_property PACKAGE_PIN P2 [get_ports trig_out]
+
+# borrow IO1 pin:
+set_property PACKAGE_PIN F1 [get_ports target_clk]
 
 # borrow PC pin:
 set_property PACKAGE_PIN M1 [get_ports target_trig_in]

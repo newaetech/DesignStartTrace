@@ -132,8 +132,8 @@ module trace_top #(
             .INIT_Q2          (0),
             .SRTYPE           ("SYNC")
          ) U_trace_data_iddr (
-            .Q1               (trace_data_sdr[i]),
-            .Q2               (trace_data_sdr[i+4]),
+            .Q1               (trace_data_iddr[i]),
+            .Q2               (trace_data_iddr[i+4]),
             .D                (trace_data[i]),
             .CE               (1'b1),
             .C                (trace_clk_in),
@@ -205,6 +205,7 @@ module trace_top #(
       );
 
       `ifndef __ICARUS__
+         wire fe_clk_pre;
          BUFGMUX U_fe_clock_mux1 (
             .I0            (target_clk),
             .I1            (trace_clk_in),
