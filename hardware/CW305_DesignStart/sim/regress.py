@@ -214,12 +214,11 @@ test_regex = re.compile(args.tests)
 
 # Check once that compile passes:
 outfile = open('regress.out', 'w')
-#makeargs = ['make', 'all']
-#result = subprocess.run(makeargs, stdout=outfile, stderr=outfile)
-#if result.returncode:
-#   print ("Compilation failed (return code: %d), check regress.out." % result.returncode)
-#   quit()
-
+makeargs = ['make', 'compile', 'TARGET_CLOCK_TRACE_PERIOD=10', 'TARGET_CLOCK_SWO_PERIOD=10', 'TRIGGER_CLOCK_PERIOD=10']
+result = subprocess.run(makeargs, stdout=outfile, stderr=outfile)
+if result.returncode:
+   print ("Compilation failed (return code: %d), check regress.out." % result.returncode)
+   quit()
 
 # Run tests:
 start_time = int(time.time())
