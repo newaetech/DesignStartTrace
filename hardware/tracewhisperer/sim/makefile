@@ -69,6 +69,17 @@ nofifo:
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
 
+lint:
+	verilator --lint-only -Wall \
+	-Wno-PINCONNECTEMPTY \
+	-f cmdfile_nofifo \
+	-I../../CW305_DesignStart/hdl \
+	-I../../phywhisperer/software/phywhisperer/firmware \
+	-D__ICARUS__ \
+	-DNOFIFO \
+	--top-module tracewhisperer_top \
+	2>&1 | tee lint.out \
+
 nofifo_swo_only:
 	iverilog -ccmdfile_swo_only_nofifo \
 	-g2005-sv \
@@ -77,7 +88,6 @@ nofifo_swo_only:
 	-I../../CW305_DesignStart/hdl \
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
-
 
 run:
 	cd $(RUNDIR) && vvp -l../$(LOGFILE) $(EXEFILE) -$(WAVEFORMAT)

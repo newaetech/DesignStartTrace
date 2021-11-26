@@ -9,6 +9,10 @@ CAPTURE_RAW=0
 CAPTURE_NOW = 0
 PATTERN_TRIG = 0
 SWO_MODE = 0
+USB_CLOCK_PERIOD = 12
+TARGET_CLOCK_TRACE_PERIOD = 168
+TARGET_CLOCK_SWO_PERIOD = 10
+TRIGGER_CLOCK_PERIOD = 10
 MAX_TIMESTAMP = 65535
 TIMEOUT=100000
 DUMP=0
@@ -35,6 +39,11 @@ compile:
 	-P tb.pTIMEOUT=$(TIMEOUT) \
         -P tb.pCAPTURE_NOW=$(CAPTURE_NOW) \
         -P tb.pMAX_TIMESTAMP=$(MAX_TIMESTAMP) \
+	-P tb.pUSB_CLOCK_PERIOD=$(USB_CLOCK_PERIOD) \
+	-P tb.pTARGET_CLOCK_TRACE_PERIOD=$(TARGET_CLOCK_TRACE_PERIOD) \
+	-P tb.pTARGET_CLOCK_SWO_PERIOD=$(TARGET_CLOCK_SWO_PERIOD) \
+	-P tb.pSWO_MODE=$(SWO_MODE) \
+	-P tb.pTRIGGER_CLOCK_PERIOD=$(TRIGGER_CLOCK_PERIOD) \
 	-DCW305 \
 	-o $(RUNDIR)/$(EXEFILE) \
 
@@ -47,6 +56,19 @@ nofifo:
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
 	-DCW305 \
+
+lint:
+	verilator --lint-only -Wall \
+	-Wno-PINCONNECTEMPTY \
+	-f cmdfile_nofifo \
+	-I../hdl \
+	-I../../phywhisperer/software/phywhisperer/firmware \
+	-D__ICARUS__ \
+	-DNOFIFO \
+	-DCW305 \
+	-DLINT \
+	--top-module CW305_designstart_top \
+	2>&1 | tee lint.out \
 
 traceonly:
 	iverilog -ccmdfile_traceonly \

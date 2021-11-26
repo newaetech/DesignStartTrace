@@ -233,7 +233,6 @@ module trace_top #(
 
    wire [pMATCH_RULES-1:0] pattern_enable;
    wire [pMATCH_RULES-1:0] pattern_trig_enable;
-   wire trace_reset_sync;
    wire [2:0] trace_width;
    wire capture_raw;
    wire record_syncs;
@@ -276,7 +275,6 @@ module trace_top #(
    wire fifo_overflow_blocked;
    wire fifo_full;
    wire fifo_empty;
-   wire capture_done;
    wire [5:0] fifo_status;
    wire usb_drive_data;
    wire reg_arm;
@@ -289,7 +287,6 @@ module trace_top #(
 
    wire trigger_enable;
    wire soft_trig_enable;
-   wire soft_trig_passthru;
    wire [pNUM_TRIGGER_WIDTH-1:0] num_triggers;
    wire [pALL_TRIGGER_DELAY_WIDTHS-1:0] trigger_delay;
    wire [pALL_TRIGGER_WIDTH_WIDTHS-1:0] trigger_width;
@@ -335,7 +332,6 @@ module trace_top #(
    ) U_reg_trace (
       .reset_i                  (reset), 
       .usb_clk                  (usb_clk), 
-      .uart_clk                 (trigger_clk), 
       .reg_address              (reg_address[7:0]), 
       .reg_bytecnt              (reg_bytecnt), 
       .read_data                (read_data_trace), 
@@ -531,7 +527,7 @@ module trace_top #(
       .O_fifo_wr                (fe_fifo_wr),
 
       .O_fifo_flush             (fifo_flush),
-      .O_capture_done           (capture_done),
+      .O_capture_done           (),
       .I_fifo_overflow_blocked  (fifo_overflow_blocked),
       .I_fifo_full              (fifo_full),
       .I_fifo_empty             (fifo_empty),

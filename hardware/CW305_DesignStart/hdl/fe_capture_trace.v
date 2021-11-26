@@ -110,7 +110,6 @@ module fe_capture_trace #(
    wire [pBUFFER_SIZE-1:0] revbuffer;
    reg  synchronized;
    reg  [2:0] valid_count;
-   reg  word_count;
    reg  [2:0] trace_width_r;
    reg valid_buffer;   
    wire revbuffer_all_syncframes;
@@ -472,14 +471,14 @@ module fe_capture_trace #(
          O_trace_count7 <= 0;
       end
       else begin
-         if (match_bits[0]) O_trace_count0 = O_trace_count0 + 1;
-         if (match_bits[1]) O_trace_count1 = O_trace_count1 + 1;
-         if (match_bits[2]) O_trace_count2 = O_trace_count2 + 1;
-         if (match_bits[3]) O_trace_count3 = O_trace_count3 + 1;
-         if (match_bits[4]) O_trace_count4 = O_trace_count4 + 1;
-         if (match_bits[5]) O_trace_count5 = O_trace_count5 + 1;
-         if (match_bits[6]) O_trace_count6 = O_trace_count6 + 1;
-         if (match_bits[7]) O_trace_count7 = O_trace_count7 + 1;
+         if (match_bits[0]) O_trace_count0 <= O_trace_count0 + 1;
+         if (match_bits[1]) O_trace_count1 <= O_trace_count1 + 1;
+         if (match_bits[2]) O_trace_count2 <= O_trace_count2 + 1;
+         if (match_bits[3]) O_trace_count3 <= O_trace_count3 + 1;
+         if (match_bits[4]) O_trace_count4 <= O_trace_count4 + 1;
+         if (match_bits[5]) O_trace_count5 <= O_trace_count5 + 1;
+         if (match_bits[6]) O_trace_count6 <= O_trace_count6 + 1;
+         if (match_bits[7]) O_trace_count7 <= O_trace_count7 + 1;
       end
    end
 

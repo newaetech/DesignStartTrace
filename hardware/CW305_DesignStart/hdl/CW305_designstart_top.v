@@ -195,18 +195,21 @@ module CW305_designstart_top #(
         .CM3_CODE_AXI3_wvalid   ()
        );
 
-  `else 
+   `elsif LINT
+
+   `else 
      // in simulation we simply emulate the trace pins instead:
      assign ext_clock = sys_clock;
      tb_trace_generator #(
            .pSWO_MODE              (0)
      ) U_tb_trace_generator
-          (.target_clk             (sys_clock),
+          (.target_clk_trace       (sys_clock),
            .swo_clk                (1'b0),
            .reset                  (fpga_reset),
            .TRACEDATA              (TRACEDATA),
            .trig_out               (m3_trig_out),
            .done                   (trace_generator_done),
+           .setup_done             (1'b0),
            .swo                    ()
           );
   `endif

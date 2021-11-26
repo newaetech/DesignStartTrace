@@ -183,6 +183,7 @@ module tracewhisperer_top #(
       .swo              (swo),
       .O_trace_trig_out (trig_out),
       .m3_trig          (target_trig_in_r),
+      .O_soft_trig_passthru (),
 
       .target_clk       (target_clk),
 
