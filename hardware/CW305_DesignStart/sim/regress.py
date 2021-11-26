@@ -105,9 +105,8 @@ if not args.CW305:
                  CAPTURE_RAW = 1,
                  PATTERN_TRIG = 0,
                  RULES = 4,
-                 #TIMEOUT = 10000, # TODO-temp
                  USB_CLOCK_SEL = [0, 1],
-                 TRACE_CLOCK_SEL = 0, # TODO-temp
+                 TRACE_CLOCK_SEL = 0,
                  SWO_DIV = [1, 13],
                  USB_CLOCK_PERIOD = [6, 14, 2],
                  EVENTS = 30))
@@ -120,7 +119,7 @@ if not args.CW305:
                  PATTERN_TRIG = 0,
                  RULES = 8,
                  USB_CLOCK_SEL = [0, 1],
-                 TRACE_CLOCK_SEL = 0, # TODO-temp
+                 TRACE_CLOCK_SEL = 0,
                  SWO_DIV = [1, 13],
                  USB_CLOCK_PERIOD = [6, 14, 2],
                  EVENTS = 30))
@@ -144,7 +143,7 @@ if not args.CW305:
                  PATTERN_TRIG = 0,
                  RULES = 4,
                  USB_CLOCK_SEL = [0, 1],
-                 TRACE_CLOCK_SEL = 0, # TODO-temp
+                 TRACE_CLOCK_SEL = 0,
                  SWO_DIV = [1, 13],
                  USB_CLOCK_PERIOD = [6, 14, 2],
                  EVENTS = 30))
