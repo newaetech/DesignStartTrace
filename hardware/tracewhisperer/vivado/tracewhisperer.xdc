@@ -6,8 +6,8 @@ create_clock -period 10.400 -name usb_clk -waveform {0.000 5.200} [get_nets USB_
 
 create_generated_clock -name fe_clk -source [get_pins U_trace_top/U_fe_clock_mux2/I1] -combinational [get_pins U_trace_top/U_fe_clock_mux2/O]
 set_case_analysis 1 [get_pins U_trace_top/U_fe_clock_mux2/S]
-
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets target_clk_IBUF]
+
 
 set_clock_groups -asynchronous \
                  -group [get_clocks TRACECLOCK ] \
@@ -20,6 +20,11 @@ set_clock_groups -asynchronous \
 set_clock_groups -asynchronous \
                  -group [get_clocks target_clk ] \
                  -group [get_clocks usb_clk ]
+
+set_clock_groups -asynchronous \
+                 -group [get_clocks fe_clk ] \
+                 -group [get_clocks usb_clk ]
+
 
 
 set_property PACKAGE_PIN K3 [get_ports USB_SPARE0]
@@ -82,7 +87,13 @@ set_property PACKAGE_PIN A4 [get_ports USB_SPARE1]
 set_property PACKAGE_PIN P2 [get_ports trig_out]
 
 # borrow IO1 pin:
-set_property PACKAGE_PIN F1 [get_ports target_clk]
+#set_property PACKAGE_PIN F1 [get_ports target_clk]
+
+# borrow HS2 pin:
+set_property PACKAGE_PIN C1 [get_ports target_clk]
+
+# borrow IO2 pin:
+set_property PACKAGE_PIN L3 [get_ports led4]
 
 # borrow PC pin:
 set_property PACKAGE_PIN M1 [get_ports target_trig_in]
@@ -114,10 +125,10 @@ set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
 # --------------------------------------------------
 # Remaining input delays
 # --------------------------------------------------
-set_input_delay -clock [get_clocks fe_clk] -add_delay 0.000 [get_ports {TRACEDATA[3]}]
-set_input_delay -clock [get_clocks fe_clk] -add_delay 0.000 [get_ports {TRACEDATA[2]}]
-set_input_delay -clock [get_clocks fe_clk] -add_delay 0.000 [get_ports {TRACEDATA[1]}]
-set_input_delay -clock [get_clocks fe_clk] -add_delay 0.000 [get_ports {TRACEDATA[0]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 0.000 [get_ports {TRACEDATA[3]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 0.000 [get_ports {TRACEDATA[2]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 0.000 [get_ports {TRACEDATA[1]}]
+set_input_delay -clock [get_clocks TRACECLOCK] -add_delay 0.000 [get_ports {TRACEDATA[0]}]
 #set_false_path -from [get_ports {TRACEDATA[3]}]
 #set_false_path -from [get_ports {TRACEDATA[2]}]
 #set_false_path -from [get_ports {TRACEDATA[1]}]

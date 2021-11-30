@@ -73,15 +73,16 @@ module tracewhisperer_top #(
   // leds:
   output wire led1,
   output wire led2,
-  output wire led3
+  output wire led3,
+  output wire led4
 );
 
   wire arm;
   wire capturing;
   wire fe_clk;
   wire fpga_reset;
-  wire [3:0] board_rev;
   wire reverse_tracedata;
+  wire led_select;
   wire [3:0] trace_data;
 
   wire [pUSERIO_WIDTH-1:0] userio_pwdriven;
@@ -94,43 +95,42 @@ module tracewhisperer_top #(
   wire trigger_clk_psincdec;
   wire trigger_clk_psdone;
 
-  reg [22:0] count;
+  reg [22:0] count_fe_clock = 0;
+  reg [22:0] count_trace_clock = 0;
   reg target_trig_in_r;
 
-  always @(posedge fe_clk) count <= count + 1;
+  always @(posedge fe_clk) count_fe_clock <= count_fe_clock + 1;
+  always @(posedge TRACECLOCK) count_trace_clock <= count_trace_clock + 1;
 
-  assign led1 = count[22];              // clock alive; actually routes to PD pin of 20-pin CW connector
-  assign led3 = arm;                    // "Armed" LED
-  assign led2 = capturing;              // "Capturing" LED
+  assign led1 = count_fe_clock[22];     // clock alive; actually routes to PD pin of 20-pin CW connector
+  assign led4 = count_trace_clock[22];  // clock alive; actually routes to IO2 pin of 20-pin CW connector
+  assign led3 = led_select? count_fe_clock[22] : arm;
+  assign led2 = led_select? count_trace_clock[22] : capturing;
 
   assign mcx_trig = trig_out;
 
-  // front panel header has different pin mapping in pre-production boards
-  /*
-  always @(*) begin
-     case (board_rev)
-        3: begin
-              if (reverse_tracedata)
-                 trace_data = {userio_d[3], TRACEDATA[2], TRACEDATA[1], TRACEDATA[3]};
-              else
-                 trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
-              swo = userio_d[1];
-           end
-        default: begin // catches production board rev (4)
-              if (reverse_tracedata)
-                 trace_data = {TRACEDATA[0], TRACEDATA[1], TRACEDATA[2], TRACEDATA[3]};
-              else
-                 trace_data = TRACEDATA;
-              swo = userio_d[2];
-           end
-     endcase
-  end
-  */
- // TODO-temp!fix!
-  assign trace_data = TRACEDATA;
-  //assign trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
-  assign swo = userio_d[2];
+  // Front panel header has different pin mapping in pre-production boards.
+  // This affects TRACEDATA too, but we can't mux around the IDDRs so we're
+  // stuck (only option is a build-time flag)
 
+  `ifdef REV3
+      assign trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
+      assign swo = userio_d[1];
+  `else
+      assign trace_data = TRACEDATA;
+      assign swo = userio_d[2];
+  `endif
+
+  `ifdef ILA_RAW_TRACE
+      ila_raw_trace I_raw_trace_ila (
+         .clk          (clk_usb_buf),          // input wire clk
+         .probe0       (TRACEDATA),            // input wire [3:0]  probe0  
+         .probe1       (userio_d[3]),          // input wire [0:0]  probe1 
+         .probe2       (userio_d[2]),          // input wire [0:0]  probe2 
+         .probe3       (userio_d[1]),          // input wire [0:0]  probe3 
+         .probe4       (TRACECLOCK)            // input wire [0:0]  probe4 
+     );
+  `endif
 
   wire clk_usb_buf;
 
@@ -147,6 +147,11 @@ module tracewhisperer_top #(
       assign trigger_clk_locked = 1'b1;
       assign trigger_clk_psdone = 1'b1;
    `else
+      /* TODO-temp!
+      assign trigger_clk = clk_usb_buf;
+      assign trigger_clk_locked = 1'b1;
+      assign trigger_clk_psdone = 1'b1;
+      */
        clk_wiz_0 U_trigger_clock (
          .reset        (fpga_reset),
          .clk_in1      (fe_clk),
@@ -165,7 +170,6 @@ module tracewhisperer_top #(
    always @(posedge fe_clk) begin
       target_trig_in_r <= target_trig_in;
    end
-
 
    trace_top #(
       .pBYTECNT_SIZE    (pBYTECNT_SIZE),
@@ -206,8 +210,8 @@ module tracewhisperer_top #(
       .O_data_available (USB_SPARE0 ),
       .I_fast_fifo_rdn  (USB_SPARE1 ),
 
-      .O_board_rev      (board_rev),
       .O_reverse_tracedata (reverse_tracedata),
+      .O_led_select     (led_select),
 
       .userio_d         (userio_d),
       .O_userio_pwdriven (userio_pwdriven),
@@ -228,7 +232,6 @@ module tracewhisperer_top #(
       .I_userio_pwdriven        (userio_pwdriven),
       .I_userio_drive_data      (userio_drive_data)
    );
-
 
 
 endmodule

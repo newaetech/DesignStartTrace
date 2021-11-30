@@ -222,7 +222,7 @@ module reg_trace #(
          O_uart_stop_bits <= 1;
          O_uart_data_bits <= 8;
          O_record_syncs <= 0;
-         O_reverse_tracedata <= 1; // TODO: change default to 0 later
+         O_reverse_tracedata <= 0; // TODO: cleanup later if truly not needed
          O_fe_clk_sel <= 0;
          reset_sync <= 0;
          reset_sync_r <= 0;
@@ -302,7 +302,8 @@ module reg_trace #(
 	.probe6         (reg_addrvalid),                // input wire [0:0]  probe6 
 	.probe7         (reg_read_data),                // input wire [7:0]  probe7 
 	.probe8         (selected),                     // input wire [0:0]  probe8 
-	.probe9         (O_pattern_enable)              // input wire [7:0]  probe9
+	.probe9         (O_pattern_enable),             // input wire [7:0]  probe9
+	.probe10        (O_fe_clk_sel)                  // input wire [1:0]  probe10
        );
 
 

@@ -55,6 +55,7 @@ nofifo:
 	-I../hdl \
 	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
+	-DLINT \
 	-DCW305 \
 
 lint:

@@ -76,7 +76,7 @@ module trace_top #(
   output wire          O_data_available,
   input  wire          I_fast_fifo_rdn,
 
-  output wire [3:0]   O_board_rev,
+  output wire         O_led_select,
   output wire         O_reverse_tracedata,
 
   // USERIO pins: (TraceWhisperer only, unused for CW305)
@@ -118,7 +118,6 @@ module trace_top #(
    wire [7:0] trace_data_iddr;
    wire [7:0] trace_data_sdr;
 
-   //
    `ifdef __ICARUS__
       assign trace_data_iddr = I_trace_sdr;
    `else
@@ -126,8 +125,7 @@ module trace_top #(
    generate 
       for (i = 0; i < 4; i = i + 1) begin: gen_adc_data
          IDDR #(
-            //DDR_CLK_EDGE     ("OPPOSITE_EDGE"),
-            .DDR_CLK_EDGE     ("SAME_EDGE_PIPELINED"),
+            .DDR_CLK_EDGE     ("OPPOSITE_EDGE"),
             .INIT_Q1          (0),
             .INIT_Q2          (0),
             .SRTYPE           ("SYNC")
@@ -219,6 +217,7 @@ module trace_top #(
             .S             (fe_clk_sel[1]),
             .O             (fe_clk)
          );
+
       `else
          assign fe_clk = fe_clk_sel[1]?  usb_clk :
                          fe_clk_sel[0]?  trace_clk_in : 
@@ -443,7 +442,8 @@ module trace_top #(
       .O_capture_while_trig (capture_while_trig),
       .O_max_timestamp  (max_timestamp),
       .I_capture_enable_pulse (capture_enable_pulse),
-      .O_board_rev      (O_board_rev),
+      .O_board_rev      (),
+      .O_led_select     (O_led_select),
 
       .I_locked1        (1'b0),
       .I_locked2        (trigger_clk_locked),
