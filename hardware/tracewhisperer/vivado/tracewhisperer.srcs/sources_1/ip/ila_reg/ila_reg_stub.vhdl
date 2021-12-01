@@ -1,7 +1,7 @@
 -- Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
--- Date        : Fri Nov 26 11:32:48 2021
+-- Date        : Wed Dec  1 10:22:40 2021
 -- Host        : red running 64-bit Ubuntu 18.04.6 LTS
 -- Command     : write_vhdl -force -mode synth_stub
 --               /home/jpnewae/git/DesignStartTrace/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/ila_reg/ila_reg_stub.vhdl
@@ -28,11 +28,12 @@ entity ila_reg is
     probe10 : in STD_LOGIC_VECTOR ( 0 to 0 );
     probe11 : in STD_LOGIC_VECTOR ( 0 to 0 );
     probe12 : in STD_LOGIC_VECTOR ( 0 to 0 );
-    probe13 : in STD_LOGIC_VECTOR ( 31 downto 0 );
+    probe13 : in STD_LOGIC_VECTOR ( 6 downto 0 );
     probe14 : in STD_LOGIC_VECTOR ( 0 to 0 );
     probe15 : in STD_LOGIC_VECTOR ( 7 downto 0 );
     probe16 : in STD_LOGIC_VECTOR ( 0 to 0 );
-    probe17 : in STD_LOGIC_VECTOR ( 7 downto 0 )
+    probe17 : in STD_LOGIC_VECTOR ( 7 downto 0 );
+    probe18 : in STD_LOGIC_VECTOR ( 7 downto 0 )
   );
 
 end ila_reg;
@@ -41,7 +42,7 @@ architecture stub of ila_reg is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;
-attribute black_box_pad_pin of stub : architecture is "clk,probe0[7:0],probe1[7:0],probe2[0:0],probe3[0:0],probe4[0:0],probe5[0:0],probe6[7:0],probe7[6:0],probe8[7:0],probe9[15:0],probe10[0:0],probe11[0:0],probe12[0:0],probe13[31:0],probe14[0:0],probe15[7:0],probe16[0:0],probe17[7:0]";
+attribute black_box_pad_pin of stub : architecture is "clk,probe0[7:0],probe1[7:0],probe2[0:0],probe3[0:0],probe4[0:0],probe5[0:0],probe6[7:0],probe7[6:0],probe8[7:0],probe9[15:0],probe10[0:0],probe11[0:0],probe12[0:0],probe13[6:0],probe14[0:0],probe15[7:0],probe16[0:0],probe17[7:0],probe18[7:0]";
 attribute X_CORE_INFO : string;
 attribute X_CORE_INFO of stub : architecture is "ila,Vivado 2020.2";
 begin

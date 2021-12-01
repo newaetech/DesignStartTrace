@@ -56,21 +56,29 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// clk_out1__160.00000______0.000______50.0______128.832____103.963
+// clk_out1__80.00000______0.000______50.0______275.573____301.601
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
 //----------------------------------------------------------------------------
-// __primary__________80.000____________0.010
+// __primary______________20_____________0.01
 
 `timescale 1ps/1ps
 
-(* CORE_GENERATION_INFO = "clk_wiz_0,clk_wiz_v6_0_6_0_0,{component_name=clk_wiz_0,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=true,use_inclk_switchover=false,use_dyn_reconfig=false,enable_axi=0,feedback_source=FDBK_AUTO,PRIMITIVE=MMCM,num_out_clk=1,clkin1_period=12.500,clkin2_period=10.000,use_power_down=false,use_reset=true,use_locked=true,use_inclk_stopped=false,feedback_type=SINGLE,CLOCK_MGR_TYPE=NA,manual_override=false}" *)
+(* CORE_GENERATION_INFO = "clk_wiz_0,clk_wiz_v6_0_6_0_0,{component_name=clk_wiz_0,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=true,use_inclk_switchover=false,use_dyn_reconfig=true,enable_axi=0,feedback_source=FDBK_AUTO,PRIMITIVE=MMCM,num_out_clk=1,clkin1_period=50.000,clkin2_period=10.0,use_power_down=false,use_reset=true,use_locked=true,use_inclk_stopped=false,feedback_type=SINGLE,CLOCK_MGR_TYPE=NA,manual_override=false}" *)
 
 module clk_wiz_0 
  (
   // Clock out ports
   output        clk_out1,
+  // Dynamic reconfiguration ports
+  input   [6:0] daddr,
+  input         dclk,
+  input         den,
+  input  [15:0] din,
+  output [15:0] dout,
+  output        drdy,
+  input         dwe,
   // Dynamic phase shift ports
   input         psclk,
   input         psen,
@@ -87,6 +95,14 @@ module clk_wiz_0
   (
   // Clock out ports  
   .clk_out1(clk_out1),
+  // Dynamic reconfiguration ports            
+  .daddr(daddr),
+  .dclk(dclk),
+  .den(den),
+  .din(din),
+  .dout(dout),
+  .drdy(drdy),
+  .dwe(dwe),
   // Dynamic phase shift ports                
   .psclk(psclk),
   .psen(psen),

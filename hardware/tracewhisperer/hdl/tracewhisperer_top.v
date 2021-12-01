@@ -95,6 +95,13 @@ module tracewhisperer_top #(
   wire trigger_clk_psincdec;
   wire trigger_clk_psdone;
 
+  wire [6:0]     trig_drp_addr;
+  wire           trig_drp_den;
+  wire [15:0]    trig_drp_din;
+  wire [15:0]    trig_drp_dout;
+  wire           trig_drp_dwe;
+  wire           trig_drp_reset;
+
   reg [22:0] count_fe_clock = 0;
   reg [22:0] count_trace_clock = 0;
   reg target_trig_in_r;
@@ -162,9 +169,18 @@ module tracewhisperer_top #(
          .psincdec     (trigger_clk_psincdec),
          .psdone       (trigger_clk_psdone),
          // Status and control signals
-         .locked       (trigger_clk_locked)
+         .locked       (trigger_clk_locked),
+         // Dynamic reconfiguration ports:
+         .daddr        (trig_drp_addr),
+         .dclk         (clk_usb_buf),
+         .den          (trig_drp_den),
+         .din          (trig_drp_din),
+         .dout         (trig_drp_dout),
+         .drdy         (),
+         .dwe          (trig_drp_dwe)
       );
    `endif
+
 
 
    always @(posedge fe_clk) begin
@@ -191,12 +207,21 @@ module tracewhisperer_top #(
       .O_soft_trig_passthru (),
 
       .target_clk       (target_clk),
+      .I_fe_clock_count (count_fe_clock),
 
       .trigger_clk          (trigger_clk),
       .trigger_clk_locked   (trigger_clk_locked),
       .trigger_clk_psen     (trigger_clk_psen    ),
       .trigger_clk_psincdec (trigger_clk_psincdec),
       .trigger_clk_psdone   (trigger_clk_psdone  ),
+
+      .trig_drp_addr    (trig_drp_addr  ),
+      .trig_drp_den     (trig_drp_den   ),
+      .trig_drp_din     (trig_drp_din   ),
+      .trig_drp_dout    (trig_drp_dout  ),
+      .trig_drp_dwe     (trig_drp_dwe   ),
+      .trig_drp_reset   (trig_drp_reset ),
+
 
       `ifdef __ICARUS__
       .I_trace_sdr      (I_trace_sdr),

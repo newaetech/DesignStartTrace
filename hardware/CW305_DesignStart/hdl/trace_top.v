@@ -26,6 +26,7 @@ either expressed or implied, of NewAE Technology Inc.
 `timescale 1 ns / 1 ps
 `default_nettype none
 `include "defines_pw.v"
+`include "defines_trace.v"
 
 module trace_top #(
   parameter pBYTECNT_SIZE = 7,
@@ -48,6 +49,7 @@ module trace_top #(
   output wire fpga_reset,
 
   input wire  target_clk,
+  input wire  [22:0] I_fe_clock_count,
 
   input wire  trigger_clk,
   input wire  trigger_clk_locked,
@@ -79,6 +81,14 @@ module trace_top #(
   output wire         O_led_select,
   output wire         O_reverse_tracedata,
 
+  output wire [6:0]     trig_drp_addr,
+  output wire           trig_drp_den,
+  output wire [15:0]    trig_drp_din,
+  input  wire [15:0]    trig_drp_dout,
+  output wire           trig_drp_dwe,
+  output wire           trig_drp_reset,
+
+
   // USERIO pins: (TraceWhisperer only, unused for CW305)
   input  wire [pUSERIO_WIDTH-1:0]   userio_d,
   output wire [pUSERIO_WIDTH-1:0]   O_userio_pwdriven,
@@ -105,6 +115,7 @@ module trace_top #(
    wire [7:0]   write_data;
    wire [7:0]   read_data;
    wire [7:0]   read_data_trace;
+   wire [7:0]   read_data_trace_trigger_drp;
    wire [7:0]   read_data_main;
    wire         reg_read;
    wire         reg_write;
@@ -323,6 +334,14 @@ module trace_top #(
    reg  reg_arm_feclk;
    (* ASYNC_REG = "TRUE" *) reg  [1:0] reg_arm_pipe;
 
+   reg [25:0] timer_heartbeat;
+   reg freq_measure;
+   reg timer_heartbeat22r;
+   wire freq_measure_trigger;
+   reg [31:0] trigger_frequency_int;
+   reg [31:0] trigger_frequency;
+
+
 
    reg_trace #(
       .pADDR_WIDTH              (pADDR_WIDTH),
@@ -345,6 +364,7 @@ module trace_top #(
 
       .I_synchronized           (synchronized    ),
       .I_swo_cdc_overflow       (swo_cdc_fifo_overflow),
+      .I_trigger_frequency      (trigger_frequency),
 
       .O_pattern_enable         (pattern_enable  ),
       .O_pattern_trig_enable    (pattern_trig_enable),
@@ -390,8 +410,33 @@ module trace_top #(
       .O_reverse_tracedata      (O_reverse_tracedata),
       .O_reset_sync             (reset_sync_from_reg),
 
+      .I_fe_clock_count         (I_fe_clock_count),
       .selected                 (reg_trace_selected)
    );
+
+   reg_mmcm_drp #(
+      .pBYTECNT_SIZE    (pBYTECNT_SIZE),
+      .pDRP_ADDR        (`REG_TRIGGER_DRP_ADDR),
+      .pDRP_DATA        (`REG_TRIGGER_DRP_DATA),
+      .pDRP_RESET       (`REG_TRIGGER_DRP_RESET)
+   ) U_reg_trigger_drp (
+      .reset_i          (reset),
+      .clk_usb          (usb_clk),
+      .reg_address      (reg_address[7:0]), 
+      .reg_bytecnt      (reg_bytecnt), 
+      .reg_datao        (read_data_trace_trigger_drp), 
+      .reg_datai        (write_data), 
+      .reg_read         (reg_read), 
+      .reg_write        (reg_write), 
+      .selected         (reg_trace_selected),
+
+      .drp_addr         (trig_drp_addr ),
+      .drp_den          (trig_drp_den  ),
+      .drp_din          (trig_drp_din  ),
+      .drp_dout         (trig_drp_dout ),
+      .drp_dwe          (trig_drp_dwe  ),
+      .drp_reset        (trig_drp_reset)
+   ); 
 
 
    reg_main #(
@@ -463,7 +508,7 @@ module trace_top #(
    );
 
    assign read_data = reg_main_selected? read_data_main :
-                      reg_trace_selected?  read_data_trace : 8'h00;
+                      reg_trace_selected?  read_data_trace | read_data_trace_trigger_drp : 8'h00;
 
 
    `ifndef NOFIFO // for clean compilation
@@ -688,6 +733,41 @@ module trace_top #(
       .O_capture_enable (capture_enable)
    );
 
+   // measure trigger_clk frequency: divide clock by 2^23 for frequency measurement
+   always @(posedge usb_clk) begin
+      if (reset) begin
+         timer_heartbeat <= 26'b0;
+         timer_heartbeat22r <= 1'b0;
+         freq_measure <= 1'b0;
+      end 
+      else begin
+         timer_heartbeat <= timer_heartbeat +  26'd1;
+         timer_heartbeat22r <= timer_heartbeat[22];
+         if (timer_heartbeat[22] && ~timer_heartbeat22r)
+            freq_measure <= 1'b1;
+         else
+            freq_measure <= 1'b0;
+      end
+   end
+
+   cdc_pulse U_freq_measure_adc (
+      .reset_i       (reset),
+      .src_clk       (usb_clk),
+      .src_pulse     (freq_measure),
+      .dst_clk       (trigger_clk),
+      .dst_pulse     (freq_measure_trigger)
+   );
+
+   always @(posedge trigger_clk) begin
+      if (freq_measure_trigger) begin
+         trigger_frequency_int <= 32'd1;
+         trigger_frequency <= trigger_frequency_int;
+      end 
+      else begin
+         trigger_frequency_int <= trigger_frequency_int + 32'd1;
+      end
+   end
+
 
    `ifdef ILA_REG
        ila_reg I_reg_ila (
@@ -705,12 +785,12 @@ module trace_top #(
           .probe10      (reg_read),             // input wire [0:0]  probe10 
           .probe11      (reg_write),            // input wire [0:0]  probe11 
           .probe12      (reg_addrvalid),        // input wire [0:0]  probe12 
-          //.probe13      (trace_pattern0[31:0]), // input wire [31:0] probe13 
-          .probe13      ({24'b0, cmdfifo_dout}), // input wire [31:0] probe13 
+          .probe13      (cmdfifo_dout),         // input wire [7:0]  probe13 
           .probe14      (reg_main_selected),    // input wire [0:0]  probe14 
           .probe15      (read_data_main),       // input wire [7:0]  probe15 
           .probe16      (reg_trace_selected),   // input wire [0:0]  probe16 
-          .probe17      (read_data_trace)       // input wire [7:0]  probe17 
+          .probe17      (read_data_trace),      // input wire [7:0]  probe17 
+          .probe18      (read_data_trace_trigger_drp)  // input wire [7:0]  probe18 
        );
    `endif
 
