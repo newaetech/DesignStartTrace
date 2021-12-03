@@ -72,8 +72,8 @@ module tracewhisperer_top #(
 
   // leds:
   output wire led1,
-  output wire led2,
-  output wire led3,
+  output reg  led2,
+  output reg  led3,
   output wire led4
 );
 
@@ -81,8 +81,10 @@ module tracewhisperer_top #(
   wire capturing;
   wire fe_clk;
   wire fpga_reset;
+  wire flash_pattern;
   wire reverse_tracedata;
   wire led_select;
+  wire error_flag;
   wire [3:0] trace_data;
 
   wire [pUSERIO_WIDTH-1:0] userio_pwdriven;
@@ -111,8 +113,21 @@ module tracewhisperer_top #(
 
   assign led1 = count_fe_clock[22];     // clock alive; actually routes to PD pin of 20-pin CW connector
   assign led4 = count_trace_clock[22];  // clock alive; actually routes to IO2 pin of 20-pin CW connector
-  assign led3 = led_select? count_fe_clock[22] : arm;
-  assign led2 = led_select? count_trace_clock[22] : capturing;
+
+  always @(*) begin
+      if (error_flag) begin
+          led2 = flash_pattern;
+          led3 = flash_pattern;
+      end
+      else if (led_select) begin
+          led2 = count_fe_clock[22];
+          led3 = count_trace_clock[22];
+      end
+      else begin
+          led2 = arm;
+          led3 = capturing;
+      end
+  end
 
   assign mcx_trig = trig_out;
 
@@ -199,6 +214,7 @@ module tracewhisperer_top #(
       .usb_clk          (clk_usb_buf),
       .reset_pin        (1'b0),
       .fpga_reset       (fpga_reset),
+      .flash_pattern    (flash_pattern),
                                   
       .trace_data       (trace_data),
       .swo              (swo),
@@ -237,6 +253,7 @@ module tracewhisperer_top #(
 
       .O_reverse_tracedata (reverse_tracedata),
       .O_led_select     (led_select),
+      .O_error_flag     (error_flag),
 
       .userio_d         (userio_d),
       .O_userio_pwdriven (userio_pwdriven),

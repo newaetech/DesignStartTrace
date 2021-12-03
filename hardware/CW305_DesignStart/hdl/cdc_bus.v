@@ -26,6 +26,7 @@ module cdc_bus #(
    parameter pSYNC_STAGES = 2
 )(
    input  wire                          reset_i,
+   input  wire                          clear_error,
    input  wire                          src_clk,
    input  wire                          src_pulse,
    input  wire [pDATA_WIDTH-1:0]        src_data,
@@ -59,14 +60,16 @@ module cdc_bus #(
        end
        else begin
            src_pulse_r <= src_pulse;
-           if (src_pulse && ~src_pulse_r) begin
-               if (src_outstanding)
-                   src_overflow <= 1'b1;
-               else
-                   src_outstanding <= 1'b1;
-           end
+           if (src_pulse && ~src_pulse_r && ~src_outstanding)
+               src_outstanding <= 1'b1;
            else if (src_ack)
                src_outstanding <= 1'b0;
+
+           if (src_pulse && ~src_pulse_r && src_outstanding)
+               src_overflow <= 1'b1;
+           else if (clear_error)
+               src_overflow <= 1'b0;
+
        end
    end
 

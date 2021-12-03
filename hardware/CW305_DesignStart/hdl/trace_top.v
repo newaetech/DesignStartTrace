@@ -47,6 +47,7 @@ module trace_top #(
   input  wire usb_clk,
   input  wire reset_pin,
   output wire fpga_reset,
+  output reg  flash_pattern,
 
   input wire  target_clk,
   input wire  [22:0] I_fe_clock_count,
@@ -80,6 +81,7 @@ module trace_top #(
 
   output wire         O_led_select,
   output wire         O_reverse_tracedata,
+  output wire         O_error_flag,
 
   output wire [6:0]     trig_drp_addr,
   output wire           trig_drp_den,
@@ -287,6 +289,7 @@ module trace_top #(
    wire fifo_full;
    wire fifo_empty;
    wire [5:0] fifo_status;
+   wire fifo_error_flag;
    wire usb_drive_data;
    wire reg_arm;
    wire capture_while_trig;
@@ -330,6 +333,7 @@ module trace_top #(
    wire arm_pulse;
    wire reset_sync_from_reg;
    wire timestamps_disable;
+   wire clear_errors;
 
    reg  reg_arm_feclk;
    (* ASYNC_REG = "TRUE" *) reg  [1:0] reg_arm_pipe;
@@ -344,6 +348,7 @@ module trace_top #(
    reg [31:0] fe_frequency_int;
    reg [31:0] fe_frequency;
 
+   assign O_error_flag = swo_cdc_fifo_overflow || fifo_error_flag;
 
 
    reg_trace #(
@@ -493,6 +498,7 @@ module trace_top #(
       .I_capture_enable_pulse (capture_enable_pulse),
       .O_board_rev      (),
       .O_led_select     (O_led_select),
+      .O_clear_errors   (clear_errors),
 
       .I_locked1        (1'b0),
       .I_locked2        (trigger_clk_locked),
@@ -530,10 +536,12 @@ module trace_top #(
       .I_fifo_flush             (fifo_flush),
       .I_clear_read_flags       (reg_arm),
       .I_clear_write_flags      (reg_arm_feclk),
+      .I_clear_errors           (clear_errors),
 
       .O_data                   (fifo_out_data),
       .O_fifo_status            (fifo_status),
       .O_fifo_empty             (fifo_empty),
+      .O_error_flag             (fifo_error_flag),
 
       .I_custom_fifo_stat_flag  (synchronized)      
    );
@@ -609,6 +617,7 @@ module trace_top #(
       .I_swo_data_ready         (swo_data_ready),
       .I_swo_data               (swo_data_byte),
       .O_swo_cdc_overflow       (swo_cdc_fifo_overflow),
+      .I_clear_errors           (clear_errors),
 
    /* GENERIC FRONT END CONNECTIONS */
       .O_event                  (fe_event),
@@ -743,6 +752,7 @@ module trace_top #(
          timer_heartbeat <= 26'b0;
          timer_heartbeat22r <= 1'b0;
          freq_measure <= 1'b0;
+         flash_pattern <= 1'b0;
       end 
       else begin
          timer_heartbeat <= timer_heartbeat +  26'd1;
@@ -751,6 +761,8 @@ module trace_top #(
             freq_measure <= 1'b1;
          else
             freq_measure <= 1'b0;
+         if (timer_heartbeat[25])
+            flash_pattern <= ~timer_heartbeat[23];
       end
    end
 
