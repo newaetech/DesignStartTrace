@@ -52,6 +52,7 @@ module reg_trace #(
    input  wire                                  I_synchronized,
    input  wire                                  I_swo_cdc_overflow,
    input  wire [31:0]                           I_trigger_frequency,
+   input  wire [31:0]                           I_fe_frequency,
 
    output reg  [pMATCH_RULES-1:0]               O_pattern_enable,
    output reg  [pMATCH_RULES-1:0]               O_pattern_trig_enable,
@@ -137,6 +138,7 @@ module reg_trace #(
             `REG_SYNCHRONIZED:          reg_read_data = I_synchronized;
             `REG_STAT:                  reg_read_data = I_swo_cdc_overflow;
             `REG_TRIGGER_FREQ:          reg_read_data = I_trigger_frequency[reg_bytecnt*8 +: 8];
+            `REG_FE_FREQ:               reg_read_data = I_fe_frequency[reg_bytecnt*8 +: 8];
 
             `REG_TRACE_PATTERN0:        reg_read_data = O_trace_pattern0[reg_bytecnt*8 +: 8];
             `REG_TRACE_PATTERN1:        reg_read_data = O_trace_pattern1[reg_bytecnt*8 +: 8];

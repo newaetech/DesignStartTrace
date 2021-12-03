@@ -337,9 +337,12 @@ module trace_top #(
    reg [25:0] timer_heartbeat;
    reg freq_measure;
    reg timer_heartbeat22r;
-   wire freq_measure_trigger;
+   wire freq_measure_trigger_clk;
    reg [31:0] trigger_frequency_int;
    reg [31:0] trigger_frequency;
+   wire freq_measure_fe_clk;
+   reg [31:0] fe_frequency_int;
+   reg [31:0] fe_frequency;
 
 
 
@@ -365,6 +368,7 @@ module trace_top #(
       .I_synchronized           (synchronized    ),
       .I_swo_cdc_overflow       (swo_cdc_fifo_overflow),
       .I_trigger_frequency      (trigger_frequency),
+      .I_fe_frequency           (fe_frequency),
 
       .O_pattern_enable         (pattern_enable  ),
       .O_pattern_trig_enable    (pattern_trig_enable),
@@ -733,7 +737,7 @@ module trace_top #(
       .O_capture_enable (capture_enable)
    );
 
-   // measure trigger_clk frequency: divide clock by 2^23 for frequency measurement
+   // measure fe_clk and trigger_clk frequency: divide clock by 2^23 for frequency measurement
    always @(posedge usb_clk) begin
       if (reset) begin
          timer_heartbeat <= 26'b0;
@@ -750,16 +754,24 @@ module trace_top #(
       end
    end
 
-   cdc_pulse U_freq_measure_adc (
+   cdc_pulse U_freq_measure_trigger_clk (
       .reset_i       (reset),
       .src_clk       (usb_clk),
       .src_pulse     (freq_measure),
       .dst_clk       (trigger_clk),
-      .dst_pulse     (freq_measure_trigger)
+      .dst_pulse     (freq_measure_trigger_clk)
+   );
+
+   cdc_pulse U_freq_measure_fe_clk (
+      .reset_i       (reset),
+      .src_clk       (usb_clk),
+      .src_pulse     (freq_measure),
+      .dst_clk       (fe_clk),
+      .dst_pulse     (freq_measure_fe_clk)
    );
 
    always @(posedge trigger_clk) begin
-      if (freq_measure_trigger) begin
+      if (freq_measure_trigger_clk) begin
          trigger_frequency_int <= 32'd1;
          trigger_frequency <= trigger_frequency_int;
       end 
@@ -767,6 +779,17 @@ module trace_top #(
          trigger_frequency_int <= trigger_frequency_int + 32'd1;
       end
    end
+
+   always @(posedge fe_clk) begin
+      if (freq_measure_fe_clk) begin
+         fe_frequency_int <= 32'd1;
+         fe_frequency <= fe_frequency_int;
+      end 
+      else begin
+         fe_frequency_int <= fe_frequency_int + 32'd1;
+      end
+   end
+
 
 
    `ifdef ILA_REG
