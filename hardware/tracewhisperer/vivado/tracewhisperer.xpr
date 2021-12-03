@@ -177,6 +177,7 @@
         <Option Name="TopModule" Val="tracewhisperer_top"/>
         <Option Name="TopAutoSet" Val="TRUE"/>
         <Option Name="VerilogDir" Val="$PPRDIR/../../phywhisperer/software/phywhisperer/firmware"/>
+        <Define Name="REV3"/>
       </Config>
     </FileSet>
     <FileSet Name="constrs_1" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
