@@ -115,6 +115,7 @@ module reg_trace #(
 
    assign selected = reg_addrvalid & reg_address[7:6] == `TRACE_REG_SELECT;
    wire [5:0] address = reg_address[5:0];
+   wire [31:0] fe_clock_count_extended = {9'b0, I_fe_clock_count};
 
 
    //////////////////////////////////
@@ -124,7 +125,7 @@ module reg_trace #(
    always @(*) begin
       if (selected && reg_read) begin
          case (address)
-            `REG_NAME:                  reg_read_data = name[reg_bytecnt*8 +: 8];
+            `REG_NAME:                  reg_read_data = name[reg_bytecnt[3:0]*8 +: 8];
             `REG_REV:                   reg_read_data = rev;
             `REG_CLKSETTINGS:           reg_read_data = O_clksettings;
 
@@ -137,31 +138,31 @@ module reg_trace #(
 
             `REG_SYNCHRONIZED:          reg_read_data = I_synchronized;
             `REG_STAT:                  reg_read_data = I_swo_cdc_overflow;
-            `REG_TRIGGER_FREQ:          reg_read_data = I_trigger_frequency[reg_bytecnt*8 +: 8];
-            `REG_FE_FREQ:               reg_read_data = I_fe_frequency[reg_bytecnt*8 +: 8];
+            `REG_TRIGGER_FREQ:          reg_read_data = I_trigger_frequency[reg_bytecnt[1:0]*8 +: 8];
+            `REG_FE_FREQ:               reg_read_data = I_fe_frequency[reg_bytecnt[1:0]*8 +: 8];
 
-            `REG_TRACE_PATTERN0:        reg_read_data = O_trace_pattern0[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN1:        reg_read_data = O_trace_pattern1[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN2:        reg_read_data = O_trace_pattern2[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN3:        reg_read_data = O_trace_pattern3[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN4:        reg_read_data = O_trace_pattern4[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN5:        reg_read_data = O_trace_pattern5[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN6:        reg_read_data = O_trace_pattern6[reg_bytecnt*8 +: 8];
-            `REG_TRACE_PATTERN7:        reg_read_data = O_trace_pattern7[reg_bytecnt*8 +: 8];
+            `REG_TRACE_PATTERN0:        reg_read_data = O_trace_pattern0[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_PATTERN1:        reg_read_data = O_trace_pattern1[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_PATTERN2:        reg_read_data = O_trace_pattern2[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_PATTERN3:        reg_read_data = O_trace_pattern3[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_PATTERN4:        reg_read_data = O_trace_pattern4[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_PATTERN5:        reg_read_data = O_trace_pattern5[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_PATTERN6:        reg_read_data = O_trace_pattern6[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_PATTERN7:        reg_read_data = O_trace_pattern7[reg_bytecnt[3:0]*8 +: 8];
 
-            `REG_TRACE_MASK0:           reg_read_data = O_trace_mask0[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK1:           reg_read_data = O_trace_mask1[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK2:           reg_read_data = O_trace_mask2[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK3:           reg_read_data = O_trace_mask3[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK4:           reg_read_data = O_trace_mask4[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK5:           reg_read_data = O_trace_mask5[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK6:           reg_read_data = O_trace_mask6[reg_bytecnt*8 +: 8];
-            `REG_TRACE_MASK7:           reg_read_data = O_trace_mask7[reg_bytecnt*8 +: 8];
+            `REG_TRACE_MASK0:           reg_read_data = O_trace_mask0[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_MASK1:           reg_read_data = O_trace_mask1[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_MASK2:           reg_read_data = O_trace_mask2[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_MASK3:           reg_read_data = O_trace_mask3[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_MASK4:           reg_read_data = O_trace_mask4[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_MASK5:           reg_read_data = O_trace_mask5[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_MASK6:           reg_read_data = O_trace_mask6[reg_bytecnt[3:0]*8 +: 8];
+            `REG_TRACE_MASK7:           reg_read_data = O_trace_mask7[reg_bytecnt[3:0]*8 +: 8];
 
-            `REG_TRACE_COUNT:           reg_read_data = trace_count[reg_bytecnt*8 +: 8];
+            `REG_TRACE_COUNT:           reg_read_data = trace_count[reg_bytecnt[3:0]*8 +: 8];
 
             `REG_RECORD_SYNCS:          reg_read_data = O_record_syncs;
-            `REG_MATCHED_DATA:          reg_read_data = I_matched_data[reg_bytecnt*8 +: 8];
+            `REG_MATCHED_DATA:          reg_read_data = I_matched_data[reg_bytecnt[3:0]*8 +: 8];
 
             `REG_SWO_ENABLE:            reg_read_data = O_swo_enable;
             `REG_SWO_BITRATE_DIV:       reg_read_data = O_swo_bitrate_div;
@@ -170,7 +171,7 @@ module reg_trace #(
 
             `REG_REVERSE_TRACEDATA:     reg_read_data = O_reverse_tracedata;
             `REG_FE_CLOCK_SEL:          reg_read_data = O_fe_clk_sel;
-            `REG_FE_CLOCK_COUNT:        reg_read_data = I_fe_clock_count[reg_bytecnt*8 +: 8];
+            `REG_FE_CLOCK_COUNT:        reg_read_data = fe_clock_count_extended[reg_bytecnt[1:0]*8 +: 8];
 
             default:                    reg_read_data = 0;
 
@@ -248,23 +249,23 @@ module reg_trace #(
                `REG_CAPTURE_RAW:        O_capture_raw <= write_data[0];
                `REG_RECORD_SYNCS:       O_record_syncs <= write_data[0];
 
-               `REG_TRACE_PATTERN0:     O_trace_pattern0[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_PATTERN1:     O_trace_pattern1[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_PATTERN2:     O_trace_pattern2[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_PATTERN3:     O_trace_pattern3[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_PATTERN4:     O_trace_pattern4[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_PATTERN5:     O_trace_pattern5[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_PATTERN6:     O_trace_pattern6[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_PATTERN7:     O_trace_pattern7[reg_bytecnt*8 +: 8] <= write_data;
+               `REG_TRACE_PATTERN0:     O_trace_pattern0[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_PATTERN1:     O_trace_pattern1[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_PATTERN2:     O_trace_pattern2[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_PATTERN3:     O_trace_pattern3[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_PATTERN4:     O_trace_pattern4[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_PATTERN5:     O_trace_pattern5[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_PATTERN6:     O_trace_pattern6[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_PATTERN7:     O_trace_pattern7[reg_bytecnt[3:0]*8 +: 8] <= write_data;
 
-               `REG_TRACE_MASK0:        O_trace_mask0[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_MASK1:        O_trace_mask1[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_MASK2:        O_trace_mask2[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_MASK3:        O_trace_mask3[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_MASK4:        O_trace_mask4[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_MASK5:        O_trace_mask5[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_MASK6:        O_trace_mask6[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_TRACE_MASK7:        O_trace_mask7[reg_bytecnt*8 +: 8] <= write_data;
+               `REG_TRACE_MASK0:        O_trace_mask0[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_MASK1:        O_trace_mask1[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_MASK2:        O_trace_mask2[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_MASK3:        O_trace_mask3[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_MASK4:        O_trace_mask4[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_MASK5:        O_trace_mask5[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_MASK6:        O_trace_mask6[reg_bytecnt[3:0]*8 +: 8] <= write_data;
+               `REG_TRACE_MASK7:        O_trace_mask7[reg_bytecnt[3:0]*8 +: 8] <= write_data;
                `REG_SWO_ENABLE:         O_swo_enable <= write_data[0];
                `REG_SWO_BITRATE_DIV:    O_swo_bitrate_div <= write_data;
                `REG_UART_STOP_BITS:     O_uart_stop_bits <= write_data[1:0];
