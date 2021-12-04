@@ -210,6 +210,10 @@ module fe_capture_trace #(
    always @(posedge fe_clk) begin
       if (reset)
          buffer <= 0;
+     /*
+      else if (!capturing_r)
+         buffer <= 64'hFFFFFFFFFFFFFFFF;
+     */
       else if (I_swo_enable) begin
          swo_data_ready_traceclk_r <= swo_data_ready_traceclk;
          if (swo_data_ready_traceclk) begin
@@ -361,6 +365,9 @@ module fe_capture_trace #(
          //prepare_to_stop <= 1'b0;
       end
 
+      else if (!capturing_r)
+         recording <= 1'b0;
+
       else if (valid_buffer) begin
          // Stop recording when we see only sync frames. This is a bit convoluted,
          // by necessity in order to avoid stopping recording in a way that misses the last byte
@@ -498,7 +505,11 @@ module fe_capture_trace #(
           .probe7       (match_bits      ),     // input wire [7:0]  probe7 
           .probe8       (revbuffer      ),      // input wire [63:0] probe8 
           .probe9       (O_fifo_data),          // input wire [17:0] probe9 
-          .probe10      (O_fifo_wr)             // input wire [0:0]  probe10 
+          .probe10      (O_fifo_wr),            // input wire [0:0]  probe10 
+          .probe11      (swo_data_ready_traceclk), // input wire [0:0]  probe11
+          .probe12      (swo_data_reg),         // input wire [7:0]  probe12
+          .probe13      (capturing_r)           // input wire [0:0]  probe13
+
        );
    `endif
 
