@@ -241,7 +241,7 @@ module tb();
       write_byte(`TRACE_REG_SELECT, `REG_CAPTURE_RAW, 0, pCAPTURE_RAW);
 
       // TODO: set these intelligently
-      write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd20000);
+      write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 4, 32'd20000);
       write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h1);
 
       if (pSWO_MODE) begin
@@ -261,7 +261,7 @@ module tb();
       end
       max_timestamp = $urandom_range('h200, pMAX_TIMESTAMP);
       $display("Setting max timestamp to %h", max_timestamp);
-      write_word(`MAIN_REG_SELECT, `REG_MAX_TIMESTAMP, max_timestamp);
+      write_word(`MAIN_REG_SELECT, `REG_MAX_TIMESTAMP, 2, max_timestamp);
 
       if (pCAPTURE_NOW == 0)
          write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
@@ -331,11 +331,11 @@ module tb();
       if (pPATTERN_TRIG && pCAPTURE_RAW) begin
          // in this case, the pattern bytes weren't written to a FIFO but we can retrieve them from a register:
          wait_fifo_not_empty();
-         read_word(`TRACE_REG_SELECT, `REG_MATCHED_DATA, read_buffer_data);
+         read_word(`TRACE_REG_SELECT, `REG_MATCHED_DATA, 4, read_buffer_data);
          // this is a bit wonky, but since the pattern was generated from Python, it's easiest to verify
          // by reading it back:
-         read_word(`TRACE_REG_SELECT, `REG_TRACE_PATTERN0+pattern_rule_id, expected_pattern_data);
-         read_word(`TRACE_REG_SELECT, `REG_TRACE_MASK0+pattern_rule_id, expected_pattern_mask);
+         read_word(`TRACE_REG_SELECT, `REG_TRACE_PATTERN0+pattern_rule_id, 4, expected_pattern_data);
+         read_word(`TRACE_REG_SELECT, `REG_TRACE_MASK0+pattern_rule_id, 4, expected_pattern_mask);
          if (expected_pattern_data != (expected_pattern_mask & read_buffer_data)) begin
             errors += 1;
             $display("ERROR on pattern match bytes.");
@@ -550,7 +550,7 @@ module tb();
          fast_fifo_read(read_data);
       else begin
          wait_fifo_not_empty();
-         read_word(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, read_data);
+         read_word(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 4, read_data);
       end
       if (pTIMESTAMPS_DISABLED) begin
          command =                   `FE_FIFO_CMD_STAT;

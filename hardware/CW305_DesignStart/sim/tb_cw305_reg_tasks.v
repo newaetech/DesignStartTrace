@@ -40,9 +40,10 @@ endtask
 task write_word;
    input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
+   input [3:0] bytes;
    input [31:0] data;
    int subbyte;
-   for (subbyte = 0; subbyte < 4; subbyte = subbyte + 1)
+   for (subbyte = 0; subbyte < bytes; subbyte = subbyte + 1)
       write_byte(block, address, subbyte, data[subbyte*8 +: 8]);
    if (pVERBOSE)
       $display("Write %0h", data);
@@ -52,9 +53,10 @@ endtask
 task read_word;
    input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
+   input [3:0] bytes;
    output [31:0] data;
    int subbyte;
-   for (subbyte = 0; subbyte < 4; subbyte = subbyte + 1)
+   for (subbyte = 0; subbyte < bytes; subbyte = subbyte + 1)
       read_byte(block, address, subbyte, data[subbyte*8 +: 8]);
    if (pVERBOSE)
       $display("Read %0h", data);
