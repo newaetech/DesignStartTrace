@@ -155,22 +155,19 @@ avoid this situation.
 
 The SWO baudrate sets a lower bound on jitter; for minimum jitter, set the
 `TPI.ACPR` register to 0: this makes the baud rate equal to the target clock
-rate. With this setting, it may be possible for there to be no jitter at
-all. In practice, 1-2 cycles of jitter is frequently observed, and this is
-likely because in SWO mode, debug trace acquisition is asynchronous to the
-target clock (the PhyWhisperer's SAM3U clock is used). The amount of jitter
-than can be expected will depend on the ratio of the PhyWhisperer and target
-clocks (1-2 cycles was observed with a 24 MHz target clock).
+rate. With this setting, it may be possible for there to be no jitter at all.
+In practice, some jitter is frequently observed. The [uecc.ipynb attack
+notebook](https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/uecc.ipynb)
+illustrates this and shows how jitter can be dealt with.
 
-Again, in many cases this jitter can be corrected / eliminated in
-post-processing, e.g.  by re-aligning the power traces.
-
-One final consideration is that for **very** long captures in SWO mode (i.e.
-millions of clock cycles), clock frequency drift between the PhyWhisperer's
-clock and the target's clock can have the effect of increasing the jitter
-over the lenght of the trace. For example, for a trace that is 20 million
-clock cycles long at 24 MHz, jitter is sometimes seen to increase linearly
-throughout the capture, starting a 2 cycles and ending at 8 cycles.
+In addition, if trace acquisition is clocked from PhyWhisperer's SAM3U
+clock, instead of the target clock, the asynchronous nature of these clocks
+can result in small jitter on a small scale (1-2 cycles was observed with a
+24 MHz target clock), and frequency drift which can build up on longer
+captures. For example, for a trace that is 20 million clock cycles long at
+24 MHz, jitter is sometimes seen to increase linearly throughout the
+capture, starting a 2 cycles and ending at 8 cycles. The solution to this is
+to source the trace acquisition from the target clock, not the SAM3U clock.
 
 ## Orbuculum
 Raw trace data has somewhat complex layers of formatting. Fortunately,
