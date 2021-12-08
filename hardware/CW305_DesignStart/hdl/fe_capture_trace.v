@@ -210,10 +210,6 @@ module fe_capture_trace #(
    always @(posedge fe_clk) begin
       if (reset)
          buffer <= 0;
-     /*
-      else if (!capturing_r)
-         buffer <= 64'hFFFFFFFFFFFFFFFF;
-     */
       else if (I_swo_enable) begin
          swo_data_ready_traceclk_r <= swo_data_ready_traceclk;
          if (swo_data_ready_traceclk) begin
@@ -376,19 +372,6 @@ module fe_capture_trace #(
             recording <= 1'b0;
          else if (!revbuffer_all_syncframes || I_record_syncs)
             recording <= 1'b1;
-         /* TODO: alternative mechanism, clean up later:
-         if (prepare_to_stop && revbuffer_syncframes) begin
-            prepare_to_stop <= 1'b0;
-            recording <= 1'b0;
-         end
-         else if (!prepare_to_stop && revbuffer_syncframes) begin
-            prepare_to_stop <= 1'b1;
-         end
-         else begin
-            prepare_to_stop <= 1'b0;
-            recording <= 1'b1;
-         end
-         */
       end
 
    end

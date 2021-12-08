@@ -288,14 +288,6 @@ module reg_trace #(
 
    assign O_reset_sync = reset_sync & ~reset_sync_r;
 
-               /* TODO: CDC on inputs?
-               `REG_MATCHING_PATTERN:   I_matching_pattern <= write_data[pMATCH_RULES-1:0];
-               `REG_MATCHING_BUFFER:    I_matching_buffer[reg_bytecnt*8 +: 8] <= write_data;
-               `REG_SYNCHRONIZED:       I_synchronized <= write_data;
-               `REG_LAST_BLURB:         I_last_blurb[reg_bytecnt*8 +: 8] <= write_data;
-                */
-
-
 
    `ifdef ILA_REG_TRACE
 

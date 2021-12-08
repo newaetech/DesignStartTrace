@@ -169,11 +169,6 @@ module tracewhisperer_top #(
       assign trigger_clk_locked = 1'b1;
       assign trigger_clk_psdone = 1'b1;
    `else
-      /* TODO-temp!
-      assign trigger_clk = clk_usb_buf;
-      assign trigger_clk_locked = 1'b1;
-      assign trigger_clk_psdone = 1'b1;
-      */
        clk_wiz_0 U_trigger_clock (
          .reset        (fpga_reset),
          .clk_in1      (fe_clk),
