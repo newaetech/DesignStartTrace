@@ -423,29 +423,33 @@ module trace_top #(
       .selected                 (reg_trace_selected)
    );
 
-   reg_mmcm_drp #(
-      .pBYTECNT_SIZE    (pBYTECNT_SIZE),
-      .pDRP_ADDR        (`REG_TRIGGER_DRP_ADDR),
-      .pDRP_DATA        (`REG_TRIGGER_DRP_DATA),
-      .pDRP_RESET       (`REG_TRIGGER_DRP_RESET)
-   ) U_reg_trigger_drp (
-      .reset_i          (reset),
-      .clk_usb          (usb_clk),
-      .reg_address      (reg_address[7:0]), 
-      .reg_bytecnt      (reg_bytecnt), 
-      .reg_datao        (read_data_trace_trigger_drp), 
-      .reg_datai        (write_data), 
-      .reg_read         (reg_read), 
-      .reg_write        (reg_write), 
-      .selected         (reg_trace_selected),
+   `ifndef CW305
+       reg_mmcm_drp #(
+          .pBYTECNT_SIZE    (pBYTECNT_SIZE),
+          .pDRP_ADDR        (`REG_TRIGGER_DRP_ADDR),
+          .pDRP_DATA        (`REG_TRIGGER_DRP_DATA),
+          .pDRP_RESET       (`REG_TRIGGER_DRP_RESET)
+       ) U_reg_trigger_drp (
+          .reset_i          (reset),
+          .clk_usb          (usb_clk),
+          .reg_address      (reg_address[7:0]), 
+          .reg_bytecnt      (reg_bytecnt), 
+          .reg_datao        (read_data_trace_trigger_drp), 
+          .reg_datai        (write_data), 
+          .reg_read         (reg_read), 
+          .reg_write        (reg_write), 
+          .selected         (reg_trace_selected),
 
-      .drp_addr         (trig_drp_addr ),
-      .drp_den          (trig_drp_den  ),
-      .drp_din          (trig_drp_din  ),
-      .drp_dout         (trig_drp_dout ),
-      .drp_dwe          (trig_drp_dwe  ),
-      .drp_reset        (trig_drp_reset)
-   ); 
+          .drp_addr         (trig_drp_addr ),
+          .drp_den          (trig_drp_den  ),
+          .drp_din          (trig_drp_din  ),
+          .drp_dout         (trig_drp_dout ),
+          .drp_dwe          (trig_drp_dwe  ),
+          .drp_reset        (trig_drp_reset)
+       ); 
+   `else
+          assign read_data_trace_trigger_drp = 8'b0;
+   `endif
 
 
    reg_main #(

@@ -111,6 +111,7 @@ module CW305_designstart_top #(
 
   wire arm;
   wire capturing;
+  wire fe_clk;
 
   assign swdio = SWDOEN ? SWDO : 1'bz;
   assign SWDI = swdio;
@@ -128,6 +129,9 @@ module CW305_designstart_top #(
 
   assign trig_out = soft_trig_passthru? m3_trig_out : trace_trig_out;
   assign trig_out_dbg = soft_trig_passthru? m3_trig_out : trace_trig_out;
+
+  reg [22:0] count_fe_clock = 0;
+  always @(posedge fe_clk) count_fe_clock <= count_fe_clock + 1;
 
   // controls where program is fetched from:
   wire [1:0] cfg = 2'b01;
@@ -306,10 +310,11 @@ module CW305_designstart_top #(
    ) U_trace_top (
       .trace_clk_in     (1'b0),
       .target_clk       (ext_clock),
-      .fe_clk           (),
+      .fe_clk           (fe_clk),
       .usb_clk          (clk_usb_buf),
       .reset_pin        (reset_pin),
       .fpga_reset       (fpga_reset),
+      .I_fe_clock_count (count_fe_clock),
 
       .trigger_clk          (trigger_clk),
       .trigger_clk_locked   (trigger_clk_locked),
@@ -334,8 +339,6 @@ module CW305_designstart_top #(
       .O_data_available ( ), // unused
       .I_fast_fifo_rdn  (1'b1), // unused
 
-      .O_board_rev      (),     // used for PhyWhisperer platform only
-
       .arm              (arm),
       .capturing        (capturing),
 
@@ -344,6 +347,13 @@ module CW305_designstart_top #(
       .userio_d         (4'b0),
       .O_userio_pwdriven (),
       .O_userio_drive_data (),
+
+      .trig_drp_addr    (),
+      .trig_drp_den     (),
+      .trig_drp_din     (),
+      .trig_drp_dout    (16'b0),
+      .trig_drp_dwe     (),
+      .trig_drp_reset   (),
 
       .synchronized     ()
    );
