@@ -133,26 +133,28 @@ module trace_top #(
 
    `ifdef __ICARUS__
       assign trace_data_iddr = I_trace_sdr;
+   `elsif CW305
+      assign trace_data_iddr = 8'b0;
    `else
-   genvar i;
-   generate 
-      for (i = 0; i < 4; i = i + 1) begin: gen_adc_data
-         IDDR #(
-            .DDR_CLK_EDGE     ("OPPOSITE_EDGE"),
-            .INIT_Q1          (0),
-            .INIT_Q2          (0),
-            .SRTYPE           ("SYNC")
-         ) U_trace_data_iddr (
-            .Q1               (trace_data_iddr[i]),
-            .Q2               (trace_data_iddr[i+4]),
-            .D                (trace_data[i]),
-            .CE               (1'b1),
-            .C                (trace_clk_in),
-            .S                (1'b0),
-            .R                (1'b0)
-         );
-      end
-   endgenerate
+      genvar i;
+      generate 
+         for (i = 0; i < 4; i = i + 1) begin: gen_adc_data
+            IDDR #(
+               .DDR_CLK_EDGE     ("OPPOSITE_EDGE"),
+               .INIT_Q1          (0),
+               .INIT_Q2          (0),
+               .SRTYPE           ("SYNC")
+            ) U_trace_data_iddr (
+               .Q1               (trace_data_iddr[i]),
+               .Q2               (trace_data_iddr[i+4]),
+               .D                (trace_data[i]),
+               .CE               (1'b1),
+               .C                (trace_clk_in),
+               .S                (1'b0),
+               .R                (1'b0)
+            );
+         end
+      endgenerate
    `endif
 
    assign trace_data_sdr = trace_clock_sel? trace_data_iddr : {4'b0, trace_data};
@@ -191,6 +193,7 @@ module trace_top #(
          .reg_addrvalid    (reg_addrvalid)
       );
       assign fe_clk = target_clk;
+      assign trace_clock_sel = 1'b0;
 
    `else // PhyWhisperer platform
       wire [pADDR_WIDTH-1:0]  reg_address;
@@ -215,6 +218,8 @@ module trace_top #(
          .reg_addrvalid    (reg_addrvalid)
       );
 
+      assign trace_clock_sel = fe_clk_sel == 2'b01;
+
       `ifndef __ICARUS__
          wire fe_clk_pre;
          BUFGMUX U_fe_clock_mux1 (
@@ -238,8 +243,6 @@ module trace_top #(
       `endif
 
    `endif
-
-   assign trace_clock_sel = fe_clk_sel == 2'b01;
 
 
    wire [4:0] clksettings; // TODO-later

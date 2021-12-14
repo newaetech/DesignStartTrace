@@ -10,13 +10,12 @@ create_clock -period 50.000 -name tio_clkin -waveform {0.000 20.000} [get_nets t
 create_clock -period 50.000 -name swclk -waveform {0.000 20.000} [get_nets swclk]
 create_clock -period 10.000 -name usb_clk -waveform {0.000 5.000} [get_nets USB_clk]
 
-create_generated_clock -name trigger_clk -master cpu_clk [get_pins U_trace_top/U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
+create_generated_clock -name trigger_clk -master cpu_clk [get_pins U_trigger_clock/inst/mmcm_adv_inst/CLKOUT0]
 
+set_clock_groups -asynchronous \
+                 -group [get_clocks usb_clk] \
+                 -group [get_clocks trigger_clk]
 
-#set_clock_groups -asynchronous \
-#                 -group [get_clocks usb_clk] \
-#                 -group [get_clocks trigger_clk]
-#
 #set_clock_groups -asynchronous \
 #                 -group [get_clocks usb_clk] \
 #                 -group [get_clocks pll_clk1]
@@ -163,7 +162,6 @@ set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
 
 # quasi-static control signals:
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_reverse_tracedata*/C] -to [all_registers]
-set_false_path -from [get_pins U_trace_top/U_reg_main/reg_board_rev_reg*/C] -to [all_registers]
 set_false_path -from [get_pins U_trace_top/U_reg_main/reg_timestamps_disable_reg/C] -to [all_registers]
 
 set_false_path -from [get_pins U_trace_top/U_reg_trace/O_trace_mask*_reg*/C] -to [all_registers]

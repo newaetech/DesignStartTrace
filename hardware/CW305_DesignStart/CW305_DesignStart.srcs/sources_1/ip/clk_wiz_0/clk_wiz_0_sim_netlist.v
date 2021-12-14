@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-// Date        : Tue Aug 11 13:06:33 2020
+// Date        : Mon Dec 13 11:23:44 2021
 // Host        : qed running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               W:/hardware/CW305_DesignStart/CW305_DesignStart.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.v
@@ -15,6 +15,13 @@
 (* NotValidForBitStream *)
 module clk_wiz_0
    (clk_out1,
+    daddr,
+    dclk,
+    den,
+    din,
+    dout,
+    drdy,
+    dwe,
     psclk,
     psen,
     psincdec,
@@ -23,6 +30,13 @@ module clk_wiz_0
     locked,
     clk_in1);
   output clk_out1;
+  input [6:0]daddr;
+  input dclk;
+  input den;
+  input [15:0]din;
+  output [15:0]dout;
+  output drdy;
+  input dwe;
   input psclk;
   input psen;
   input psincdec;
@@ -33,6 +47,13 @@ module clk_wiz_0
 
   wire clk_in1;
   wire clk_out1;
+  wire [6:0]daddr;
+  wire dclk;
+  wire den;
+  wire [15:0]din;
+  wire [15:0]dout;
+  wire drdy;
+  wire dwe;
   wire locked;
   wire psclk;
   wire psdone;
@@ -43,6 +64,13 @@ module clk_wiz_0
   clk_wiz_0_clk_wiz_0_clk_wiz inst
        (.clk_in1(clk_in1),
         .clk_out1(clk_out1),
+        .daddr(daddr),
+        .dclk(dclk),
+        .den(den),
+        .din(din),
+        .dout(dout),
+        .drdy(drdy),
+        .dwe(dwe),
         .locked(locked),
         .psclk(psclk),
         .psdone(psdone),
@@ -54,6 +82,13 @@ endmodule
 (* ORIG_REF_NAME = "clk_wiz_0_clk_wiz" *) 
 module clk_wiz_0_clk_wiz_0_clk_wiz
    (clk_out1,
+    daddr,
+    dclk,
+    den,
+    din,
+    dout,
+    drdy,
+    dwe,
     psclk,
     psen,
     psincdec,
@@ -62,6 +97,13 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
     locked,
     clk_in1);
   output clk_out1;
+  input [6:0]daddr;
+  input dclk;
+  input den;
+  input [15:0]din;
+  output [15:0]dout;
+  output drdy;
+  input dwe;
   input psclk;
   input psen;
   input psincdec;
@@ -76,6 +118,13 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
   wire clk_out1_clk_wiz_0;
   wire clkfbout_buf_clk_wiz_0;
   wire clkfbout_clk_wiz_0;
+  wire [6:0]daddr;
+  wire dclk;
+  wire den;
+  wire [15:0]din;
+  wire [15:0]dout;
+  wire drdy;
+  wire dwe;
   wire locked;
   wire psclk;
   wire psdone;
@@ -95,8 +144,6 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
   wire NLW_mmcm_adv_inst_CLKOUT4_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED;
-  wire NLW_mmcm_adv_inst_DRDY_UNCONNECTED;
-  wire [15:0]NLW_mmcm_adv_inst_DO_UNCONNECTED;
 
   (* BOX_TYPE = "PRIMITIVE" *) 
   BUFG clkf_buf
@@ -180,13 +227,13 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
         .CLKOUT4(NLW_mmcm_adv_inst_CLKOUT4_UNCONNECTED),
         .CLKOUT5(NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED),
         .CLKOUT6(NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED),
-        .DADDR({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .DCLK(1'b0),
-        .DEN(1'b0),
-        .DI({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .DO(NLW_mmcm_adv_inst_DO_UNCONNECTED[15:0]),
-        .DRDY(NLW_mmcm_adv_inst_DRDY_UNCONNECTED),
-        .DWE(1'b0),
+        .DADDR(daddr),
+        .DCLK(dclk),
+        .DEN(den),
+        .DI(din),
+        .DO(dout),
+        .DRDY(drdy),
+        .DWE(dwe),
         .LOCKED(locked),
         .PSCLK(psclk),
         .PSDONE(psdone),

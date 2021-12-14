@@ -41,13 +41,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="91"/>
-    <Option Name="WTModelSimExportSim" Val="91"/>
-    <Option Name="WTQuestaExportSim" Val="91"/>
-    <Option Name="WTIesExportSim" Val="91"/>
-    <Option Name="WTVcsExportSim" Val="91"/>
-    <Option Name="WTRivieraExportSim" Val="91"/>
-    <Option Name="WTActivehdlExportSim" Val="91"/>
+    <Option Name="WTXSimExportSim" Val="92"/>
+    <Option Name="WTModelSimExportSim" Val="92"/>
+    <Option Name="WTQuestaExportSim" Val="92"/>
+    <Option Name="WTIesExportSim" Val="92"/>
+    <Option Name="WTVcsExportSim" Val="92"/>
+    <Option Name="WTRivieraExportSim" Val="92"/>
+    <Option Name="WTActivehdlExportSim" Val="92"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -444,10 +444,10 @@
         <Step Id="synth_design">
           <Option Id="ResourceSharing">2</Option>
           <Option Id="KeepEquivalentRegisters">1</Option>
+          <Option Id="ShregMinSize">5</Option>
           <Option Id="RepFanoutThreshold">400</Option>
           <Option Id="NoCombineLuts">1</Option>
           <Option Id="FsmExtraction">1</Option>
-          <Option Id="ShregMinSize">5</Option>
         </Step>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
