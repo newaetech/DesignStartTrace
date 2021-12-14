@@ -266,7 +266,10 @@ for test in tests:
             elif i % test[key]:
                run_test = False
          else:
-            if type(test[key]) == list:
+            if key == 'TRACE_CLOCK_SEL' and args.CW305:
+                # can't let this be set or randomized to 1: unsupported by CW305
+                value = 0
+            elif type(test[key]) == list:
                 if len(test[key]) == 2:
                    value = random.randint(test[key][0], test[key][1])
                 elif len(test[key]) == 3:
