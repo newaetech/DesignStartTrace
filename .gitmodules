@@ -1,4 +1,3 @@
-[submodule "hardware/phywhisperer"]
-	path = hardware/phywhisperer
-	url = git@github.com:newaetech/phywhispererusb.git
-	branch = frontend_refactor
+[submodule "hardware/phywhisperer-common"]
+	path = hardware/phywhisperer-common
+	url = git@github.com:newaetech/phywhisperer-common.git
