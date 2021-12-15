@@ -35,8 +35,8 @@ set_property PACKAGE_PIN K3 [get_ports USB_SPARE0]
 # LEDs
 set_property DRIVE 8 [get_ports led2]
 set_property DRIVE 8 [get_ports led3]
-set_property PACKAGE_PIN D2 [get_ports led2]
-set_property PACKAGE_PIN A2 [get_ports led3]
+set_property PACKAGE_PIN A2 [get_ports led2]
+set_property PACKAGE_PIN D2 [get_ports led3]
 
 # this one is actually on 20-pin connector: PD pin
 set_property PACKAGE_PIN M3 [get_ports led1]
