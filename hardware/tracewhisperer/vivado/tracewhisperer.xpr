@@ -81,14 +81,14 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../phywhisperer/hardware/fpga/hdl/cdc_pulse.v">
+      <File Path="$PPRDIR/../../phywhisperer-common/hardware/hdl/cdc_pulse.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../phywhisperer/hardware/fpga/hdl/fe_capture_main.v">
+      <File Path="$PPRDIR/../../phywhisperer-common/hardware/hdl/fe_capture_main.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -102,21 +102,21 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../phywhisperer/hardware/fpga/hdl/fifo.v">
+      <File Path="$PPRDIR/../../phywhisperer-common/hardware/hdl/fifo.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../phywhisperer/hardware/fpga/hdl/pw_trigger.v">
+      <File Path="$PPRDIR/../../phywhisperer-common/hardware/hdl/pw_trigger.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../phywhisperer/hardware/fpga/hdl/reg_main.v">
+      <File Path="$PPRDIR/../../phywhisperer-common/hardware/hdl/reg_main.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -151,14 +151,14 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../phywhisperer/hardware/fpga/hdl/usb_reg_main.v">
+      <File Path="$PPRDIR/../../phywhisperer-common/hardware/hdl/usb_reg_main.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../phywhisperer/hardware/fpga/hdl/userio.v">
+      <File Path="$PPRDIR/../../phywhisperer-common/hardware/hdl/userio.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -176,7 +176,7 @@
         <Option Name="DesignMode" Val="RTL"/>
         <Option Name="TopModule" Val="tracewhisperer_top"/>
         <Option Name="TopAutoSet" Val="TRUE"/>
-        <Option Name="VerilogDir" Val="$PPRDIR/../../phywhisperer/software/phywhisperer/firmware"/>
+        <Option Name="VerilogDir" Val="$PPRDIR/../../CW305_DesignStart/hdl"/>
         <Define Name="REV3"/>
       </Config>
     </FileSet>

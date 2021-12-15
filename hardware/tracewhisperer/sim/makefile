@@ -40,7 +40,6 @@ compile:
 	-Wselect-range \
 	-I$(RUNDIR) \
 	-I../../CW305_DesignStart/hdl \
-	-I../../phywhisperer/software/phywhisperer/firmware \
 	-P tb.pDUMP=$(DUMP) \
 	-P tb.pSEED=$(SEED) \
 	-P tb.pSWO_MODE=$(SWO_MODE) \
@@ -66,7 +65,6 @@ nofifo:
 	-Wportbind \
 	-Wselect-range \
 	-I../../CW305_DesignStart/hdl \
-	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
 
 lint:
@@ -74,7 +72,6 @@ lint:
 	-Wno-PINCONNECTEMPTY \
 	-f cmdfile_nofifo \
 	-I../../CW305_DesignStart/hdl \
-	-I../../phywhisperer/software/phywhisperer/firmware \
 	-D__ICARUS__ \
 	-DNOFIFO \
 	--top-module tracewhisperer_top \
@@ -86,7 +83,6 @@ nofifo_swo_only:
 	-Wportbind \
 	-Wselect-range \
 	-I../../CW305_DesignStart/hdl \
-	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
 
 run:

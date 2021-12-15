@@ -32,7 +32,6 @@ compile:
 	-Wselect-range \
 	-I$(RUNDIR) \
 	-I../hdl \
-	-I../../phywhisperer/software/phywhisperer/firmware \
 	-P tb.pDUMP=$(DUMP) \
 	-P tb.pSEED=$(SEED) \
 	-P tb.pCAPTURE_RAW=$(CAPTURE_RAW) \
@@ -55,7 +54,6 @@ nofifo:
 	-Wportbind \
 	-Wselect-range \
 	-I../hdl \
-	-I../../phywhisperer/software/phywhisperer/firmware \
 	-DNOFIFO \
 	-DLINT \
 	-DCW305 \
@@ -65,7 +63,6 @@ lint:
 	-Wno-PINCONNECTEMPTY \
 	-f cmdfile_nofifo \
 	-I../hdl \
-	-I../../phywhisperer/software/phywhisperer/firmware \
 	-D__ICARUS__ \
 	-DNOFIFO \
 	-DCW305 \
@@ -79,7 +76,6 @@ traceonly:
 	-Wportbind \
 	-Wselect-range \
 	-I../hdl \
-	-I../../phywhisperer/software/phywhisperer/firmware \
 
 run:
 	cd $(RUNDIR) && vvp -l../$(LOGFILE) $(EXEFILE) -$(WAVEFORMAT)

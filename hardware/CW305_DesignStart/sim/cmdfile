@@ -7,10 +7,10 @@ tb_trace_generator.v
 ../hdl/fe_capture_trace.v
 ../hdl/cdc_bus.v
 ../../uart/uart_core.v
-../../phywhisperer/hardware/fpga/hdl/fe_capture_main.v
-../../phywhisperer/hardware/fpga/hdl/reg_main.v
-../../phywhisperer/hardware/fpga/hdl/fifo.v
-../../phywhisperer/hardware/fpga/hdl/pw_trigger.v
-../../phywhisperer/hardware/fpga/hdl/cdc_pulse.v
+../../phywhisperer-common/hardware/hdl/fe_capture_main.v
+../../phywhisperer-common/hardware/hdl/reg_main.v
+../../phywhisperer-common/hardware/hdl/fifo.v
+../../phywhisperer-common/hardware/hdl/pw_trigger.v
+../../phywhisperer-common/hardware/hdl/cdc_pulse.v
 ../CW305_DesignStart.srcs/sources_1/ip/fifo_generator_0/fifo_generator_0_sim_netlist.v
 -y/tools/Xilinx/Vivado/2020.2/ids_lite/ISE/verilog/src/unisims/
