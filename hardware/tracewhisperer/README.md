@@ -55,7 +55,13 @@ If using SWO, three pins must be connected:
 
 Additionally, if the target-generated trigger is to be used to trigger trace
 collection, then the target trigger must be connected to the "PC" pin of the
-ChipWhisperer connector on the side of PhyWhisperer-USB.
+20-pin connector on the side of PhyWhisperer-USB.
+
+Finally, the target clock can be connected to the 'HS2" ping of the side 20-pin
+connector. This is highly recommended for SWO mode, to allow for synchronous
+trace data capture (see [clocks.md](clocks.md) for more information on this).
+The target clock may also be used for parallel trace, although it does not
+provide any advantages over the trace clock.
 
 ## Implementation Details
 [This page](clocks.md) has details on internal clocking, which is needed to
