@@ -21,10 +21,11 @@ endtask
 task write_word;
    input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
+   input [3:0] bytes;
    input [31:0] data;
    int subbyte;
    rw_lots_bytes(block, address);
-   for (subbyte = 0; subbyte < 4; subbyte = subbyte + 1)
+   for (subbyte = 0; subbyte < bytes; subbyte = subbyte + 1)
       write_next_byte(data[subbyte*8 +: 8]);
 endtask
 
@@ -32,10 +33,11 @@ endtask
 task read_word;
    input [1:0] block;
    input [pADDR_WIDTH-pBYTECNT_SIZE-1:0] address;
+   input [3:0] bytes;
    output [31:0] data;
    int subbyte;
    rw_lots_bytes(block, address);
-   for (subbyte = 0; subbyte < 4; subbyte = subbyte + 1)
+   for (subbyte = 0; subbyte < bytes; subbyte = subbyte + 1)
       read_next_byte(data[subbyte*8 +: 8]);
 endtask
 

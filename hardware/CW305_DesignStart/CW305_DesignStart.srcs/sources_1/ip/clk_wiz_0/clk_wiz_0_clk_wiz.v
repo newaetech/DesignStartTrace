@@ -70,6 +70,14 @@ module clk_wiz_0_clk_wiz
  (// Clock in ports
   // Clock out ports
   output        clk_out1,
+  // Dynamic reconfiguration ports
+  input   [6:0] daddr,
+  input         dclk,
+  input         den,
+  input  [15:0] din,
+  output [15:0] dout,
+  output        drdy,
+  input         dwe,
   // Dynamic phase shift ports
   input         psclk,
   input         psen,
@@ -106,8 +114,6 @@ wire clk_in2_clk_wiz_0;
   wire        clk_out6_clk_wiz_0;
   wire        clk_out7_clk_wiz_0;
 
-  wire [15:0] do_unused;
-  wire        drdy_unused;
   wire        locked_int;
   wire        clkfbout_clk_wiz_0;
   wire        clkfbout_buf_clk_wiz_0;
@@ -163,13 +169,13 @@ wire clk_in2_clk_wiz_0;
      // Tied to always select the primary input clock
     .CLKINSEL            (1'b1),
     // Ports for dynamic reconfiguration
-    .DADDR               (7'h0),
-    .DCLK                (1'b0),
-    .DEN                 (1'b0),
-    .DI                  (16'h0),
-    .DO                  (do_unused),
-    .DRDY                (drdy_unused),
-    .DWE                 (1'b0),
+    .DADDR               (daddr),
+    .DCLK                (dclk),
+    .DEN                 (den),
+    .DI                  (din),
+    .DO                  (dout),
+    .DRDY                (drdy),
+    .DWE                 (dwe),
     // Ports for dynamic phase shift
     .PSCLK               (psclk),
     .PSEN                (psen),

@@ -1,10 +1,10 @@
--- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+-- Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
--- Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
--- Date        : Tue Nov 10 10:16:53 2020
--- Host        : qed running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim -rename_top clk_wiz_0 -prefix
---               clk_wiz_0_ clk_wiz_0_sim_netlist.vhdl
+-- Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
+-- Date        : Tue Nov 30 13:18:28 2021
+-- Host        : red running 64-bit Ubuntu 18.04.6 LTS
+-- Command     : write_vhdl -force -mode funcsim
+--               /home/jpnewae/git/DesignStartTrace/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.vhdl
 -- Design      : clk_wiz_0
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -17,6 +17,13 @@ use UNISIM.VCOMPONENTS.ALL;
 entity clk_wiz_0_clk_wiz_0_clk_wiz is
   port (
     clk_out1 : out STD_LOGIC;
+    daddr : in STD_LOGIC_VECTOR ( 6 downto 0 );
+    dclk : in STD_LOGIC;
+    den : in STD_LOGIC;
+    din : in STD_LOGIC_VECTOR ( 15 downto 0 );
+    dout : out STD_LOGIC_VECTOR ( 15 downto 0 );
+    drdy : out STD_LOGIC;
+    dwe : in STD_LOGIC;
     psclk : in STD_LOGIC;
     psen : in STD_LOGIC;
     psincdec : in STD_LOGIC;
@@ -25,6 +32,8 @@ entity clk_wiz_0_clk_wiz_0_clk_wiz is
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of clk_wiz_0_clk_wiz_0_clk_wiz : entity is "clk_wiz_0_clk_wiz";
 end clk_wiz_0_clk_wiz_0_clk_wiz;
 
 architecture STRUCTURE of clk_wiz_0_clk_wiz_0_clk_wiz is
@@ -44,8 +53,6 @@ architecture STRUCTURE of clk_wiz_0_clk_wiz_0_clk_wiz is
   signal NLW_mmcm_adv_inst_CLKOUT4_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED : STD_LOGIC;
-  signal NLW_mmcm_adv_inst_DRDY_UNCONNECTED : STD_LOGIC;
-  signal NLW_mmcm_adv_inst_DO_UNCONNECTED : STD_LOGIC_VECTOR ( 15 downto 0 );
   attribute BOX_TYPE : string;
   attribute BOX_TYPE of clkf_buf : label is "PRIMITIVE";
   attribute BOX_TYPE of clkout1_buf : label is "PRIMITIVE";
@@ -64,12 +71,12 @@ clkout1_buf: unisim.vcomponents.BUFG
 mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
     generic map(
       BANDWIDTH => "OPTIMIZED",
-      CLKFBOUT_MULT_F => 12.000000,
+      CLKFBOUT_MULT_F => 48.000000,
       CLKFBOUT_PHASE => 0.000000,
       CLKFBOUT_USE_FINE_PS => false,
-      CLKIN1_PERIOD => 12.500000,
+      CLKIN1_PERIOD => 50.000000,
       CLKIN2_PERIOD => 0.000000,
-      CLKOUT0_DIVIDE_F => 6.000000,
+      CLKOUT0_DIVIDE_F => 12.000000,
       CLKOUT0_DUTY_CYCLE => 0.500000,
       CLKOUT0_PHASE => 0.000000,
       CLKOUT0_USE_FINE_PS => true,
@@ -132,13 +139,13 @@ mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
       CLKOUT4 => NLW_mmcm_adv_inst_CLKOUT4_UNCONNECTED,
       CLKOUT5 => NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED,
       CLKOUT6 => NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED,
-      DADDR(6 downto 0) => B"0000000",
-      DCLK => '0',
-      DEN => '0',
-      DI(15 downto 0) => B"0000000000000000",
-      DO(15 downto 0) => NLW_mmcm_adv_inst_DO_UNCONNECTED(15 downto 0),
-      DRDY => NLW_mmcm_adv_inst_DRDY_UNCONNECTED,
-      DWE => '0',
+      DADDR(6 downto 0) => daddr(6 downto 0),
+      DCLK => dclk,
+      DEN => den,
+      DI(15 downto 0) => din(15 downto 0),
+      DO(15 downto 0) => dout(15 downto 0),
+      DRDY => drdy,
+      DWE => dwe,
       LOCKED => locked,
       PSCLK => psclk,
       PSDONE => psdone,
@@ -155,6 +162,13 @@ use UNISIM.VCOMPONENTS.ALL;
 entity clk_wiz_0 is
   port (
     clk_out1 : out STD_LOGIC;
+    daddr : in STD_LOGIC_VECTOR ( 6 downto 0 );
+    dclk : in STD_LOGIC;
+    den : in STD_LOGIC;
+    din : in STD_LOGIC_VECTOR ( 15 downto 0 );
+    dout : out STD_LOGIC_VECTOR ( 15 downto 0 );
+    drdy : out STD_LOGIC;
+    dwe : in STD_LOGIC;
     psclk : in STD_LOGIC;
     psen : in STD_LOGIC;
     psincdec : in STD_LOGIC;
@@ -173,6 +187,13 @@ inst: entity work.clk_wiz_0_clk_wiz_0_clk_wiz
      port map (
       clk_in1 => clk_in1,
       clk_out1 => clk_out1,
+      daddr(6 downto 0) => daddr(6 downto 0),
+      dclk => dclk,
+      den => den,
+      din(15 downto 0) => din(15 downto 0),
+      dout(15 downto 0) => dout(15 downto 0),
+      drdy => drdy,
+      dwe => dwe,
       locked => locked,
       psclk => psclk,
       psdone => psdone,

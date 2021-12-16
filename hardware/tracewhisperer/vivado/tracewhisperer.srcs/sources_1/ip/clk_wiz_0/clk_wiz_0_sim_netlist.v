@@ -1,10 +1,10 @@
-// Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+// Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2019.1 (win64) Build 2552052 Fri May 24 14:49:42 MDT 2019
-// Date        : Tue Nov 10 10:16:53 2020
-// Host        : qed running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim -rename_top clk_wiz_0 -prefix
-//               clk_wiz_0_ clk_wiz_0_sim_netlist.v
+// Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
+// Date        : Tue Nov 30 13:18:28 2021
+// Host        : red running 64-bit Ubuntu 18.04.6 LTS
+// Command     : write_verilog -force -mode funcsim
+//               /home/jpnewae/git/DesignStartTrace/hardware/tracewhisperer/vivado/tracewhisperer.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0_sim_netlist.v
 // Design      : clk_wiz_0
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -15,6 +15,13 @@
 (* NotValidForBitStream *)
 module clk_wiz_0
    (clk_out1,
+    daddr,
+    dclk,
+    den,
+    din,
+    dout,
+    drdy,
+    dwe,
     psclk,
     psen,
     psincdec,
@@ -23,6 +30,13 @@ module clk_wiz_0
     locked,
     clk_in1);
   output clk_out1;
+  input [6:0]daddr;
+  input dclk;
+  input den;
+  input [15:0]din;
+  output [15:0]dout;
+  output drdy;
+  input dwe;
   input psclk;
   input psen;
   input psincdec;
@@ -33,6 +47,13 @@ module clk_wiz_0
 
   wire clk_in1;
   wire clk_out1;
+  wire [6:0]daddr;
+  wire dclk;
+  wire den;
+  wire [15:0]din;
+  wire [15:0]dout;
+  wire drdy;
+  wire dwe;
   wire locked;
   wire psclk;
   wire psdone;
@@ -43,6 +64,13 @@ module clk_wiz_0
   clk_wiz_0_clk_wiz_0_clk_wiz inst
        (.clk_in1(clk_in1),
         .clk_out1(clk_out1),
+        .daddr(daddr),
+        .dclk(dclk),
+        .den(den),
+        .din(din),
+        .dout(dout),
+        .drdy(drdy),
+        .dwe(dwe),
         .locked(locked),
         .psclk(psclk),
         .psdone(psdone),
@@ -51,8 +79,16 @@ module clk_wiz_0
         .reset(reset));
 endmodule
 
+(* ORIG_REF_NAME = "clk_wiz_0_clk_wiz" *) 
 module clk_wiz_0_clk_wiz_0_clk_wiz
    (clk_out1,
+    daddr,
+    dclk,
+    den,
+    din,
+    dout,
+    drdy,
+    dwe,
     psclk,
     psen,
     psincdec,
@@ -61,6 +97,13 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
     locked,
     clk_in1);
   output clk_out1;
+  input [6:0]daddr;
+  input dclk;
+  input den;
+  input [15:0]din;
+  output [15:0]dout;
+  output drdy;
+  input dwe;
   input psclk;
   input psen;
   input psincdec;
@@ -74,6 +117,13 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
   wire clk_out1_clk_wiz_0;
   wire clkfbout_buf_clk_wiz_0;
   wire clkfbout_clk_wiz_0;
+  wire [6:0]daddr;
+  wire dclk;
+  wire den;
+  wire [15:0]din;
+  wire [15:0]dout;
+  wire drdy;
+  wire dwe;
   wire locked;
   wire psclk;
   wire psdone;
@@ -93,8 +143,6 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
   wire NLW_mmcm_adv_inst_CLKOUT4_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED;
-  wire NLW_mmcm_adv_inst_DRDY_UNCONNECTED;
-  wire [15:0]NLW_mmcm_adv_inst_DO_UNCONNECTED;
 
   (* BOX_TYPE = "PRIMITIVE" *) 
   BUFG clkf_buf
@@ -107,12 +155,12 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
   (* BOX_TYPE = "PRIMITIVE" *) 
   MMCME2_ADV #(
     .BANDWIDTH("OPTIMIZED"),
-    .CLKFBOUT_MULT_F(12.000000),
+    .CLKFBOUT_MULT_F(48.000000),
     .CLKFBOUT_PHASE(0.000000),
     .CLKFBOUT_USE_FINE_PS("FALSE"),
-    .CLKIN1_PERIOD(12.500000),
+    .CLKIN1_PERIOD(50.000000),
     .CLKIN2_PERIOD(0.000000),
-    .CLKOUT0_DIVIDE_F(6.000000),
+    .CLKOUT0_DIVIDE_F(12.000000),
     .CLKOUT0_DUTY_CYCLE(0.500000),
     .CLKOUT0_PHASE(0.000000),
     .CLKOUT0_USE_FINE_PS("TRUE"),
@@ -174,13 +222,13 @@ module clk_wiz_0_clk_wiz_0_clk_wiz
         .CLKOUT4(NLW_mmcm_adv_inst_CLKOUT4_UNCONNECTED),
         .CLKOUT5(NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED),
         .CLKOUT6(NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED),
-        .DADDR({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .DCLK(1'b0),
-        .DEN(1'b0),
-        .DI({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .DO(NLW_mmcm_adv_inst_DO_UNCONNECTED[15:0]),
-        .DRDY(NLW_mmcm_adv_inst_DRDY_UNCONNECTED),
-        .DWE(1'b0),
+        .DADDR(daddr),
+        .DCLK(dclk),
+        .DEN(den),
+        .DI(din),
+        .DO(dout),
+        .DRDY(drdy),
+        .DWE(dwe),
         .LOCKED(locked),
         .PSCLK(psclk),
         .PSDONE(psdone),
@@ -197,12 +245,15 @@ module glbl ();
 
     parameter ROC_WIDTH = 100000;
     parameter TOC_WIDTH = 0;
+    parameter GRES_WIDTH = 10000;
+    parameter GRES_START = 10000;
 
 //--------   STARTUP Globals --------------
     wire GSR;
     wire GTS;
     wire GWE;
     wire PRLD;
+    wire GRESTORE;
     tri1 p_up_tmp;
     tri (weak1, strong0) PLL_LOCKG = p_up_tmp;
 
@@ -215,6 +266,7 @@ module glbl ();
     reg GSR_int;
     reg GTS_int;
     reg PRLD_int;
+    reg GRESTORE_int;
 
 //--------   JTAG Globals --------------
     wire JTAG_TDO_GLBL;
@@ -242,6 +294,7 @@ module glbl ();
     assign (strong1, weak0) GSR = GSR_int;
     assign (strong1, weak0) GTS = GTS_int;
     assign (weak1, weak0) PRLD = PRLD_int;
+    assign (strong1, weak0) GRESTORE = GRESTORE_int;
 
     initial begin
 	GSR_int = 1'b1;
@@ -255,6 +308,14 @@ module glbl ();
 	GTS_int = 1'b1;
 	#(TOC_WIDTH)
 	GTS_int = 1'b0;
+    end
+
+    initial begin 
+	GRESTORE_int = 1'b0;
+	#(GRES_START);
+	GRESTORE_int = 1'b1;
+	#(GRES_WIDTH);
+	GRESTORE_int = 1'b0;
     end
 
 endmodule

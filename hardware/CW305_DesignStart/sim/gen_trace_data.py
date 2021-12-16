@@ -26,21 +26,36 @@
 
 import random
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int, default=1)
 parser.add_argument("--events", type=int, default=1)
 parser.add_argument("--rules", type=int, default=1)
 parser.add_argument("--raw", type=int, default=0)
+parser.add_argument("--longcorner", type=int, default=0)
+parser.add_argument("--traceclock", type=int, default=0)
 parser.add_argument("--patterntrig", type=int, default=0)
 parser.add_argument("--capturenow", type=int, default=0)
 parser.add_argument("--swo_mode", type=int, default=0)
+parser.add_argument("--usb_clock_period", type=int, default=0)
+parser.add_argument("--target_clock_trace_period", type=int, default=0)
+parser.add_argument("--target_clock_swo_period", type=int, default=0)
+parser.add_argument("--usb_clock_sel", type=int, default=0)
 parser.add_argument("--cw305", type=int, default=0)
+parser.add_argument("--rundir", type=str, default='rundir')
 args = parser.parse_args()
 
 rawmode = args.raw
 patterntrig = args.patterntrig
 capturenow = args.capturenow
+longcorner = args.longcorner
+traceclock = args.traceclock
+usb_clock_period = args.usb_clock_period
+target_clock_trace_period = args.target_clock_trace_period
+target_clock_swo_period = args.target_clock_swo_period
+usb_clock_sel = args.usb_clock_sel
+rundir = args.rundir
 
 random.seed(args.seed)
 
@@ -54,7 +69,10 @@ nibble_index = 0
 match_index = 0
 
 if args.swo_mode:
-    multiplier = 4 # TODO: make this ratio of trace_clk : usb_clk
+    if usb_clock_sel:
+        multiplier = target_clock_trace_period / usb_clock_period
+    else:
+        multiplier = target_clock_trace_period / target_clock_swo_period
 else:
     multiplier = 1
 
@@ -170,17 +188,15 @@ def random_frame(n=1, minlen=2, maxlen=15):
                     inc_time(2)
                     if first_event and args.swo_mode:
                         adjust = 2
-                        #first_event = False
                     elif first_event and args.cw305:
                         adjust = 1
-                        #first_event = False
                     else:
                         adjust = 0
                     if first_event:
                         first_event = False
                         if not args.cw305 and not args.swo_mode:
                             adjust -= 1
-                    matchtimes.write('%016x\n' % ((((nibble << 4) + lastnib) << 56) + (time-last_time+adjust)*multiplier))
+                    matchtimes.write('%016x\n' % ((((nibble << 4) + lastnib) << 56) + int((time-last_time+adjust)*multiplier)))
                     last_time = time
                 else:
                     lastnib = nibble
@@ -243,18 +259,16 @@ def match_frame(rule=0):
         if rawmode:
             inc_time(2)
             if first_event and args.swo_mode:
-                adjust = 2
-                #first_event = False
+                adjust = 1
             elif first_event and args.cw305:
                 adjust = 1
-                #first_event = False
             else:
                 adjust = 0
             if first_event:
                 first_event = False
                 if not args.cw305 and not args.swo_mode:
                     adjust -= 1
-            matchtimes.write('%016x\n' % ((x << 56) + (time-last_time+adjust)*multiplier))
+            matchtimes.write('%016x\n' % ((x << 56) + int((time-last_time+adjust)*multiplier)))
             last_time = time
     mem.write('\n\n')
     nibble_index += len(pattern)*2 + 3
@@ -265,11 +279,9 @@ def match_frame(rule=0):
         inc_time(len(rules[rule])*2)
         rule = 2**rule;
         if first_event and args.swo_mode:
-            adjust = 2
-            #first_event = False
+            adjust = 1
         elif first_event and args.cw305:
             adjust = 1
-            #first_event = False
         else:
             adjust = 0
         if first_event:
@@ -277,7 +289,7 @@ def match_frame(rule=0):
             if not args.cw305 and not args.swo_mode:
                 adjust -= 1
 
-        matchtimes.write('%016x\n' % ((rule << 56) + (time-last_event_time+adjust)*multiplier))
+        matchtimes.write('%016x\n' % ((rule << 56) + int((time-last_event_time+adjust)*multiplier)))
 
     last_event_time = time
 
@@ -288,10 +300,12 @@ def inc_time(nibbles):
 
 
 # open output files that will be read by the Verilog testbench:
-mem = open('tracedata.mem', 'w+')
-regs = open('registers.v', 'w+')
-matchtimes = open('matchtimes.mem', 'w+')
-trig = open('swtrigtime.mem', 'w+')
+if not os.path.isdir(rundir):
+    os.mkdir(rundir)
+mem = open('%s/tracedata.mem' % rundir, 'w+')
+regs = open('%s/registers.v' % rundir, 'w+')
+matchtimes = open('%s/matchtimes.mem' % rundir, 'w+')
+trig = open('%s/swtrigtime.mem' % rundir, 'w+')
 
 # generate match rules:
 if patterntrig:
@@ -321,9 +335,12 @@ recording = True
 if patterntrig:
     match_frame(trig_rule)
     if rawmode:
-        last_event_time = time - 3
+        offset = 3
     else:
-        last_event_time = time - 1
+        offset = 1
+    if traceclock:
+        offset += 1
+    last_event_time = time - offset
     for i in range(args.events):
         sync_frame(random.randrange(0,80))
         random_frame(random.randrange(0,20))
@@ -339,7 +356,13 @@ else:
     for i in range(args.events):
         rule = random.randrange(0, args.rules)
         match_frame(rule)
-        sync_frame(random.randrange(0,80))
+        if longcorner:
+            # range is carefully selected along with MAX_TIMESTAMP in the long_corner testcase
+            # to make those long corner events more likely. Testbench will issue a warning if
+            # long corner events aren't observed.
+            sync_frame(random.randrange(130,138))
+        else:
+            sync_frame(random.randrange(0,80))
         random_frame(random.randrange(0,20))
         sync_frame(random.randrange(0,4))
     sync_frame(10)

@@ -1,5 +1,3 @@
-tb.v
-tb_trace_generator.v
 ../hdl/CW305_designstart_top.v
 ../hdl/trace_top.v
 ../hdl/cw305_usb_reg_fe.v
@@ -7,7 +5,7 @@ tb_trace_generator.v
 ../hdl/fe_capture_trace.v
 ../hdl/cdc_bus.v
 ../../uart/uart_core.v
-../../phywhisperer/hardware/fpga/hdl/fe_capture_main.v
-../../phywhisperer/hardware/fpga/hdl/reg_main.v
-../../phywhisperer/hardware/fpga/hdl/pw_trigger.v
-../../phywhisperer/hardware/fpga/hdl/cdc_pulse.v
+../../phywhisperer-common/hardware/hdl/fe_capture_main.v
+../../phywhisperer-common/hardware/hdl/reg_main.v
+../../phywhisperer-common/hardware/hdl/pw_trigger.v
+../../phywhisperer-common/hardware/hdl/cdc_pulse.v

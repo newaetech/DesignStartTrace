@@ -35,21 +35,25 @@ either expressed or implied, of NewAE Technology Inc.
 module tb();
     parameter pADDR_WIDTH = 21;
     parameter pBYTECNT_SIZE = 7;
-    //parameter pUSB_CLOCK_PERIOD = 10;
-    parameter pUSB_CLOCK_PERIOD = 42;
-    parameter pPLL_CLOCK_PERIOD = 168;
-    parameter pTRIGGER_CLOCK_PERIOD = 2;
+    parameter pUSB_CLOCK_PERIOD = 12;
     parameter pCAPTURE_RAW = 0;
     parameter pCAPTURE_NOW = 0;
     parameter pPATTERN_TRIG = 0;
     parameter pSWO_MODE = 0;
-    parameter pSWO_DIV = 15;
+    parameter pTRACE_CLOCK_SEL = 0;
+    parameter pUSB_CLOCK_SEL = 0;
+    parameter pLONGCORNER = 0;
     parameter pTIMESTAMPS_DISABLED = 0;
     parameter pMAX_TIMESTAMP = 'hFFFF;
     parameter pSEED = 1;
     parameter pTIMEOUT = 2560000;
     parameter pVERBOSE = 0;
     parameter pDUMP = 0;
+    // clock periods below are interdependent and are intended to be calculated by regress.py:
+    parameter pSWO_DIV = 0;
+    parameter pTARGET_CLOCK_TRACE_PERIOD = 0;
+    parameter pTARGET_CLOCK_SWO_PERIOD = 0;     // this is tied to pTARGET_CLOCK_TRACE_PERIOD
+    parameter pTRIGGER_CLOCK_PERIOD = 0;        // this is tied to pSWO_MODE
 
     reg usb_clk;
     wire [7:0] usb_data;
@@ -67,10 +71,12 @@ module tb();
     reg l14_sel;
     reg pushbutton;
     reg reset;
-    reg pll_clk1;
     reg trigger_clk;
-    wire tio_clkin;
     wire trig_out;
+    reg  target_clk_trace = 1'b0;       // target clock for parallel trace mode
+    reg  target_clk_swo = 1'b0;         // target clock for SWO mode
+    reg  trace_clk = 1'b0;              // half-rate trace clock
+    wire target_clk;
 
     wire led1;
     wire led2;
@@ -84,6 +90,7 @@ module tb();
 
     int seed;
     int errors;
+    int trace_generator_errors;
     int warnings;
     int i;
     int match_index;
@@ -92,7 +99,7 @@ module tb();
     
     reg [31:0] write_data;
 
-    wire trace_clk = pll_clk1;  // shorthand for testbench
+    assign target_clk = pSWO_MODE? target_clk_swo : target_clk_trace;
 
    reg [63:0] matchdata[0:2047];
    int cycle;
@@ -120,6 +127,7 @@ module tb();
    bit setup_done;
    bit in_sync;
    bit fast_fifo_mode;
+   bit long_corner_seen;
    int sync_counter;
    reg [63:0] sync_data;
    int slop;
@@ -144,12 +152,24 @@ module tb();
       match_index = 0;
       $display("Running with seed=%0d", seed);
       $urandom(seed);
+      $display("pTRACE_CLOCK_SEL                = %1d", pTRACE_CLOCK_SEL);
+      $display("pUSB_CLOCK_SEL                  = %1d", pUSB_CLOCK_SEL);
+      $display("pSWO_MODE                       = %1d", pSWO_MODE);
+      $display("pSWO_DIV                        = %1d", pSWO_DIV);
+      $display("pUSB_CLOCK_PERIOD               = %1d", pUSB_CLOCK_PERIOD);
+      $display("pTARGET_CLOCK_TRACE_PERIOD      = %1d", pTARGET_CLOCK_TRACE_PERIOD);
+      $display("pTARGET_CLOCK_SWO_PERIOD        = %1d", pTARGET_CLOCK_SWO_PERIOD);
+      $display("pTRIGGER_CLOCK_PERIOD           = %1d", pTRIGGER_CLOCK_PERIOD);
+      $display("pPATTERN_TRIG                   = %1d", pPATTERN_TRIG);
+      $display("pCAPTURE_RAW                    = %1d", pCAPTURE_RAW);
+      
       if (pDUMP) begin
-         $dumpfile("results/tb.fst");
+         $dumpfile("tb.fst");
          $dumpvars(0, tb);
       end
       usb_clk = 1'b1;
-      pll_clk1 = 1'b1;
+      target_clk_trace = 1'b1;
+      target_clk_swo = 1'b1;
 
       usb_wdata = 0;
       usb_addr = 0;
@@ -164,15 +184,15 @@ module tb();
       l14_sel = 0;
       pushbutton = 1;
       reset = 0;
-      pll_clk1 = 0;
+      target_clk_trace = 0;
+      target_clk_swo = 1'b1;
       trigger_clk = 0;
 
-      //#(pPLL_CLOCK_PERIOD*2) pushbutton = 0;
-      //#(pPLL_CLOCK_PERIOD*2) pushbutton = 1;
       #(pUSB_CLOCK_PERIOD*10);
 
       write_byte(`MAIN_REG_SELECT, `REG_RESET_REG, 0, 8'h1);
       reset = 1;
+      #(pUSB_CLOCK_PERIOD*10);
       write_byte(`MAIN_REG_SELECT, `REG_RESET_REG, 0, 8'h0);
       reset = 0;
 
@@ -221,7 +241,7 @@ module tb();
       write_byte(`TRACE_REG_SELECT, `REG_CAPTURE_RAW, 0, pCAPTURE_RAW);
 
       // TODO: set these intelligently
-      write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 32'd20000);
+      write_word(`MAIN_REG_SELECT, `REG_CAPTURE_LEN, 4, 32'd20000);
       write_byte(`MAIN_REG_SELECT, `REG_COUNT_WRITES, 0, 8'h1);
 
       if (pSWO_MODE) begin
@@ -234,31 +254,55 @@ module tb();
       write_byte(`MAIN_REG_SELECT, `REG_CAPTURE_WHILE_TRIG, 0, 0);
 
 
-      max_timestamp = $urandom_range('h80, pMAX_TIMESTAMP);
+      // don't make the max timestamp smaller than the short timestamp!
+      if (pMAX_TIMESTAMP < 'h200) begin
+          $display("pMAX_TIMESTAMP is too small!");
+          errors += 1;
+      end
+      max_timestamp = $urandom_range('h200, pMAX_TIMESTAMP);
       $display("Setting max timestamp to %h", max_timestamp);
-      write_word(`MAIN_REG_SELECT, `REG_MAX_TIMESTAMP, max_timestamp);
+      write_word(`MAIN_REG_SELECT, `REG_MAX_TIMESTAMP, 2, max_timestamp);
 
       if (pCAPTURE_NOW == 0)
          write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h1);
       else
          write_byte(`MAIN_REG_SELECT, `REG_ARM, 0, 8'h3);
 
+      if (pUSB_CLOCK_SEL)
+         write_byte(`TRACE_REG_SELECT, `REG_FE_CLOCK_SEL, 0, 8'h2);
+      else if (pTRACE_CLOCK_SEL)
+         write_byte(`TRACE_REG_SELECT, `REG_FE_CLOCK_SEL, 0, 8'h1);
+      else
+         write_byte(`TRACE_REG_SELECT, `REG_FE_CLOCK_SEL, 0, 8'h0);
+
       setup_done = 1;
 
    end
 
+   // DIY code coverage:
+   initial begin
+       long_corner_seen = 0;
+       wait (setup_done);
+       wait (U_dut.U_trace_top.U_fe_capture_main.long_corner);
+       long_corner_seen = 1;
+   end
+
    // maintain a cycle counter
-   always @(posedge trace_clk) begin
+   always @(posedge target_clk) begin
       if (reset == 1)
          cycle <= 0;
       else
          cycle <= cycle + 1;
    end
 
+   // testbench generates data on target clock; synthesize the half-rate trace clock:
+   always @ (posedge target_clk_trace)
+       trace_clk <= ~trace_clk;
+
 
    // timeout thread:
    initial begin
-      #(pUSB_CLOCK_PERIOD*pTIMEOUT);
+      #(pTARGET_CLOCK_TRACE_PERIOD*pTIMEOUT);
       errors += 1;
       $display("ERROR: global timeout");
       $display("SIMULATION FAILED (%0d errors).", errors);
@@ -287,11 +331,11 @@ module tb();
       if (pPATTERN_TRIG && pCAPTURE_RAW) begin
          // in this case, the pattern bytes weren't written to a FIFO but we can retrieve them from a register:
          wait_fifo_not_empty();
-         read_word(`TRACE_REG_SELECT, `REG_MATCHED_DATA, read_buffer_data);
+         read_word(`TRACE_REG_SELECT, `REG_MATCHED_DATA, 4, read_buffer_data);
          // this is a bit wonky, but since the pattern was generated from Python, it's easiest to verify
          // by reading it back:
-         read_word(`TRACE_REG_SELECT, `REG_TRACE_PATTERN0+pattern_rule_id, expected_pattern_data);
-         read_word(`TRACE_REG_SELECT, `REG_TRACE_MASK0+pattern_rule_id, expected_pattern_mask);
+         read_word(`TRACE_REG_SELECT, `REG_TRACE_PATTERN0+pattern_rule_id, 4, expected_pattern_data);
+         read_word(`TRACE_REG_SELECT, `REG_TRACE_MASK0+pattern_rule_id, 4, expected_pattern_mask);
          if (expected_pattern_data != (expected_pattern_mask & read_buffer_data)) begin
             errors += 1;
             $display("ERROR on pattern match bytes.");
@@ -305,8 +349,6 @@ module tb();
       total_time = 0;
       write_byte(`MAIN_REG_SELECT, `REG_FAST_FIFO_RD_EN, 0, {7'b0, fast_fifo_mode});
       while (matchdata[match_index] != 64'hFFFF_FFFF_FFFF_FFFF) begin
-         //$display("total_time=%0d on match_index=%0d, byte=%x", total_time, match_index, expected_byte);
-         //total_time = 0;
          read_fifo(fast_fifo_mode);
          while (command == `FE_FIFO_CMD_TIME) begin
             total_time += read_data[`FE_FIFO_TIME_START +: `FE_FIFO_FULLTIME_LEN];
@@ -330,13 +372,13 @@ module tb();
                $display("Correct rule on match event %0d", match_index);
             // now check timestamp -- exact in the case of trace, some slop allowed for SWO
             if (pSWO_MODE)
-               slop = 5; // TODO: tie this into clock ratios?
+               // rough way of accounting for pSWO_DIV:
+               slop = pTARGET_CLOCK_TRACE_PERIOD / (pUSB_CLOCK_SEL? pUSB_CLOCK_PERIOD : pTARGET_CLOCK_SWO_PERIOD) * 2;
             else
                slop = 0;
-            // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:
             if ( (total_time > expected_time + slop) || (total_time < expected_time - slop) ) begin
                errors += 1;
-               $display("ERROR on match event %0d at time %t: expected timestamp %0d, got %0d", match_index, $time, expected_time, total_time);
+               $display("ERROR on match event %0d at time %t: expected timestamp %0d, got %0d (slop: %0d)", match_index, $time, expected_time, total_time, slop);
             end
             match_index += 1;
             total_time = 0;
@@ -383,7 +425,8 @@ module tb();
 
             else begin
                if (pSWO_MODE)
-                  slop = 2; // TODO: tie this into clock ratios?
+                  // rough way of accounting for pSWO_DIV:
+                  slop = pTARGET_CLOCK_TRACE_PERIOD / (pUSB_CLOCK_SEL? pUSB_CLOCK_PERIOD : pTARGET_CLOCK_SWO_PERIOD) * 2;
                else
                   slop = 0;
                // in pCAPTURE_NOW mode, we don't correctly predict the first timestamp, so skip checking it:
@@ -393,7 +436,7 @@ module tb();
                   end
                   else begin
                      errors += 1;
-                     $display("ERROR on match byte #%0d (byte=%0x) at time %t: expected timestamp %0d, got %0d", match_index, fifo_data, $time, expected_time, total_time);
+                     $display("ERROR on match byte #%0d (byte=%0x) at time %t: expected timestamp %0d, got %0d (slop=%0d)", match_index, fifo_data, $time, expected_time, total_time, slop);
                   end
                   total_time = 0;
                end
@@ -447,6 +490,11 @@ module tb();
       $display("All expected events processed. Waiting for trace generator to be done...");
       wait (trace_generator_done);
       $display("Trace generator done.");
+      errors += trace_generator_errors;
+      if (pLONGCORNER && long_corner_seen == 0) begin
+          warnings += 1;
+          $display("WARNING: no long corner observed (this can happen from time to time, but it shouldn't happen on every run!");
+      end
       if (errors)
          $display("SIMULATION FAILED (%0d errors, %0d warnings).", errors, warnings);
       else
@@ -458,7 +506,6 @@ module tb();
    reg read_select;
 
    assign usb_data = read_select? 8'bz : usb_wdata;
-   assign tio_clkin = pll_clk1;
 
    assign userio_d[2] = swo;
 
@@ -503,7 +550,7 @@ module tb();
          fast_fifo_read(read_data);
       else begin
          wait_fifo_not_empty();
-         read_word(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, read_data);
+         read_word(`MAIN_REG_SELECT, `REG_SNIFF_FIFO_RD, 4, read_data);
       end
       if (pTIMESTAMPS_DISABLED) begin
          command =                   `FE_FIFO_CMD_STAT;
@@ -555,7 +602,8 @@ module tb();
 
 
    always #(pUSB_CLOCK_PERIOD/2) usb_clk = !usb_clk;
-   always #(pPLL_CLOCK_PERIOD/2) pll_clk1 = !pll_clk1;
+   always #(pTARGET_CLOCK_TRACE_PERIOD/2) target_clk_trace = !target_clk_trace;
+   always #(pTARGET_CLOCK_SWO_PERIOD/2) target_clk_swo = !target_clk_swo;
    always #(pTRIGGER_CLOCK_PERIOD/2) trigger_clk = !trigger_clk;
 
    wire #1 usb_rdn_out = usb_rdn;
@@ -588,12 +636,12 @@ module tb();
           .led3               (led3      ),
 
           // PLL
-          .pll_clk1           (pll_clk1),
+          .pll_clk1           (target_clk_trace),
 
           // 20-Pin Connector
           //.tio_trigger        (tio_trigger),
           //.tio_clkout         (tio_clkout ),
-          .tio_clkin          (tio_clkin  ),
+          .tio_clkin          (target_clk_trace  ),
           .trig_out           (trig_out),
 
           .I_trigger_clk      (trigger_clk),
@@ -608,6 +656,7 @@ module tb();
 
    `else
       wire [3:0] TRACEDATA;
+      wire [7:0] trace_data_sdr;
       wire m3_trig_out;
 
       tracewhisperer_top #(
@@ -632,9 +681,9 @@ module tb();
 
           // trace
           .TRCENA             (1'b1),
-          .I_trace_clk        (trace_clk),
+          .target_clk         (target_clk),
           .TRACEDATA          (TRACEDATA),
-          .TRACECLOCK         (1'b0),
+          .TRACECLOCK         (trace_clk),
 
           // userio (SWO)
           .userio_d           (userio_d),
@@ -643,7 +692,8 @@ module tb();
           .trig_out           (trig_out),          // output to CW
           .target_trig_in     (m3_trig_out),       // input from target
 
-          .I_trigger_clk      (trigger_clk)
+          .I_trigger_clk      (trigger_clk),
+          .I_trace_sdr        (trace_data_sdr)
 
       );
 
@@ -651,13 +701,16 @@ module tb();
             .pSWO_MODE              (pSWO_MODE),
             .pSWO_DIV               (pSWO_DIV)
       ) U_tb_trace_generator
-           (.trace_clk              (trace_clk),
+           (.target_clk_trace       (target_clk_trace),
             .swo_clk                (trigger_clk),
             .reset                  (reset),
+            .trace_data_sdr         (trace_data_sdr),
             .TRACEDATA              (TRACEDATA),
             .swo                    (swo),
             .trig_out               (m3_trig_out),
-            .done                   (trace_generator_done)
+            .done                   (trace_generator_done),
+            .errors                 (trace_generator_errors),
+            .setup_done             (setup_done)
            );
 
    `endif

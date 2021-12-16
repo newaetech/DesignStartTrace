@@ -27,17 +27,21 @@ either expressed or implied, of NewAE Technology Inc.
 `default_nettype none
 
 module tb_trace_generator (
-  input  wire trace_clk,
+  input  wire target_clk_trace,
   input  wire swo_clk,
   input  wire reset,
   output reg  [3:0] TRACEDATA,
+  output reg [7:0] trace_data_sdr,
   output wire swo,
   output reg  trig_out,
-  output reg  done
+  output reg  done,
+  output int  errors,
+  input  wire setup_done
 );
 
 parameter pSWO_MODE = 0;
 parameter pSWO_DIV = 16'd15;
+
 
 reg [31:0] i;
 reg [3:0] tracedata [0:32767];
@@ -65,8 +69,9 @@ initial begin
    swo_txin_trace = 0;
    trig_out = 0;
    tot_nibbles = 0;
+   errors = 0;
    @ (negedge reset);
-   @ (posedge trace_clk);
+   @ (posedge target_clk_trace);
    command = 0;
    while (command != 2) begin
       command = tracedata[i];
@@ -77,20 +82,26 @@ initial begin
       i = i + 1;
       //$display("Got command: %d, nibbles: %d, i: %d", command, num_nibbles, i);
       if (command == 0) begin
-         for (j = 0; j < num_nibbles; j = j + 1)  begin
-            @ (posedge trace_clk);
+         if (num_nibbles %2) begin
+             errors += 1;
+             $display("TRACE GENERATOR ERROR: odd number of nibbles, this shouldn't happen");
+         end
+         for (j = 0; j < num_nibbles; j = j + 2)  begin
+            @ (posedge target_clk_trace);
             TRACEDATA_r = TRACEDATA;
             TRACEDATA = tracedata[i+j];
-            if (j[0])
-               swo_txin_trace = 1'b1;
-            else
-               swo_txin_trace = 1'b0;
+            trace_data_sdr = {tracedata[i+j+1], tracedata[i+j]};
+            swo_txin_trace = 1'b0;
+            @ (posedge target_clk_trace);
+            TRACEDATA_r = TRACEDATA;
+            TRACEDATA = tracedata[i+j+1];
+            swo_txin_trace = 1'b1;
          end
          i = i + num_nibbles;
          tot_nibbles = tot_nibbles + num_nibbles;
       end
       else if (command == 1) begin
-         repeat (num_nibbles) @ (posedge trace_clk);
+         repeat (num_nibbles) @ (posedge target_clk_trace);
          swo_txin_trace = 1'b0;
          tot_nibbles = tot_nibbles + num_nibbles;
       end
@@ -100,7 +111,7 @@ initial begin
       end
       else begin
          $display("ERROR: unexpected command %d (i=%d)", command, i);
-         @ (posedge trace_clk);
+         @ (posedge target_clk_trace);
       end
 
       if (tot_nibbles == trigtime[0])
@@ -123,6 +134,22 @@ end
 
 assign swo_tx_datain = {TRACEDATA, TRACEDATA_r};
 
+wire txd_ack;
+reg swo_txin_r;
+always @(posedge swo_clk)
+    swo_txin_r <= swo_txin;
+
+initial begin
+    if (pSWO_MODE) begin
+        wait (setup_done);
+        wait (swo_txin_r ^ txd_ack);
+        errors += 1;
+        $display("TRACE GENERATOR ERROR: tripping over ourselves on SWO generation. Bad combination of clock rates?");
+    end
+end
+
+
+
 uart_core U_uart_tx (
    .clk                      (swo_clk),
    .reset_n                  (~reset),
@@ -133,15 +160,15 @@ uart_core U_uart_tx (
    // External data interface
    .rxd                      (1'b1),
    .txd                      (swo),
-   // UART Rx
+   // UART Rx (unused)
    .rxd_syn                  (),
    .rxd_data                 (),
    .rxd_ack                  (1'b0),
    .rxd_state                (),
-   // UART Tx (unused)
+   // UART Tx
    .txd_syn                  (swo_txin),
    .txd_data                 (swo_tx_datain),
-   .txd_ack                  ()
+   .txd_ack                  (txd_ack)
 );
 
 

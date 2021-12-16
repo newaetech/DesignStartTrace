@@ -84,7 +84,6 @@ module CW305_designstart_top #(
   output wire led3
 );
 
-
   wire sys_clock;
   wire SWDI;
   wire SWDO;
@@ -103,8 +102,22 @@ module CW305_designstart_top #(
   wire reset_pin = !resetn_pin;
   wire fpga_reset;
 
+  wire trigger_clk;
+  wire trigger_clk_locked;
+  wire trigger_clk_psen;
+  wire trigger_clk_psincdec;
+  wire trigger_clk_psdone;
+
   wire arm;
   wire capturing;
+  wire fe_clk;
+
+  wire [6:0]     trig_drp_addr;
+  wire           trig_drp_den;
+  wire [15:0]    trig_drp_din;
+  wire [15:0]    trig_drp_dout;
+  wire           trig_drp_dwe;
+  wire           trig_drp_reset;
 
   assign swdio = SWDOEN ? SWDO : 1'bz;
   assign SWDI = swdio;
@@ -189,18 +202,21 @@ module CW305_designstart_top #(
         .CM3_CODE_AXI3_wvalid   ()
        );
 
-  `else 
+   `elsif LINT
+
+   `else 
      // in simulation we simply emulate the trace pins instead:
      assign ext_clock = sys_clock;
      tb_trace_generator #(
            .pSWO_MODE              (0)
      ) U_tb_trace_generator
-          (.trace_clk              (sys_clock),
+          (.target_clk_trace       (sys_clock),
            .swo_clk                (1'b0),
            .reset                  (fpga_reset),
            .TRACEDATA              (TRACEDATA),
            .trig_out               (m3_trig_out),
            .done                   (trace_generator_done),
+           .setup_done             (1'b0),
            .swo                    ()
           );
   `endif
@@ -269,6 +285,33 @@ module CW305_designstart_top #(
            .I(USB_clk) );
    `endif
 
+   `ifdef __ICARUS__
+      assign trigger_clk = I_trigger_clk;
+      assign trigger_clk_locked = 1'b1;
+      assign trigger_clk_psdone = 1'b1;
+   `else
+       clk_wiz_0 U_trigger_clock (
+         .reset        (fpga_reset),
+         .clk_in1      (fe_clk),
+         .clk_out1     (trigger_clk),
+         // Dynamic phase shift ports
+         .psclk        (clk_usb_buf),
+         .psen         (trigger_clk_psen),
+         .psincdec     (trigger_clk_psincdec),
+         .psdone       (trigger_clk_psdone),
+         // Status and control signals
+         .locked       (trigger_clk_locked),
+         // Dynamic reconfiguration ports:
+         .daddr        (trig_drp_addr),
+         .dclk         (clk_usb_buf),
+         .den          (trig_drp_den),
+         .din          (trig_drp_din),
+         .dout         (trig_drp_dout),
+         .drdy         (),
+         .dwe          (trig_drp_dwe)
+      );
+   `endif
+
 
    trace_top #(
       .pBYTECNT_SIZE    (7),
@@ -276,20 +319,27 @@ module CW305_designstart_top #(
       .pBUFFER_SIZE     (64),
       .pMATCH_RULES     (8)
    ) U_trace_top (
-      .trace_clk_in     (ext_clock),
-      .trace_clk_out    (),
+      .trace_clk_in     (1'b0),
+      .target_clk       (ext_clock),
+      .fe_clk           (fe_clk),
       .usb_clk          (clk_usb_buf),
       .reset_pin        (reset_pin),
       .fpga_reset       (fpga_reset),
-                                  
+      .I_fe_clock_count (count),
+
+      .trigger_clk          (trigger_clk),
+      .trigger_clk_locked   (trigger_clk_locked),
+      .trigger_clk_psen     (trigger_clk_psen    ),
+      .trigger_clk_psincdec (trigger_clk_psincdec),
+      .trigger_clk_psdone   (trigger_clk_psdone  ),
+
       .trace_data       (TRACEDATA),
       .O_trace_trig_out (trace_trig_out),
       .m3_trig          (m3_trig_out),
       .O_soft_trig_passthru (soft_trig_passthru),
 
       `ifdef __ICARUS__
-      .I_trigger_clk    (I_trigger_clk),
-      .I_trace_clk      (1'b0),
+      .I_trace_sdr      (8'b0),
       `endif
 
       .USB_Data         (USB_Data ),
@@ -299,8 +349,7 @@ module CW305_designstart_top #(
       .USB_nCS          (USB_nCS  ),
       .O_data_available ( ), // unused
       .I_fast_fifo_rdn  (1'b1), // unused
-
-      .O_board_rev      (),     // used for PhyWhisperer platform only
+      .O_led_select     (), // unused
 
       .arm              (arm),
       .capturing        (capturing),
@@ -311,7 +360,13 @@ module CW305_designstart_top #(
       .O_userio_pwdriven (),
       .O_userio_drive_data (),
 
-      .trace_clk_locked (),
+      .trig_drp_addr    (trig_drp_addr ),
+      .trig_drp_den     (trig_drp_den  ),
+      .trig_drp_din     (trig_drp_din  ),
+      .trig_drp_dout    (trig_drp_dout ),
+      .trig_drp_dwe     (trig_drp_dwe  ),
+      .trig_drp_reset   (trig_drp_reset),
+
       .synchronized     ()
    );
 

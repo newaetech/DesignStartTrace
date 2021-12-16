@@ -73,7 +73,11 @@ following reasons:
 - there is less jitter on SWO (we observe small amounts of jitter due to
   asynchronous sampling, but it's possible that there is no jitter at all);
   the large jitter from the parallel trace port may be obscuring the leakage
-  which makes the CPA attack possible.
+  which makes the CPA attack possible. (These measurements were done using
+  the USB clock for sampling the trace data, which implies some jitter due
+  to the asynchronous relationship of the USB and target clocks. It is also
+  possible to use the target clock for trace sampling, although this does
+  not necessarily eliminate the jitter.)
 
 
 ## Avoiding Trace Noise

@@ -37,8 +37,10 @@ module tracewhisperer_top #(
   // for simulation only:
   `ifdef __ICARUS__
   input wire  I_trigger_clk,
-  input wire  I_trace_clk,
+  input wire  [7:0] I_trace_sdr,
   `endif
+
+  input wire  target_clk,
 
   // CW trigger:
   output wire trig_out,
@@ -66,57 +68,91 @@ module tracewhisperer_top #(
   inout  wire [pUSERIO_WIDTH-1:0] userio_d,
 
   // debug:
-  output wire         trace_clk_locked,
   output wire         synchronized,
 
   // leds:
   output wire led1,
-  output wire led2,
-  output wire led3
+  output reg  led2,
+  output reg  led3,
+  output wire led4
 );
 
   wire arm;
   wire capturing;
-  wire trace_clk;
-  wire [3:0] board_rev;
+  wire fe_clk;
+  wire fpga_reset;
+  wire flash_pattern;
   wire reverse_tracedata;
-  reg  [3:0] trace_data;
+  wire led_select;
+  wire error_flag;
+  wire [3:0] trace_data;
 
   wire [pUSERIO_WIDTH-1:0] userio_pwdriven;
   wire [pUSERIO_WIDTH-1:0] userio_drive_data;
-  reg swo;
+  wire swo;
 
-  reg [22:0] count;
+  wire trigger_clk;
+  wire trigger_clk_locked;
+  wire trigger_clk_psen;
+  wire trigger_clk_psincdec;
+  wire trigger_clk_psdone;
+
+  wire [6:0]     trig_drp_addr;
+  wire           trig_drp_den;
+  wire [15:0]    trig_drp_din;
+  wire [15:0]    trig_drp_dout;
+  wire           trig_drp_dwe;
+  wire           trig_drp_reset;
+
+  reg [22:0] count_fe_clock = 0;
+  reg [22:0] count_trace_clock = 0;
   reg target_trig_in_r;
 
-  always @(posedge trace_clk) count <= count + 1;
+  always @(posedge fe_clk) count_fe_clock <= count_fe_clock + 1;
+  always @(posedge TRACECLOCK) count_trace_clock <= count_trace_clock + 1;
 
-  assign led1 = count[22];              // clock alive; actually routes to PD pin of 20-pin CW connector
-  assign led3 = arm;                    // "Armed" LED
-  assign led2 = capturing;              // "Capturing" LED
+  assign led1 = count_fe_clock[22];     // clock alive; actually routes to PD pin of 20-pin CW connector
+  assign led4 = count_trace_clock[22];  // clock alive; actually routes to IO2 pin of 20-pin CW connector
+
+  always @(*) begin
+      if (error_flag) begin
+          led2 = flash_pattern;
+          led3 = flash_pattern;
+      end
+      else if (led_select) begin
+          led2 = count_fe_clock[22];
+          led3 = count_trace_clock[22];
+      end
+      else begin
+          led2 = arm;
+          led3 = capturing;
+      end
+  end
 
   assign mcx_trig = trig_out;
 
-  // front panel header has different pin mapping in pre-production boards
-  always @(*) begin
-     case (board_rev)
-        3: begin
-              if (reverse_tracedata)
-                 trace_data = {userio_d[3], TRACEDATA[2], TRACEDATA[1], TRACEDATA[3]};
-              else
-                 trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
-              swo = userio_d[1];
-           end
-        default: begin // catches production board rev (4)
-              if (reverse_tracedata)
-                 trace_data = {TRACEDATA[0], TRACEDATA[1], TRACEDATA[2], TRACEDATA[3]};
-              else
-                 trace_data = TRACEDATA;
-              swo = userio_d[2];
-           end
-     endcase
-  end
+  // Front panel header has different pin mapping in pre-production boards.
+  // This affects TRACEDATA too, but we can't mux around the IDDRs so we're
+  // stuck (only option is a build-time flag)
 
+  `ifdef REV3
+      assign trace_data = {TRACEDATA[3], TRACEDATA[1], TRACEDATA[2], userio_d[3]};
+      assign swo = userio_d[1];
+  `else
+      assign trace_data = TRACEDATA;
+      assign swo = userio_d[2];
+  `endif
+
+  `ifdef ILA_RAW_TRACE
+      ila_raw_trace I_raw_trace_ila (
+         .clk          (clk_usb_buf),          // input wire clk
+         .probe0       (TRACEDATA),            // input wire [3:0]  probe0  
+         .probe1       (userio_d[3]),          // input wire [0:0]  probe1 
+         .probe2       (userio_d[2]),          // input wire [0:0]  probe2 
+         .probe3       (userio_d[1]),          // input wire [0:0]  probe3 
+         .probe4       (TRACECLOCK)            // input wire [0:0]  probe4 
+     );
+  `endif
 
   wire clk_usb_buf;
 
@@ -128,11 +164,38 @@ module tracewhisperer_top #(
            .I(USB_clk) );
    `endif
 
+   `ifdef __ICARUS__
+      assign trigger_clk = I_trigger_clk;
+      assign trigger_clk_locked = 1'b1;
+      assign trigger_clk_psdone = 1'b1;
+   `else
+       clk_wiz_0 U_trigger_clock (
+         .reset        (fpga_reset),
+         .clk_in1      (fe_clk),
+         .clk_out1     (trigger_clk),
+         // Dynamic phase shift ports
+         .psclk        (clk_usb_buf),
+         .psen         (trigger_clk_psen),
+         .psincdec     (trigger_clk_psincdec),
+         .psdone       (trigger_clk_psdone),
+         // Status and control signals
+         .locked       (trigger_clk_locked),
+         // Dynamic reconfiguration ports:
+         .daddr        (trig_drp_addr),
+         .dclk         (clk_usb_buf),
+         .den          (trig_drp_den),
+         .din          (trig_drp_din),
+         .dout         (trig_drp_dout),
+         .drdy         (),
+         .dwe          (trig_drp_dwe)
+      );
+   `endif
 
-   always @(posedge trace_clk) begin
+
+
+   always @(posedge fe_clk) begin
       target_trig_in_r <= target_trig_in;
    end
-
 
    trace_top #(
       .pBYTECNT_SIZE    (pBYTECNT_SIZE),
@@ -142,19 +205,37 @@ module tracewhisperer_top #(
       .pUSERIO_WIDTH    (pUSERIO_WIDTH)
    ) U_trace_top (
       .trace_clk_in     (TRACECLOCK),
-      .trace_clk_out    (trace_clk),
+      .fe_clk           (fe_clk),
       .usb_clk          (clk_usb_buf),
       .reset_pin        (1'b0),
-      .fpga_reset       (), // unused
+      .fpga_reset       (fpga_reset),
+      .flash_pattern    (flash_pattern),
                                   
       .trace_data       (trace_data),
       .swo              (swo),
       .O_trace_trig_out (trig_out),
       .m3_trig          (target_trig_in_r),
+      .O_soft_trig_passthru (),
+
+      .target_clk       (target_clk),
+      .I_fe_clock_count (count_fe_clock),
+
+      .trigger_clk          (trigger_clk),
+      .trigger_clk_locked   (trigger_clk_locked),
+      .trigger_clk_psen     (trigger_clk_psen    ),
+      .trigger_clk_psincdec (trigger_clk_psincdec),
+      .trigger_clk_psdone   (trigger_clk_psdone  ),
+
+      .trig_drp_addr    (trig_drp_addr  ),
+      .trig_drp_den     (trig_drp_den   ),
+      .trig_drp_din     (trig_drp_din   ),
+      .trig_drp_dout    (trig_drp_dout  ),
+      .trig_drp_dwe     (trig_drp_dwe   ),
+      .trig_drp_reset   (trig_drp_reset ),
+
 
       `ifdef __ICARUS__
-      .I_trigger_clk    (I_trigger_clk),
-      .I_trace_clk      (I_trace_clk),
+      .I_trace_sdr      (I_trace_sdr),
       `endif
                                   
       .USB_Data         (USB_Data ),
@@ -165,8 +246,9 @@ module tracewhisperer_top #(
       .O_data_available (USB_SPARE0 ),
       .I_fast_fifo_rdn  (USB_SPARE1 ),
 
-      .O_board_rev      (board_rev),
       .O_reverse_tracedata (reverse_tracedata),
+      .O_led_select     (led_select),
+      .O_error_flag     (error_flag),
 
       .userio_d         (userio_d),
       .O_userio_pwdriven (userio_pwdriven),
@@ -175,7 +257,6 @@ module tracewhisperer_top #(
       .arm              (arm),
       .capturing        (capturing),
 
-      .trace_clk_locked (trace_clk_locked),
       .synchronized     (synchronized)
    );
 
@@ -188,7 +269,6 @@ module tracewhisperer_top #(
       .I_userio_pwdriven        (userio_pwdriven),
       .I_userio_drive_data      (userio_drive_data)
    );
-
 
 
 endmodule

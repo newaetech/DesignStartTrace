@@ -72,6 +72,14 @@
    (
     // Clock out ports
     .clk_out1(clk_out1),     // output clk_out1
+    // Dynamic reconfiguration ports
+    .daddr(daddr), // input [6:0] daddr
+    .dclk(dclk), // input dclk
+    .den(den), // input den
+    .din(din), // input [15:0] din
+    .dout(dout), // output [15:0] dout
+    .drdy(drdy), // output drdy
+    .dwe(dwe), // output dwe
     // Dynamic phase shift ports
     .psclk(psclk), // input psclk
     .psen(psen), // input psen
