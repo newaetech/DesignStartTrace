@@ -1,3 +1,6 @@
 [submodule "hardware/phywhisperer-common"]
 	path = hardware/phywhisperer-common
 	url = git@github.com:newaetech/phywhisperer-common.git
+[submodule "hardware/tracewhisperer"]
+	path = hardware/tracewhisperer
+	url = git@github.com:newaetech/tracewhisperer.git
