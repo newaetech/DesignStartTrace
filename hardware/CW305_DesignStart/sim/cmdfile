@@ -7,10 +7,10 @@
 ../../tracewhisperer/hdl/fe_capture_trace.v
 ../../tracewhisperer/hdl/cdc_bus.v
 ../../tracewhisperer/hdl/uart_core.v
+../../tracewhisperer/hdl/simple_trigger.v
 ../../phywhisperer-common/hardware/hdl/fe_capture_main.v
 ../../phywhisperer-common/hardware/hdl/reg_main.v
 ../../phywhisperer-common/hardware/hdl/fifo.v
-../../phywhisperer-common/hardware/hdl/pw_trigger.v
 ../../phywhisperer-common/hardware/hdl/cdc_pulse.v
 ../CW305_DesignStart.srcs/sources_1/ip/fifo_generator_0/fifo_generator_0_sim_netlist.v
 -y/tools/Xilinx/Vivado/2020.2/ids_lite/ISE/verilog/src/unisims/
