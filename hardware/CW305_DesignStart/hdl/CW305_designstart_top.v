@@ -95,6 +95,7 @@ module CW305_designstart_top #(
   wire swotdo;
   wire nTDOEN;
   wire TRACECLK;
+  wire [31:0] buildtime;
 
   wire trace_trig_out;
   wire soft_trig_passthru;
@@ -108,7 +109,6 @@ module CW305_designstart_top #(
   wire trigger_clk_psincdec;
   wire trigger_clk_psdone;
 
-  wire arm;
   wire capturing;
   wire fe_clk;
 
@@ -130,7 +130,7 @@ module CW305_designstart_top #(
   end
 
   assign led1 = count[22];              // clock alive
-  assign led2 = arm;
+  assign led2 = arm_usb;
   assign led3 = capturing;
 
   assign trig_out = soft_trig_passthru? m3_trig_out : trace_trig_out;
@@ -312,10 +312,71 @@ module CW305_designstart_top #(
       );
    `endif
 
+   wire isout;
+   wire usb_drive_data;
+   wire [7:0] cmdfifo_din;
+   wire [7:0] cmdfifo_dout_pre;
+   //reg  [7:0] cmdfifo_dout_reg;
+   wire [7:0] cmdfifo_dout;
+   wire [pBYTECNT_SIZE-1:0]  reg_bytecnt;
+   wire [7:0]   write_data;
+   wire [7:0]   read_data;
+   wire [7:0]   read_data_trace;
+   wire [7:0]   read_data_trace_trigger_drp;
+   wire [7:0]   read_data_main;
+   wire         reg_read;
+   wire         reg_write;
+   wire         reg_addrvalid;
+
+   wire         fifo_full;
+   wire         fifo_overflow_blocked;
+   wire [17:0]  fifo_in_data;
+   wire         fifo_wr;
+   wire         fifo_read;
+   wire         fifo_flush;
+   wire         arm_usb;
+   wire         arm_fe;
+   wire         clear_errors;
+   wire [17:0]  fifo_out_data;
+   wire [5:0]   fifo_status;
+   wire         fifo_empty;
+   wire         fifo_error_flag;
+   wire         synchronized;
+
+
+   assign USB_Data = isout ? cmdfifo_dout : 8'bZ;
+   assign cmdfifo_din = USB_Data;
+   //always @(posedge usb_clk)
+   //   cmdfifo_dout_reg <= cmdfifo_dout_pre;
+   //assign cmdfifo_dout = O_board_rev[3]? cmdfifo_dout_reg : cmdfifo_dout_pre;
+   assign cmdfifo_dout = cmdfifo_dout_pre;
+
+
+   wire [pADDR_WIDTH-pBYTECNT_SIZE-1:0]  reg_address;
+   cw305_usb_reg_fe #(
+      .pBYTECNT_SIZE    (pBYTECNT_SIZE)
+   ) U_usb_reg_main (
+      .rst              (fpga_reset),
+      .usb_clk          (clk_usb_buf), 
+      .usb_din          (cmdfifo_din), 
+      .usb_dout         (cmdfifo_dout_pre), 
+      .usb_rdn          (USB_nRD), 
+      .usb_wrn          (USB_nWE),
+      .usb_cen          (USB_nCS),
+      .usb_addr         (USB_Addr),
+      .usb_isout        (isout), 
+      .I_drive_data     (usb_drive_data),
+      .reg_address      (reg_address), 
+      .reg_bytecnt      (reg_bytecnt), 
+      .reg_datao        (write_data), 
+      .reg_datai        (read_data),
+      .reg_read         (reg_read), 
+      .reg_write        (reg_write), 
+      .reg_addrvalid    (reg_addrvalid)
+   );
 
    trace_top #(
       .pBYTECNT_SIZE    (7),
-      .pADDR_WIDTH      (21),
       .pBUFFER_SIZE     (64),
       .pMATCH_RULES     (8)
    ) U_trace_top (
@@ -325,7 +386,11 @@ module CW305_designstart_top #(
       .usb_clk          (clk_usb_buf),
       .reset_pin        (reset_pin),
       .fpga_reset       (fpga_reset),
+      .I_external_arm   (1'b0), // Husky only
       .I_fe_clock_count (count),
+      .buildtime        (buildtime),
+      .O_trace_en       (), // Husky only
+      .O_trace_userio_dir (), // Husky only
 
       .trigger_clk          (trigger_clk),
       .trigger_clk_locked   (trigger_clk_locked),
@@ -342,17 +407,36 @@ module CW305_designstart_top #(
       .I_trace_sdr      (8'b0),
       `endif
 
-      .USB_Data         (USB_Data ),
-      .USB_Addr         (USB_Addr ),
-      .USB_nRD          (USB_nRD  ),
-      .USB_nWE          (USB_nWE  ),
       .USB_nCS          (USB_nCS  ),
       .O_data_available ( ), // unused
       .I_fast_fifo_rdn  (1'b1), // unused
       .O_led_select     (), // unused
 
-      .arm              (arm),
+      .usb_drive_data   (usb_drive_data),
+      .reg_address      (reg_address[7:0]), 
+      .reg_bytecnt      (reg_bytecnt), 
+      .write_data       (write_data), 
+      .read_data        (read_data),
+      .reg_read         (reg_read), 
+      .reg_write        (reg_write), 
+      .reg_addrvalid    (reg_addrvalid),
+
       .capturing        (capturing),
+
+      // FIFO interface:
+      .fifo_full        (fifo_full),
+      .fifo_overflow_blocked (fifo_overflow_blocked),
+      .fifo_in_data     (fifo_in_data),
+      .fifo_wr          (fifo_wr),
+      .fifo_read        (fifo_read),
+      .fifo_flush       (fifo_flush),
+      .arm_usb          (arm_usb),
+      .arm_fe           (arm_fe),
+      .clear_errors     (clear_errors),
+      .fifo_out_data    (fifo_out_data),
+      .fifo_status      (fifo_status),
+      .fifo_empty       (fifo_empty),
+      .fifo_error_flag  (fifo_error_flag),
 
       // unused for CW305:
       .swo              (1'b0),
@@ -367,8 +451,46 @@ module CW305_designstart_top #(
       .trig_drp_dwe     (trig_drp_dwe  ),
       .trig_drp_reset   (trig_drp_reset),
 
-      .synchronized     ()
+      .synchronized     (synchronized)
    );
+
+
+   `ifndef NOFIFO // for clean compilation
+   fifo U_fifo (
+      .reset_i                  (fpga_reset),
+      .cwusb_clk                (clk_usb_buf),
+      .fe_clk                   (fe_clk),
+
+      .O_fifo_full              (fifo_full),
+      .O_fifo_overflow_blocked  (fifo_overflow_blocked),
+      .I_data                   (fifo_in_data),
+      .I_wr                     (fifo_wr),
+
+      .I_fifo_read              (fifo_read),
+      .I_fifo_flush             (fifo_flush),
+      .I_clear_read_flags       (arm_usb),
+      .I_clear_write_flags      (arm_fe),
+      .I_clear_errors           (clear_errors),
+
+      .O_data                   (fifo_out_data),
+      .O_fifo_status            (fifo_status),
+      .O_fifo_empty             (fifo_empty),
+      .O_error_flag             (fifo_error_flag),
+
+      .I_custom_fifo_stat_flag  (synchronized)      
+   );
+   `endif
+
+
+   `ifndef __ICARUS__
+      USR_ACCESSE2 U_buildtime (
+         .CFGCLK(),
+         .DATA(buildtime),
+         .DATAVALID()
+      );
+   `else
+      assign buildtime = 0;
+   `endif
 
 
 endmodule

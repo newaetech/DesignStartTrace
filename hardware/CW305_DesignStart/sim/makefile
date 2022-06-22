@@ -21,7 +21,7 @@ DUMP=0
 all: testcase compile run
 
 testcase:
-	python3 gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
+	python3 ../../tracewhisperer/sim/gen_trace_data.py --seed $(SEED) --rules $(RULES) --events $(EVENTS) \
 	--raw $(CAPTURE_RAW) --patterntrig $(PATTERN_TRIG) --swo_mode $(SWO_MODE) --cw305 1 --capturenow $(CAPTURE_NOW) \
 	--rundir $(RUNDIR)
 
@@ -31,7 +31,7 @@ compile:
 	-Wportbind \
 	-Wselect-range \
 	-I$(RUNDIR) \
-	-I../hdl \
+	-I../../tracewhisperer/hdl \
 	-P tb.pDUMP=$(DUMP) \
 	-P tb.pSEED=$(SEED) \
 	-P tb.pCAPTURE_RAW=$(CAPTURE_RAW) \
@@ -53,7 +53,7 @@ nofifo:
 	-g2005-sv \
 	-Wportbind \
 	-Wselect-range \
-	-I../hdl \
+	-I../../tracewhisperer/hdl \
 	-DNOFIFO \
 	-DLINT \
 	-DCW305 \
@@ -62,20 +62,13 @@ lint:
 	verilator --lint-only -Wall \
 	-Wno-PINCONNECTEMPTY \
 	-f cmdfile_nofifo \
-	-I../hdl \
+	-I../../tracewhisperer/hdl \
 	-D__ICARUS__ \
 	-DNOFIFO \
 	-DCW305 \
 	-DLINT \
 	--top-module CW305_designstart_top \
 	2>&1 | tee lint.out \
-
-traceonly:
-	iverilog -ccmdfile_traceonly \
-	-g2005-sv \
-	-Wportbind \
-	-Wselect-range \
-	-I../hdl \
 
 run:
 	cd $(RUNDIR) && vvp -l../$(LOGFILE) $(EXEFILE) -$(WAVEFORMAT)

@@ -208,3 +208,18 @@ alternating addresses:
 the raw trace data looks the way it does... don't say I didn't warn you!)
 
 
+## Development Notes
+There is a Verilog simulation environment
+[here](hardware/CW305_DesignStart/sim).
+
+In order to generate a new bitfile, you'll need to first build the Arm
+DesignStart core, following the instructions
+[here](https://github.com/newaetech/CW305-Arm-DesignStart).
+
+When you generate a new bitfile, don't forget to update the .mmi file and
+run the `make_prog_files.bat` script, as described
+[here](https://github.com/newaetech/CW305-Arm-DesignStart#update-mmi-file).
+
+Similarly if you wish to modify the firmware, follow the instructions
+[here](https://github.com/newaetech/CW305-Arm-DesignStart#compile-software).
+
