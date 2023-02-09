@@ -69,13 +69,15 @@ targets, and so any existing target application can very easily be ported to
 this platform and gain the power of trace.
 
 If your target cannot be implemented on the CW305 platform, the trace
-sniffing logic can also be implemented on the
-[PhyWhisperer-USB](https://rtfm.newae.com/Tools/PhyWhisperer/). This can
-support any target with a parallel trace port or SWO pin. Look to
-[hardware/tracewhisperer](hardware/tracewhisperer) for this variant. This
-platform provides all the same capabilities of trace, but with some gotchas
-related to power trace noise which are discussed
-[here](hardware/tracewhisperer/trace_noise.md).
+sniffing logic has been ported to the
+[PhyWhisperer-USB](https://rtfm.newae.com/Tools/PhyWhisperer/) and
+[ChipWhisperer-Husky](https://rtfm.newae.com/Capture/ChipWhisperer-Husky/).
+This can support any target with a parallel trace port or SWO pin. Look to
+[TraceWhisperer repository](https://github.com/newaetech/tracewhisperer) for
+this variant. Both of these platforms provide all the same capabilities of
+trace, but with some gotchas related to power trace noise which are
+discussed
+[here](https://github.com/newaetech/tracewhisperer/blob/master/trace_noise.md).
 
 
 ## How it Works
@@ -98,10 +100,11 @@ trace = TraceWhisperer(target, scope)
 
 and start having fun. This [example Jupyter
 notebook](jupyter/TraceWhisperer.ipynb) shows a bunch of examples. This
-notebook supports both CW305 and CW610 (PhyWhisperer) platforms. You'll need
-ChipWhisperer capture hardware, and either a CW305 or a CW610. The target
-may be the CWLITEARM; other targets with SWO and/or parallel trace ports
-(such as the CW308 K82F target) can also be used.
+notebook supports the CW305, CW610 (PhyWhisperer), and ChipWhisperer-Husky
+platforms.  If you're using trace on the CW305 or CW610 platform, you'll
+also need ChipWhisperer capture hardware (e.g. ChipWhisperer-Lite). The
+target may be the CWLITEARM; other targets with SWO and/or parallel trace
+ports (such as the CW308 K82F target) can also be used.
 
 Use `help(TraceWhisperer)` to see which methods are available.  At a low
 level, trace is configured on the sniffing side via configuration and status
@@ -134,7 +137,7 @@ The observations that follow are just that, observations made during the
 development of this tooling; there is nothing in Arm's specifications which
 guarantees some permissible range for this jitter.
 
-### Jitter from Paralle Trace Port
+### Jitter from Parallel Trace Port
 When there is no trace data to output, synchronization frames are produced
 continuously. These frames are 16 or 32 bits wide. It follows that with any
 trace port width less than 32 bits, jitter is unavoidable. In practice, up
