@@ -80,6 +80,18 @@ discussed
 [here](https://github.com/newaetech/tracewhisperer/blob/master/trace_noise.md).
 
 
+## Why Is There a Separate [TraceWhisperer Repository](https://github.com/newaetech/tracewhisperer)?
+DesignStartTrace, which is "TraceWhisperer but specifically for our 
+[https://github.com/newaetech/CW305-Arm-DesignStart](https://github.com/newaetech/CW305-Arm-DesignStart)
+target" came first. When TraceWhisperer progressed to include other targets, the 
+[TraceWhisperer Repository](https://github.com/newaetech/tracewhisperer) 
+repository was born.
+
+However when it comes to *using* TraceWhisperer,  there is a 
+[single, common, target-independent API](https://github.com/newaetech/chipwhisperer/blob/develop/software/chipwhisperer/capture/trace/TraceWhisperer.py)
+and so the actual usage experience is not fractured -- only the source
+repositories are, for historical reasons as explained above.
+
 ## How it Works
 The trace sniffer runs completely in hardware on the FPGA. It is basically
 like PhyWhisperer-USB, but for trace. (In fact, about half of the Verilog
@@ -209,6 +221,9 @@ alternating addresses:
 (If you must know, section D4.2 of [ARM IHI
 0029E](https://developer.arm.com/documentation/ihi0029/e/) will show you why
 the raw trace data looks the way it does... don't say I didn't warn you!)
+
+The [TraceWhisperer.ipynb](jupyter/TraceWhisperer.ipynb) notebook teaches how to
+use Orbuculum to parse the collected trace data.
 
 
 ## Development Notes
